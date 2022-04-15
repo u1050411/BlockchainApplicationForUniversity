@@ -22,13 +22,10 @@ from crypto.Hash import SHA
 from crypto.PublicKey import RSA
 from crypto.Signature import PKCS1_v1_5
 
-self._private_key = RSA.generate(1024, random)
-self._public_key = self._private_key.publickey()
-
-
 # Creem la clase publica que sera la identitat del client . En el nostre cas identitat de les universitats.
 
 class Client:
+
     def __init__(self):
         random = crypto.Random.new().read
         self._private_key = RSA.generate(1024, random)
@@ -38,6 +35,4 @@ class Client:
     @property
     def identity(self):
         return
-
-
 binascii.hexlify(self._public_key.exportKey(format='DER')).decode('ascii')
