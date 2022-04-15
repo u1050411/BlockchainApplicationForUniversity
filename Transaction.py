@@ -5,11 +5,14 @@ import datetime
 from matplotlib import collections
 
 
-def __init__(self, sender, recipient, value):
-    self.sender = sender
-    self.recipient = recipient
-    self.value = value
-    self.time = datetime.datetime.now()
+class Transaction:
+
+    def __init__(self, sender, recipient, value):
+        self.sender = sender
+        self.recipient = recipient
+        self.value = value
+        self.time = datetime.datetime.now()
+
 
 # Creem blocks de la cadena
 
