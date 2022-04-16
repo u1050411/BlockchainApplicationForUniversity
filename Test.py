@@ -17,7 +17,7 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(transaction.value, 3)  # add assertion here
 
     def test_creacioCuaTransaction(self):
-        transactions = []
+        cua = []
         dinesh = Client()
         ramesh = Client()
         eli = Client()
@@ -29,76 +29,73 @@ class TestTransaction(unittest.TestCase):
             15.0
         )
         t1.sign_transaction()
-        transactions.append(t1)
+        cua.append(t1)
         t2 = Transaction(
             dinesh,
             eli.identity,
             6.0
         )
         t2.sign_transaction()
-        transactions.append(t2)
+        cua.append(t2)
         t3 = Transaction(
             ramesh,
             vijay.identity,
             2.0
         )
         t3.sign_transaction()
-        transactions.append(t3)
+        cua.append(t3)
         t4 = Transaction(
             eli,
             ramesh.identity,
             4.0
         )
         t4.sign_transaction()
-        transactions.append(t4)
+        cua.append(t4)
         t5 = Transaction(
             vijay,
             eli.identity,
             7.0
         )
         t5.sign_transaction()
-        transactions.append(t5)
+        cua.append(t5)
         t6 = Transaction(
             ramesh,
             eli.identity,
             3.0
         )
         t6.sign_transaction()
-        transactions.append(t6)
+        cua.append(t6)
         t7 = Transaction(
             eli,
             dinesh.identity,
             8.0
         )
         t7.sign_transaction()
-        transactions.append(t7)
+        cua.append(t7)
         t8 = Transaction(
             eli,
             ramesh.identity,
             1.0
         )
         t8.sign_transaction()
-        transactions.append(t8)
+        cua.append(t8)
         t9 = Transaction(
             vijay,
             dinesh.identity,
             5.0
         )
         t9.sign_transaction()
-        transactions.append(t9)
+        cua.append(t9)
         t10 = Transaction(
             vijay,
             ramesh.identity,
             3.0
         )
         t10.sign_transaction()
-        transactions.append(t10)
-
-    # for x in transactions:
-    #     pass
-
-    # display_transaction(transaction)
-    # print('--------------')
+        cua.append(t10)
+        for x in cua:
+            x.display_transaction()
+            print('--------------')
 
 
 class TestClient(unittest.TestCase):
