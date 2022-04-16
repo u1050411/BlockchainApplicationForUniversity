@@ -1,6 +1,6 @@
 import unittest
 
-from Universitat import Universitat
+from BlockchainUniversity import Universitat
 
 
 class TestUniversitat(unittest.TestCase):
