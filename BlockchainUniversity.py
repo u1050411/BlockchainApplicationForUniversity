@@ -142,6 +142,7 @@ class Bloc:
 
     last_block_hash = ""  # Variable Global
 
-    def __init__(self):
+    def __init__(self, transaccio):
         self.previous_block_hash = ""
         self.Nonce = ""
+        self.transaccioVerificada = transaccio

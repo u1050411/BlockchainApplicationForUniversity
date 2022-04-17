@@ -1,5 +1,5 @@
 import unittest
-from BlockchainUniversity import Usuari, Universitat, Estudiant, Transaccio, Professor, TransaccioProfessor
+from BlockchainUniversity import Usuari, Universitat, Estudiant, Transaccio, Professor, TransaccioProfessor, Bloc
 
 
 class TestUsuaris(unittest.TestCase):
@@ -39,3 +39,13 @@ class TestTransaction(unittest.TestCase):
             print('--------------')
 
 
+class TestBloc(unittest.TestCase):
+    def test_creation(self):
+        pass
+
+    def test_blocInicial(self):
+        estudiant = Estudiant('Pau')
+        t1 = Transaccio(estudiant, 'DocumentEncriptat', 'Hash')
+        blockinicial = Bloc(t1)
+        blockinicial.previous_block_hash = None
+        Nonce = None
