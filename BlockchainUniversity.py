@@ -1,12 +1,11 @@
 import binascii
-from datetime import datetime
-from typing import List, Any
+import datetime
+import collections
 
 from Crypto import Random
 from Crypto.Hash import SHA
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
-from matplotlib import collections
 
 
 class Usuari:
@@ -44,22 +43,62 @@ class Universitat(Usuari):
     pass
 
 
-class Professors(Usuari):
+class Professor(Usuari):
     pass
 
 
-class Estudiants(Usuari):
+class Estudiant(Usuari):
     pass
 
 
 class Transaccio:
 
     def __init__(self, emissor, document, id_document):
-        self.emissor = emissor
-        self.document = document
-        self.id_document = id_document
-        self.nota = 0
-        self.time = datetime.datetime.now()
+        self._emissor = emissor
+        self._document = document
+        self._id_document = id_document
+        self._nota = 0
+        self._time = datetime.datetime.now()
+
+    @property
+    def emissor(self):
+        return self._emissor
+
+    @property
+    def document(self):
+        return self._document
+
+    @property
+    def id_document(self):
+        return self._id_document
+
+    @property
+    def nota(self):
+        return self._nota
+
+    @property
+    def time(self):
+        return self._time
+
+    @emissor.setter
+    def emissor(self, emissor):
+        self._emissor = emissor
+
+    @document.setter
+    def document(self, document):
+        self._document = document
+
+    @document.setter
+    def id_document(self, id_document):
+        self._id_document = id_document
+
+    @nota.setter
+    def nota(self, nota):
+        self._nota = nota
+
+    @time.setter
+    def time(self, time):
+        self._time = time
 
     def to_dict(self):
         return collections.OrderedDict({
@@ -69,7 +108,7 @@ class Transaccio:
             'Nota': self.nota,
             'Data': self.time})
 
-    def display_transaction(transaccio):
+    def display_transaccio(transaccio):
         trans = transaccio.to_dict()
         print("sender: " + trans['Emissor'])
         print('-----')
@@ -91,8 +130,8 @@ class Transaccio:
 
 class TransaccioProfessor(Transaccio):
 
-    def __init__(self, emissor, document, id_document, nota):
-        self.emissor = emissor
+    def __init__(self, emissors, document, id_document, nota):
+        self.emissor = emissors
         self.document = document
         self.id_document = id_document
         self.nota = nota
