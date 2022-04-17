@@ -136,3 +136,12 @@ class TransaccioProfessor(Transaccio):
         self.id_document = id_document
         self.nota = nota
         self.time = datetime.datetime.now()
+
+
+class Bloc:
+
+    last_block_hash = ""  # Variable Global
+
+    def __init__(self):
+        self.previous_block_hash = ""
+        self.Nonce = ""
