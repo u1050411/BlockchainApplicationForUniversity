@@ -1,11 +1,13 @@
 import binascii
 import datetime
 import collections
+from hashlib import sha256
 
 from Crypto import Random
 from Crypto.Hash import SHA
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
+from pandas._libs import json
 
 
 class Usuari:
@@ -52,7 +54,7 @@ class Estudiant(Usuari):
 
 
 class Transaccio:
-
+    # Classe on guardem les dades de les transaccions
     def __init__(self, emissor, document, id_document):
         self._emissor = emissor
         self._document = document
@@ -108,8 +110,8 @@ class Transaccio:
             'Nota': self.nota,
             'Data': self.time})
 
-    def display_transaccio(transaccio):
-        trans = transaccio.to_dict()
+    def display_transaccio(self):
+        trans = self.to_dict()
         print("sender: " + trans['Emissor'])
         print('-----')
         print("recipient: " + trans['ID Document'])
@@ -130,19 +132,60 @@ class Transaccio:
 
 class TransaccioProfessor(Transaccio):
 
-    def __init__(self, emissors, document, id_document, nota):
-        self.emissor = emissors
-        self.document = document
-        self.id_document = id_document
+    def __init__(self, emissors, document, id_document, nota, emissor):
+        super().__init__(emissor, document, id_document)
         self.nota = nota
-        self.time = datetime.datetime.now()
 
 
 class Bloc:
+    # Classe creació del bloc
 
-    last_block_hash = ""  # Variable Global
+    def __init__(self, index, previous_block_hash, transaccio):
+        self._index = index
+        self._timestamp = datetime.datetime.now()
+        self._previous_block_hash = previous_block_hash
+        self._transaccio = transaccio
+        self._nonce = 0
 
-    def __init__(self, transaccio):
-        self.previous_block_hash = ""
-        self.Nonce = ""
-        self.transaccioVerificada = transaccio
+    @property
+    def index(self):
+        return self._index
+
+    @property
+    def timestamp(self):
+        return self._timestamp
+
+    @property
+    def previous_block_hash(self):
+        return self._previous_block_hash
+
+    @property
+    def transaccio(self):
+        return self._transaccio
+
+    @property
+    def nonce(self):
+        return self._nonce
+
+    @index.setter
+    def nota(self, index):
+        self._index = index
+
+    @previous_block_hash.setter
+    def previous_block_hash(self, previous_block_hash):
+        self._previous_block_hash = previous_block_hash
+
+    @transaccio.setter
+    def transaccio(self, transaccio):
+        self._transaccio = transaccio
+
+    @nonce.setter
+    def transaccio(self, nonce):
+        self._nonce = nonce
+
+    def bloc_hash(self):
+        # Converteix el bloc en una cadena json i retorna el hash
+        block_string = json.dumps(self.__dict__, sort_keys=True)
+        return 256(block_string.encode()).hexdigest()
+
+

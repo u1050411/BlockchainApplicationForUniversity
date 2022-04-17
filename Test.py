@@ -26,7 +26,6 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(transaccio.id_document, 'Hash')
 
     def test_posarNota(self):
-
         cua = []
         estudiant = Estudiant('Pau')
         professor = Professor('Teo')
@@ -40,12 +39,9 @@ class TestTransaction(unittest.TestCase):
 
 
 class TestBloc(unittest.TestCase):
-    def test_creation(self):
-        pass
 
     def test_blocInicial(self):
         estudiant = Estudiant('Pau')
         t1 = Transaccio(estudiant, 'DocumentEncriptat', 'Hash')
-        blockinicial = Bloc(t1)
+        blockinicial = Bloc('0', '0', t1)
         blockinicial.previous_block_hash = None
-        Nonce = None
