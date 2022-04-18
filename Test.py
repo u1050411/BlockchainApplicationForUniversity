@@ -1,4 +1,7 @@
 import unittest
+
+from pandas.io import json
+
 from BlockchainUniversity import Usuari, Universitat, Estudiant, Transaccio, Professor, TransaccioProfessor, Bloc
 
 
@@ -36,6 +39,14 @@ class TestTransaction(unittest.TestCase):
         for x in cua:
             x.display_transaccio()
             print('--------------')
+
+    def test_to_Json(self):
+        estudiant = Estudiant('Pau')
+        t1 = Transaccio(estudiant, 'DocumentEncriptat', 'Hash')
+        x= t1.to_json()
+        # jtrans = json.loads(t1.to_json())
+        # print(json.dumps(jtrans, indent=4))
+        print(x)
 
 
 class TestBloc(unittest.TestCase):
