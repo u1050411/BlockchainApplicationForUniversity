@@ -89,19 +89,7 @@ class Transaccio:
             'Nota': self.nota,
             'Data': self.time})
 
-    # canviarlo a json
     def display_transaccio(self):
-        # print("sender: " + self.emissor.identity)
-        # print('-----')
-        # print("recipient: " + self.id_document)
-        # print('-----')
-        # print("value: " + self.document)
-        # print('-----')
-        # print("time: " + str(self.nota))
-        # print('-----')
-        # print("time: " + str(self.time))
-        # print('-----')
-        #Cadena multilinea f""
         print(f"""sender: {self.emissor.identity} 
 -----
 recipient: {self.id_document}
@@ -113,12 +101,16 @@ nota: {self.nota}
 time: {self.time}
 -----
 """)
+
     # Mètode que el emissor signa la transaccio
 
     def sign_transaction(self):
         # return self.emissor.sign(str(self.to_dict()).encode('utf8'))
         block_string = json.dumps(self.__dict__, sort_keys=True)
         return self.emissor.sign(block_string.encode(UTF_8))
+
+    def to_json(self):
+        return json.dumps(self.__dict__)
 
 
 class TransaccioProfessor(Transaccio):
@@ -158,5 +150,3 @@ class Bloc:
         # Converteix el bloc en una cadena json i retorna el hash
         block_string = json.dumps(self.__dict__, sort_keys=True)
         return hashlib.sha256(block_string.encode()).hexdigest()
-
-
