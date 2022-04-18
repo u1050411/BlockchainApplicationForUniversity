@@ -123,10 +123,10 @@ class TransaccioProfessor(Transaccio):
 class Bloc:
     # Classe creació del bloc
 
-    def __init__(self, index, previous_block_hash, transaccio):
+    def __init__(self, index, hash_bloc_anterior, transaccio):
         self._index = index
         self._timestamp = datetime.datetime.now()
-        self._previous_block_hash = previous_block_hash
+        self.hash_bloc_anterior = hash_bloc_anterior
         self._transaccio = transaccio
         self.nonce = 0
 
@@ -140,13 +140,79 @@ class Bloc:
 
     @property
     def previous_block_hash(self):
-        return self._previous_block_hash
+        return self.hash_bloc_anterior
 
     @property
     def transaccio(self):
         return self._transaccio
 
-    def bloc_hash(self):
+    def calcular_hash(self):
         # Converteix el bloc en una cadena json i retorna el hash
         block_string = json.dumps(self.__dict__, sort_keys=True)
         return hashlib.sha256(block_string.encode()).hexdigest()
+
+
+class BlockchainUniversity:
+    # Dificultat del hash
+    dificultat = 2
+
+    def __init__(self):
+        self.transaccio_noconfirmades = []
+        self.cadena = []
+        self.create_genesis_block()
+
+    def create_genesis_block(self):
+        """
+       Creacio del bloc Inicial.
+        """
+        genesis_bloc = Bloc(0, None, None)
+        genesis_bloc.hash = genesis_bloc.bloc_hash()
+        self.cadena.append(genesis_bloc)
+
+    @property
+    def ultim_bloc(self):
+        return self.cadena[-1]
+
+    def afegir_bloc(self, bloc, prova):
+        """
+        Una funció que afegeix el bloc a la cadena després de la verificació.
+         La verificació inclou:
+         * Comprovació de la validesa de la prova.
+         * L'anterior_hash referit al bloc i el hash del darrer bloc
+           en el partit de cadena.
+        """
+        hash_anterior = self.ultim_bloc.hash
+
+        if hash_anterior != bloc.hash_bloc_anterior:
+            return False
+
+        if not self.es_prova_valida(bloc, prova):
+            return False
+
+        bloc.hash = prova
+        self.cadena.append(bloc)
+        return True
+
+    def es_prova_valida(self, bloc, hash_bloc):
+        """
+        Comprovem si el hash del bloc és vàlid i satisfà els criteris de dificultat
+        """
+        return (hash_bloc.startswith('0' * BlockchainUniversity.dificultat) and
+                hash_bloc == bloc.calcular_hash())
+
+    def hash_correcte(self, bloc):
+        """
+        Funció que prova diferents valors de nonce per obtenir un hash
+        que compleix els nostres criteris de dificultat.
+        """
+        bloc.nonce = 0
+
+        hash_calculat = bloc.calcular_hash()
+        while not hash_calculat.startswith('0' * BlockchainUniversity.dificultat):
+            bloc.nonce += 1
+            hash_calculat = bloc.calcular_hash()
+
+        return hash_calculat
+
+    def afegir_nova_transaccio(self, transaccio):
+        self.transaccio_noconfirmades.append(transaccio)
