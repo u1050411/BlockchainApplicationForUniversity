@@ -1,11 +1,10 @@
 import binascii
-import datetime
 import collections
 import hashlib
-from hashlib import sha256
+from datetime import datetime
 
 from Crypto import Random
-from Crypto.Hash import SHA
+from Crypto.Hash import SHA1
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from pandas.io import json
@@ -24,7 +23,7 @@ class Usuari:
         self.private_key = RSA.generate(1024, random_seed)
 
     def sign(self, data):
-        h = SHA.new(data)
+        h = SHA1.new(data)
         return binascii.hexlify(self._signer.sign(h)).decode('ascii')
 
     @property  # retorna clau publica
@@ -61,7 +60,7 @@ class Transaccio:
         self.document = document
         self.id_document = id_document
         self._nota = 0
-        self._time = datetime.datetime.now()
+        self._time = datetime.now()
 
     @property
     def nota(self):
@@ -125,7 +124,7 @@ class Bloc:
 
     def __init__(self, index, hash_bloc_anterior, transaccio):
         self._index = index
-        self._timestamp = datetime.datetime.now()
+        self._timestamp = datetime.now()
         self.hash_bloc_anterior = hash_bloc_anterior
         self._transaccio = transaccio
         self.nonce = 0
@@ -148,7 +147,7 @@ class Bloc:
 
     def calcular_hash(self):
         # Converteix el bloc en una cadena json i retorna el hash
-        block_string = json.dumps(self.__dict__, sort_keys=True)
+        block_string = json.dumps(self.__dict__)
         return hashlib.sha256(block_string.encode()).hexdigest()
 
 
@@ -159,14 +158,14 @@ class BlockchainUniversity:
     def __init__(self):
         self.transaccio_noconfirmades = []
         self.cadena = []
-        self.create_genesis_block()
+        self.crear_genesis_bloc()
 
-    def create_genesis_block(self):
+    def crear_genesis_bloc(self):
         """
        Creacio del bloc Inicial.
         """
-        genesis_bloc = Bloc(0, None, None)
-        genesis_bloc.hash = genesis_bloc.bloc_hash()
+        genesis_bloc = Bloc('0', '0', [])
+        genesis_bloc.hash = genesis_bloc.calcular_hash()
         self.cadena.append(genesis_bloc)
 
     @property
@@ -193,14 +192,15 @@ class BlockchainUniversity:
         self.cadena.append(bloc)
         return True
 
-    def es_prova_valida(self, bloc, hash_bloc):
+    def es_prova_valida(self, hash_bloc):
         """
         Comprovem si el hash del bloc és vàlid i satisfà els criteris de dificultat
         """
         return (hash_bloc.startswith('0' * BlockchainUniversity.dificultat) and
-                hash_bloc == bloc.calcular_hash())
+                hash_bloc == self.hash_correcte)
 
-    def hash_correcte(self, bloc):
+    @staticmethod
+    def hash_correcte(bloc):
         """
         Funció que prova diferents valors de nonce per obtenir un hash
         que compleix els nostres criteris de dificultat.
@@ -216,3 +216,23 @@ class BlockchainUniversity:
 
     def afegir_nova_transaccio(self, transaccio):
         self.transaccio_noconfirmades.append(transaccio)
+
+    def minat(self):
+        """
+    Aquesta funció serveix com a interfície per afegir el pendent
+         transaccions a la cadena de blocs afegint-les al bloc
+         i esbrinar el hash.
+        """
+        if not self.transaccio_noconfirmades:
+            return False
+
+        ultim_bloc = self.ultim_bloc
+
+        new_bloc = Bloc(index=ultim_bloc.index + 1, transactions=self.transaccio_noconfirmades,
+                        timestamp=datetime.now(),
+                        hash_anterior=ultim_bloc.hash())
+
+        prova = self.hash_correcte
+        self.afegir_bloc(new_bloc, prova)
+        self.transaccio_noconfirmades = []
+        return new_bloc.index

@@ -1,8 +1,10 @@
 import unittest
+from datetime import datetime
 
 from pandas.io import json
 
-from BlockchainUniversity import Usuari, Universitat, Estudiant, Transaccio, Professor, TransaccioProfessor, Bloc
+from BlockchainUniversity import Usuari, Universitat, Estudiant, Transaccio, Professor, TransaccioProfessor, Bloc, \
+    BlockchainUniversity
 
 
 class TestUsuaris(unittest.TestCase):
@@ -43,7 +45,7 @@ class TestTransaction(unittest.TestCase):
     def test_to_Json(self):
         estudiant = Estudiant('Pau')
         t1 = Transaccio(estudiant, 'DocumentEncriptat', 'Hash')
-        x= t1.to_json()
+        x = t1.to_json()
         # jtrans = json.loads(t1.to_json())
         # print(json.dumps(jtrans, indent=4))
         print(x)
@@ -54,5 +56,26 @@ class TestBloc(unittest.TestCase):
     def test_blocInicial(self):
         estudiant = Estudiant('Pau')
         t1 = Transaccio(estudiant, 'DocumentEncriptat', 'Hash')
-        blockinicial = Bloc('0', '0', t1)
-        blockinicial.previous_block_hash = None
+        bloc_prova = Bloc('0', '0', t1)
+
+        self.assertEqual(bloc_prova.index, '0')
+        self.assertEqual(bloc_prova.transaccio, t1)
+        self.assertEqual(bloc_prova.hash_bloc_anterior, '0')
+
+    def test_calcular_Hash(self):
+        estudiant = Estudiant('Albert')
+        t1 = Transaccio(estudiant, 'DocumentEncriptat', 'Hash')
+        bloc_prova = Bloc('0', '0', t1)
+        hash_anterior = bloc_prova.calcular_hash()
+        print(hash_anterior)
+
+
+class TestBlockchainUniversity(unittest.TestCase):
+
+    def test_crear_genesis_bloc(self):
+        bloc_chain = BlockchainUniversity()
+        bloc = bloc_chain.ultim_bloc
+        self.assertEqual(bloc.index, '0')
+        self.assertEqual(bloc.transaccio, [])
+        self.assertEqual(bloc.hash_bloc_anterior, '0')
+
