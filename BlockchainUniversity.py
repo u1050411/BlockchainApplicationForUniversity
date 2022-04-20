@@ -1,13 +1,14 @@
 import binascii
 import collections
 import hashlib
+import json
 from datetime import datetime
 
 from Crypto import Random
 from Crypto.Hash import SHA1
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
-from pandas.io import json
+# from pandas.io import json
 
 UTF_8 = 'utf8'
 
@@ -17,8 +18,8 @@ class Usuari:
     def __init__(self, nom):
         self.nom = nom
         random_seed = Random.new().read
-        self._private_key = None  # Creacio de la clau privada
-        self._public_key = None  # Creacio de la clau publica que es part de la clau privada
+        self._private_key = None  # Creació de la clau privada
+        self._public_key = None  # Creació de la clau pública que és part de la clau privada
         self._signer = None  # Signatura
         self.private_key = RSA.generate(1024, random_seed)
 
@@ -36,8 +37,8 @@ class Usuari:
 
     @private_key.setter  # fiquem clau
     def private_key(self, key):
-        self._private_key = key  # Creacio de la clau privada
-        self._public_key = self._private_key.publickey()  # Creacio de la clau publica que es part de la clau privada
+        self._private_key = key  # Creació de la clau privada
+        self._public_key = self._private_key.publickey()  # Creació de la clau pública que és part de la clau privada
         self._signer = PKCS1_v1_5.new(self._private_key)  # Signatura
 
 
@@ -105,11 +106,11 @@ time: {self.time}
 
     def sign_transaction(self):
         # return self.emissor.sign(str(self.to_dict()).encode('utf8'))
-        block_string = json.dumps(self.__dict__, sort_keys=True)
-        return self.emissor.sign(block_string.encode(UTF_8))
+        block_json = self.to_json()
+        return self.emissor.sign(block_json.encode(UTF_8))
 
     def to_json(self):
-        return json.dumps(self.__dict__)
+        return json.dumps(self.__dict__, sort_keys=True, default=str)
 
 
 class TransaccioProfessor(Transaccio):
@@ -147,7 +148,7 @@ class Bloc:
 
     def calcular_hash(self):
         # Converteix el bloc en una cadena json i retorna el hash
-        block_string = json.dumps(self.__dict__)
+        block_string = json.dumps(self.__dict__, sort_keys=True, default=str)
         return hashlib.sha256(block_string.encode()).hexdigest()
 
 
@@ -172,35 +173,35 @@ class BlockchainUniversity:
     def ultim_bloc(self):
         return self.cadena[-1]
 
-    def afegir_bloc(self, bloc, prova):
+    def afegir_bloc(self, bloc, hash_prova):
         """
         Una funció que afegeix el bloc a la cadena després de la verificació.
          La verificació inclou:
-         * Comprovació de la validesa de la prova.
-         * L'anterior_hash referit al bloc i el hash del darrer bloc
-           en el partit de cadena.
+         * Block apunti al block anterior
+         * Que hash_prova satisfà la dificultat prevista
         """
         hash_anterior = self.ultim_bloc.hash
 
         if hash_anterior != bloc.hash_bloc_anterior:
             return False
 
-        if not self.es_prova_valida(bloc, prova):
+        if not self.es_prova_valida(bloc, hash_prova):
             return False
 
-        bloc.hash = prova
+        bloc.hash = hash_prova
         self.cadena.append(bloc)
         return True
 
-    def es_prova_valida(self, hash_bloc):
+    @staticmethod
+    def es_prova_valida(bloc, hash_bloc):
         """
         Comprovem si el hash del bloc és vàlid i satisfà els criteris de dificultat
         """
         return (hash_bloc.startswith('0' * BlockchainUniversity.dificultat) and
-                hash_bloc == self.hash_correcte)
+                hash_bloc == bloc.hash_correcte)
 
     @staticmethod
-    def hash_correcte(bloc):
+    def hash_correcte(bloc, bloc_hash):
         """
         Funció que prova diferents valors de nonce per obtenir un hash
         que compleix els nostres criteris de dificultat.
@@ -217,22 +218,21 @@ class BlockchainUniversity:
     def afegir_nova_transaccio(self, transaccio):
         self.transaccio_noconfirmades.append(transaccio)
 
-    def minat(self):
-        """
-    Aquesta funció serveix com a interfície per afegir el pendent
-         transaccions a la cadena de blocs afegint-les al bloc
-         i esbrinar el hash.
-        """
-        if not self.transaccio_noconfirmades:
-            return False
-
-        ultim_bloc = self.ultim_bloc
-
-        new_bloc = Bloc(index=ultim_bloc.index + 1, transactions=self.transaccio_noconfirmades,
-                        timestamp=datetime.now(),
-                        hash_anterior=ultim_bloc.hash())
-
-        prova = self.hash_correcte
-        self.afegir_bloc(new_bloc, prova)
-        self.transaccio_noconfirmades = []
-        return new_bloc.index
+    # def minat(self):
+    #     """
+    # Aquesta funció serveix com a interfície per afegir la transacció pendent a la cadena de blocs afegint-les al bloc
+    #      i esbrinar el hash.
+    #     """
+    #     if not self.transaccio_noconfirmades:
+    #         return False
+    #
+    #     ultim_bloc = self.ultim_bloc
+    #
+    #     new_bloc = Bloc(index=ultim_bloc.index + 1, transactions=self.transaccio_noconfirmades,
+    #                     timestamp=datetime.now(),
+    #                     hash_anterior=ultim_bloc.hash())
+    #
+    #     prova = self.hash_correcte
+    #     self.afegir_bloc(new_bloc, prova)
+    #     self.transaccio_noconfirmades = []
+    #     return new_bloc.index

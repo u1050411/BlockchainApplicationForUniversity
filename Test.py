@@ -1,7 +1,4 @@
 import unittest
-from datetime import datetime
-
-from pandas.io import json
 
 from BlockchainUniversity import Usuari, Universitat, Estudiant, Transaccio, Professor, TransaccioProfessor, Bloc, \
     BlockchainUniversity
@@ -41,6 +38,12 @@ class TestTransaction(unittest.TestCase):
         for x in cua:
             x.display_transaccio()
             print('--------------')
+
+    @staticmethod
+    def test_sign_transaction():
+        estudiant = Estudiant('Pau')
+        t1 = Transaccio(estudiant, 'DocumentEncriptat', 'Hash')
+        t1.sign_transaction()
 
     def test_to_Json(self):
         estudiant = Estudiant('Pau')
