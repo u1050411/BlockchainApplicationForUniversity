@@ -1,7 +1,9 @@
 import unittest
 
 import mysql.connector
+from CreateMysql import MySqlBloc
 
+import CreateMysql
 from BlockchainUniversity import Usuari, Universitat, Estudiant, Transaccio, Professor, TransaccioProfessor, Bloc, \
     BlockchainUniversity
 
@@ -25,8 +27,6 @@ class TestUsuaris(unittest.TestCase):
                 id, nom))
         cur.close()
         miConexion.close()
-
-
 
 
 class TestUniversitat(unittest.TestCase):
@@ -115,5 +115,10 @@ class TestBlockchainUniversity(unittest.TestCase):
             x = []
 
 
+class TestMysql(unittest.TestCase):
 
-
+    @staticmethod
+    def test_my_create():
+        mydb = MySqlBloc()
+        mydb.afegir_schema('blockchainuniversity2')
+        mydb.create_tables()
