@@ -20,12 +20,12 @@ class Usuari:
         random_seed = Random.new().read
         self._private_key = None  # Creació de la clau privada
         self._public_key = None  # Creació de la clau pública que és part de la clau privada
-        self._signer = None  # Signatura
+        self._signatura = None  # Signatura
         self.private_key = RSA.generate(1024, random_seed)
 
     def sign(self, data):
         h = SHA1.new(data)
-        return binascii.hexlify(self._signer.sign(h)).decode('ascii')
+        return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
 
     @property  # retorna clau publica
     def identity(self):
@@ -39,7 +39,7 @@ class Usuari:
     def private_key(self, key):
         self._private_key = key  # Creació de la clau privada
         self._public_key = self._private_key.publickey()  # Creació de la clau pública que és part de la clau privada
-        self._signer = PKCS1_v1_5.new(self._private_key)  # Signatura
+        self._signatura = PKCS1_v1_5.new(self._private_key)  # Signatura
 
 
 class Universitat(Usuari):
@@ -165,7 +165,7 @@ class BlockchainUniversity:
         """
        Creacio del bloc Inicial.
         """
-        genesis_bloc = Bloc('0', '0', [])
+        genesis_bloc = Bloc(0, '0', [])
         genesis_bloc.hash = genesis_bloc.calcular_hash()
         self.cadena.append(genesis_bloc)
 
@@ -218,21 +218,20 @@ class BlockchainUniversity:
     def afegir_nova_transaccio(self, transaccio):
         self.transaccio_noconfirmades.append(transaccio)
 
-    # def minat(self):
-    #     """
-    # Aquesta funció serveix com a interfície per afegir la transacció pendent a la cadena de blocs afegint-les al bloc
-    #      i esbrinar el hash.
-    #     """
-    #     if not self.transaccio_noconfirmades:
-    #         return False
-    #
-    #     ultim_bloc = self.ultim_bloc
-    #
-    #     new_bloc = Bloc(index=ultim_bloc.index + 1, transactions=self.transaccio_noconfirmades,
-    #                     timestamp=datetime.now(),
-    #                     hash_anterior=ultim_bloc.hash())
-    #
-    #     prova = self.hash_correcte
-    #     self.afegir_bloc(new_bloc, prova)
-    #     self.transaccio_noconfirmades = []
-    #     return new_bloc.index
+    def minat(self):
+        """
+    Aquesta funció serveix com a interfície per afegir la transacció pendent a la cadena de blocs afegint-les al bloc
+         i esbrinar el hash.
+        """
+        if not self.transaccio_noconfirmades:
+            return False
+
+        ultim_bloc = self.ultim_bloc
+        index = ultim_bloc.index + 1
+        transactions = self.transaccio_noconfirmades
+        hash_anterior = ultim_bloc.calcular_hash()
+        new_bloc = Bloc(index, hash_anterior, transactions,)
+        hash_actual = self.hash_correcte
+        self.afegir_bloc(new_bloc, hash_actual)
+        self.transaccio_noconfirmades = []
+        return new_bloc.index
