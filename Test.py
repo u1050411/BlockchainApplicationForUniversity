@@ -2,8 +2,6 @@ import unittest
 
 import mysql.connector
 from CreateMysql import MySqlBloc
-
-import CreateMysql
 from BlockchainUniversity import Usuari, Universitat, Estudiant, Transaccio, Professor, TransaccioProfessor, Bloc, \
     BlockchainUniversity
 
@@ -138,7 +136,27 @@ class TestMysql(unittest.TestCase):
                 "`pdf` BINARY(64) NULL,"
                 "PRIMARY KEY (`id`))")
         mydb.executar_sql(line)
+        line = ("CREATE TABLE `private_key` ("
+                "`id_usuari` INT NOT NULL,"
+                "`key` BINARY(128) NULL,"
+                "PRIMARY KEY (`id_usuari`))")
+        mydb.executar_sql(line)
+        line = ("CREATE TABLE `public_key` ("
+                "`id_usuari` INT NOT NULL,"
+                "`key` BINARY(128) NULL,"
+                "PRIMARY KEY (`id_usuari`))")
+        mydb.executar_sql(line)
         mydb.tancar()
+
+    def test_create_usuari(self):
+        mydb = MySqlBloc()
+        mydb.afegir_schema('blockchainuniversity')
+        line = "INSERT INTO usuari (`id`, `nom`) VALUES ('1050412', 'Pere')"
+        mydb.executar_sql(line)
+        line = "INSERT INTO usuari (`id`, `nom`) VALUES ('1050412', 'Pere')"
+        mydb.executar_sql(line)
+        line = "INSERT INTO usuari (`id`, `nom`) VALUES ('1050413', 'Joan')"
+        mydb.executar_sql(line)
 
     def test_drop_schema(self):
         mydb = MySqlBloc()

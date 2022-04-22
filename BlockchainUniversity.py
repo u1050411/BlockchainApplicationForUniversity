@@ -15,31 +15,32 @@ UTF_8 = 'utf8'
 
 class Usuari:
 
-    def __init__(self, nom):
+    def __init__(self, id_usuari, nom):
+        self.id = id_usuari
         self.nom = nom
-        random_seed = Random.new().read
-        self._private_key = None  # Creació de la clau privada
+        # random_seed = Random.new().read
+        # self._private_key = None  # Creació de la clau privada
         self._public_key = None  # Creació de la clau pública que és part de la clau privada
-        self._signatura = None  # Signatura
-        self.private_key = RSA.generate(1024, random_seed)
+        # self._signatura = None  # Signatura
+        # self.private_key = RSA.generate(1024, random_seed)
 
-    def sign(self, data):
-        h = SHA1.new(data)
-        return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
+    # def sign(self, data):
+    #     h = SHA1.new(data)
+    #     return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
 
     @property  # retorna clau publica
     def identity(self):
         return binascii.hexlify(self._public_key.exportKey(format='DER')).decode('ascii')
 
-    @property  # retorna clau privada
-    def private_key(self):
-        return self._private_key
-
-    @private_key.setter  # fiquem clau
-    def private_key(self, key):
-        self._private_key = key  # Creació de la clau privada
-        self._public_key = self._private_key.publickey()  # Creació de la clau pública que és part de la clau privada
-        self._signatura = PKCS1_v1_5.new(self._private_key)  # Signatura
+    # @property  # retorna clau privada
+    # def private_key(self):
+    #     return self._private_key
+    #
+    # @private_key.setter  # fiquem clau
+    # def private_key(self, key):
+    #     self._private_key = key  # Creació de la clau privada
+    #     self._public_key = self._private_key.publickey()  # Creació de la clau pública que és part de la clau privada
+    #     self._signatura = PKCS1_v1_5.new(self._private_key)  # Signatura
 
 
 class Document:
@@ -49,7 +50,6 @@ class Document:
         self.id_tipus = id_tipus
         self.usuari = usuari
         self.pdf = pdf
-
 
 
 class Universitat(Usuari):
@@ -245,3 +245,16 @@ class BlockchainUniversity:
         self.afegir_bloc(new_bloc, hash_actual)
         self.transaccio_noconfirmades = []
         return new_bloc.index
+
+class Interaccio:
+
+
+    def creacio_key():
+        key = RSA.generate(2048)
+        return self._private_key
+
+
+    def private_key(self, key):
+        self._private_key = key  # Creació de la clau privada
+        self._public_key = self._private_key.publickey()  # Creació de la clau pública que és part de la clau privada
+        self._signatura = PKCS1_v1_5.new(self._private_key)  # Signatura

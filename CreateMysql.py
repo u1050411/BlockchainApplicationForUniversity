@@ -19,6 +19,7 @@ class MySqlBloc:
 
     def executar_sql(self, line):
         self.miCursor.execute(line)
+        self.miConexio.commit()
 
     def tancar(self):
         self.miCursor.close()
