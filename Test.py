@@ -3,7 +3,7 @@ import unittest
 import mysql.connector
 from CreateMysql import MySqlBloc
 from BlockchainUniversity import Usuari, Universitat, Estudiant, Transaccio, Professor, TransaccioProfessor, Bloc, \
-    BlockchainUniversity
+    BlockchainUniversity, Interaccio
 
 
 class TestUsuaris(unittest.TestCase):
@@ -150,8 +150,8 @@ class TestMysql(unittest.TestCase):
 
     def test_create_usuari(self):
         mydb = MySqlBloc()
-        mydb.afegir_schema('blockchainuniversity')
-        line = "INSERT INTO usuari (`id`, `nom`) VALUES ('1050412', 'Pere')"
+        mydb.afegir_schema('blockchainuniversity2')
+        line = "INSERT INTO usuari (`id`, `nom`) VALUES ('1050411', 'Pau')"
         mydb.executar_sql(line)
         line = "INSERT INTO usuari (`id`, `nom`) VALUES ('1050412', 'Pere')"
         mydb.executar_sql(line)
@@ -162,4 +162,7 @@ class TestMysql(unittest.TestCase):
         mydb = MySqlBloc()
         mydb.executar_sql("DROP DATABASE `blockchainuniversity2`")
         mydb.tancar()
+
+    def test_creacio_key(self):
+        Interaccio.creacio_key(1050412)
 

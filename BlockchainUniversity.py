@@ -8,7 +8,11 @@ from Crypto import Random
 from Crypto.Hash import SHA1
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
+
 # from pandas.io import json
+from nacl.encoding import Base64Encoder
+
+from CreateMysql import MySqlBloc
 
 UTF_8 = 'utf8'
 
@@ -240,19 +244,39 @@ class BlockchainUniversity:
         index = ultim_bloc.index + 1
         transactions = self.transaccio_noconfirmades
         hash_anterior = ultim_bloc.calcular_hash()
-        new_bloc = Bloc(index, hash_anterior, transactions,)
+        new_bloc = Bloc(index, hash_anterior, transactions, )
         hash_actual = self.hash_correcte
         self.afegir_bloc(new_bloc, hash_actual)
         self.transaccio_noconfirmades = []
         return new_bloc.index
 
+
 class Interaccio:
 
-
-    def creacio_key():
+    @staticmethod
+    def creacio_key(id_usuari):
+        # try:
         key = RSA.generate(2048)
-        return self._private_key
+        key_string = key.exportKey('PEM')
+        key_string2 = f"{key_string}"
+        key_string3 = "Prova"
+        # sql = f'INSERT INTO private_key (id_usuari, key) VALUES ({id_usuari}, {key_string})'
 
+        sql = f"INSERT INTO `private_key` (`id_usuari`, `key`) VALUES ({id_usuari}, '{key_string}')"
+        # sql = "INSERT INTO `private_key` (`id_usuari`, `key`) VALUES (%i, %s)"
+        dades = (id_usuari, key_string3)
+        # sql = ("INSERT INTO private_key (id_usuari, key) VALUES (%i , %s)", (id_usuari, key_string))
+
+        mydb = MySqlBloc()
+        mydb.afegir_schema('blockchainuniversity')
+        mydb.executar_sql(sql)
+        # columnes = "INSERT INTO private_key (id_usuari, key) VALUES (%s, %s)"
+        # dades = (id_usuari, key_string)
+        # mydb.executar_sql(sql, dades)
+        # except mydb.connector.Error as error:
+        #     print("Failed to insert into MySQL table {}".format(error))
+        # finally:
+        return key
 
     def private_key(self, key):
         self._private_key = key  # Creació de la clau privada

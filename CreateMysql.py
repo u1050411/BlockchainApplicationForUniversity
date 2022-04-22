@@ -10,15 +10,19 @@ class MySqlBloc:
     def create_schema(self, nom):
         line = "CREATE DATABASE "+nom
         self.miCursor.execute(line)
-        self.miConexio = mysql.connector.connect(host='localhost', user='root', passwd='root', db=nom, charset="utf8mb4")
+        self.miConexio = mysql.connector.connect(host='localhost', user='root', passwd='root', db=nom)
         self.miCursor = self.miConexio.cursor()
 
     def afegir_schema(self, nom):
         self.miConexio = mysql.connector.connect(host='localhost', user='root', passwd='root', db=nom)
         self.miCursor = self.miConexio.cursor()
 
-    def executar_sql(self, line):
-        self.miCursor.execute(line)
+    def executar_sql(self, columnes, dades):
+        self.miCursor.execute(columnes, dades)
+        self.miConexio.commit()
+
+    def executar_sql(self, sql):
+        self.miCursor.execute(sql)
         self.miConexio.commit()
 
     def tancar(self):
