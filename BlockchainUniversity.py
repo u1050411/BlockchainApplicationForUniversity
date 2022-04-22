@@ -255,27 +255,12 @@ class Interaccio:
 
     @staticmethod
     def creacio_key(id_usuari):
-        # try:
         key = RSA.generate(2048)
-        key_string = key.exportKey('PEM')
-        key_string2 = f"{key_string}"
-        key_string3 = "Prova"
-        # sql = f'INSERT INTO private_key (id_usuari, key) VALUES ({id_usuari}, {key_string})'
-
-        sql = f"INSERT INTO `private_key` (`id_usuari`, `key`) VALUES ({id_usuari}, '{key_string}')"
-        # sql = "INSERT INTO `private_key` (`id_usuari`, `key`) VALUES (%i, %s)"
-        dades = (id_usuari, key_string3)
-        # sql = ("INSERT INTO private_key (id_usuari, key) VALUES (%i , %s)", (id_usuari, key_string))
-
+        key_string3 = key.exportKey('PEM')
+        sql = f'INSERT INTO private_key (`id_usuari`, `key`) VALUES({id_usuari}, "{key_string3}")'
         mydb = MySqlBloc()
         mydb.afegir_schema('blockchainuniversity')
         mydb.executar_sql(sql)
-        # columnes = "INSERT INTO private_key (id_usuari, key) VALUES (%s, %s)"
-        # dades = (id_usuari, key_string)
-        # mydb.executar_sql(sql, dades)
-        # except mydb.connector.Error as error:
-        #     print("Failed to insert into MySQL table {}".format(error))
-        # finally:
         return key
 
     def private_key(self, key):

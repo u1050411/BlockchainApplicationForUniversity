@@ -122,7 +122,7 @@ class TestMysql(unittest.TestCase):
 
     def test_my_create_table(self):
         mydb = MySqlBloc()
-        mydb.afegir_schema('blockchainuniversity2')
+        mydb.afegir_schema('blockchainuniversity')
         line = ("CREATE TABLE `usuari` ("
                 "`id` int NOT NULL,"
                 "`public_key` varchar(45) DEFAULT NULL,"
@@ -138,12 +138,12 @@ class TestMysql(unittest.TestCase):
         mydb.executar_sql(line)
         line = ("CREATE TABLE `private_key` ("
                 "`id_usuari` INT NOT NULL,"
-                "`key` BINARY(128) NULL,"
+                "`key` longtext NULL,"
                 "PRIMARY KEY (`id_usuari`))")
         mydb.executar_sql(line)
         line = ("CREATE TABLE `public_key` ("
                 "`id_usuari` INT NOT NULL,"
-                "`key` BINARY(128) NULL,"
+                "`key` longtext NULL,"
                 "PRIMARY KEY (`id_usuari`))")
         mydb.executar_sql(line)
         mydb.tancar()
