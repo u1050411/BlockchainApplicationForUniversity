@@ -117,8 +117,25 @@ class TestBlockchainUniversity(unittest.TestCase):
 
 class TestMysql(unittest.TestCase):
 
-    @staticmethod
-    def test_my_create():
+    def test_create_schema(self):
         mydb = MySqlBloc()
-        mydb.afegir_schema('blockchainuniversity2')
-        mydb.create_tables()
+        mydb.create_schema('blockchainuniversity')
+        mydb.tancar()
+
+    def test_my_create_table(self):
+        mydb = MySqlBloc()
+        mydb.afegir_schema('blockchainuniversity')
+        line = ("CREATE TABLE `usuari` ("
+                "`id` int NOT NULL,"
+                "`public_key` varchar(45) DEFAULT NULL,"
+                "`nom` varchar(45) DEFAULT NULL,"
+                "PRIMARY KEY (`id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci")
+        mydb.executar_sql(line)
+        mydb.executar_sql()
+        mydb.tancar()
+
+    def test_drop_schema(self):
+        mydb = MySqlBloc()
+        mydb.executar_sql("DROP DATABASE `blockchainuniversity2`")
+        mydb.tancar()
+

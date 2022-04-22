@@ -42,6 +42,16 @@ class Usuari:
         self._signatura = PKCS1_v1_5.new(self._private_key)  # Signatura
 
 
+class Document:
+
+    def __init__(self, id_document, id_tipus, usuari, pdf):
+        self.id_document = id_document
+        self.id_tipus = id_tipus
+        self.usuari = usuari
+        self.pdf = pdf
+
+
+
 class Universitat(Usuari):
     pass
 
