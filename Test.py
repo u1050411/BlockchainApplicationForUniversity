@@ -119,26 +119,25 @@ class TestMysql(unittest.TestCase):
 
     def test_create_schema(self):
         mydb = MySqlBloc()
-        mydb.create_schema('blockchainuniversity')
+        mydb.create_schema('blockchainuniversity2')
         mydb.tancar()
 
     def test_my_create_table(self):
         mydb = MySqlBloc()
-        mydb.afegir_schema('blockchainuniversity')
+        mydb.afegir_schema('blockchainuniversity2')
         line = ("CREATE TABLE `usuari` ("
                 "`id` int NOT NULL,"
                 "`public_key` varchar(45) DEFAULT NULL,"
                 "`nom` varchar(45) DEFAULT NULL,"
                 "PRIMARY KEY (`id`)) ")
         mydb.executar_sql(line)
-        line = ("CREATE TABLE `blockchainuniversity`.`documents` ("
+        line = ("CREATE TABLE `documents` ("
                 "`id` INT NOT NULL,"
                 "`id_tipus` INT NULL,"
                 "`id_usuari` INT NULL,"
                 "`pdf` BINARY(64) NULL,"
                 "PRIMARY KEY (`id`))")
         mydb.executar_sql(line)
-        mydb.executar_sql()
         mydb.tancar()
 
     def test_drop_schema(self):
