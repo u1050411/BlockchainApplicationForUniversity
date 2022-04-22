@@ -129,7 +129,14 @@ class TestMysql(unittest.TestCase):
                 "`id` int NOT NULL,"
                 "`public_key` varchar(45) DEFAULT NULL,"
                 "`nom` varchar(45) DEFAULT NULL,"
-                "PRIMARY KEY (`id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci")
+                "PRIMARY KEY (`id`)) ")
+        mydb.executar_sql(line)
+        line = ("CREATE TABLE `blockchainuniversity`.`documents` ("
+                "`id` INT NOT NULL,"
+                "`id_tipus` INT NULL,"
+                "`id_usuari` INT NULL,"
+                "`pdf` BINARY(64) NULL,"
+                "PRIMARY KEY (`id`))")
         mydb.executar_sql(line)
         mydb.executar_sql()
         mydb.tancar()
