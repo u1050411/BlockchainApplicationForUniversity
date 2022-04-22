@@ -17,13 +17,16 @@ class MySqlBloc:
         self.miConexio = mysql.connector.connect(host='localhost', user='root', passwd='root', db=nom)
         self.miCursor = self.miConexio.cursor()
 
-    def executar_sql(self, columnes, dades):
-        self.miCursor.execute(columnes, dades)
-        self.miConexio.commit()
+    # def executar_sql(self, columnes, dades):
+    #     self.miCursor.execute(columnes, dades)
+    #     self.miConexio.commit()
 
-    def executar_sql(self, sql):
+    def exportar_sql(self, sql):
         self.miCursor.execute(sql)
         self.miConexio.commit()
+
+    def importar_sql(self, sql):
+        self.miCursor.execute(sql)
 
     def tancar(self):
         self.miCursor.close()

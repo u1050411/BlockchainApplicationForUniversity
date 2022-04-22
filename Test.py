@@ -128,41 +128,41 @@ class TestMysql(unittest.TestCase):
                 "`public_key` varchar(45) DEFAULT NULL,"
                 "`nom` varchar(45) DEFAULT NULL,"
                 "PRIMARY KEY (`id`)) ")
-        mydb.executar_sql(line)
+        mydb.exportar_sql(line)
         line = ("CREATE TABLE `documents` ("
                 "`id` INT NOT NULL,"
                 "`id_tipus` INT NULL,"
                 "`id_usuari` INT NULL,"
                 "`pdf` BINARY(64) NULL,"
                 "PRIMARY KEY (`id`))")
-        mydb.executar_sql(line)
+        mydb.exportar_sql(line)
         line = ("CREATE TABLE `private_key` ("
                 "`id_usuari` INT NOT NULL,"
-                "`key` longtext NULL,"
+                "`private_key` longtext NULL,"
                 "PRIMARY KEY (`id_usuari`))")
-        mydb.executar_sql(line)
+        mydb.exportar_sql(line)
         line = ("CREATE TABLE `public_key` ("
                 "`id_usuari` INT NOT NULL,"
-                "`key` longtext NULL,"
+                "`public_key` longtext NULL,"
                 "PRIMARY KEY (`id_usuari`))")
-        mydb.executar_sql(line)
+        mydb.exportar_sql(line)
         mydb.tancar()
 
     def test_create_usuari(self):
         mydb = MySqlBloc()
         mydb.afegir_schema('blockchainuniversity2')
         line = "INSERT INTO usuari (`id`, `nom`) VALUES ('1050411', 'Pau')"
-        mydb.executar_sql(line)
+        mydb.exportar_sql(line)
         line = "INSERT INTO usuari (`id`, `nom`) VALUES ('1050412', 'Pere')"
-        mydb.executar_sql(line)
+        mydb.exportar_sql(line)
         line = "INSERT INTO usuari (`id`, `nom`) VALUES ('1050413', 'Joan')"
-        mydb.executar_sql(line)
+        mydb.exportar_sql(line)
 
     def test_drop_schema(self):
         mydb = MySqlBloc()
-        mydb.executar_sql("DROP DATABASE `blockchainuniversity2`")
+        mydb.exportar_sql("DROP DATABASE `blockchainuniversity2`")
         mydb.tancar()
 
     def test_creacio_key(self):
-        Interaccio.creacio_key(1050412)
+        self.assertEqual(Interaccio.creacio_key(1050402), True)
 

@@ -2,6 +2,7 @@ import binascii
 import collections
 import hashlib
 import json
+from base64 import b64decode
 from datetime import datetime
 
 from Crypto import Random
@@ -257,11 +258,19 @@ class Interaccio:
     def creacio_key(id_usuari):
         key = RSA.generate(2048)
         key_string3 = key.exportKey('PEM')
-        sql = f'INSERT INTO private_key (`id_usuari`, `key`) VALUES({id_usuari}, "{key_string3}")'
+        sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{key_string3}")'
         mydb = MySqlBloc()
         mydb.afegir_schema('blockchainuniversity')
-        mydb.executar_sql(sql)
-        return key
+        mydb.exportar_sql(sql)
+        sql2 = f'select private_key from private_key where id_usuari = {id_usuari}'
+        mydb.importar_sql(sql2)
+        key64 = mydb.miCursor.fetchone()
+        key_der = b64decode(key64[0])
+        key_pub = RSA.importKey(key_der)
+        result = 0
+        if key == key_pub:
+            result = 1
+        return result
 
     def private_key(self, key):
         self._private_key = key  # Creació de la clau privada
