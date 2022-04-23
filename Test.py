@@ -5,7 +5,7 @@ from Crypto.PublicKey import RSA
 
 from CreateMysql import MySqlBloc
 from BlockchainUniversity import Usuari, Universitat, Estudiant, Transaccio, Professor, TransaccioProfessor, Bloc, \
-    BlockchainUniversity, Interaccio
+    BlockchainUniversity
 
 
 class TestUsuaris(unittest.TestCase):
@@ -15,19 +15,6 @@ class TestUsuaris(unittest.TestCase):
         print(udg.nom)
         print(udg.identity)
         print(udg.private_key)
-
-    def test_mysql(self):
-        print
-        "Resultados de mysql.connector:"
-        miConexion = mysql.connector.connect(host='localhost', user='root', passwd='root', db='blockchainuniversity')
-        cur = miConexion.cursor()
-        cur.execute("SELECT id, nom FROM usuari")
-        for (id, nom) in cur:
-            print("{}, {} ".format(
-                id, nom))
-        cur.close()
-        miConexion.close()
-
 
 class TestUniversitat(unittest.TestCase):
     pass
@@ -117,76 +104,82 @@ class TestBlockchainUniversity(unittest.TestCase):
 
 class TestMysql(unittest.TestCase):
 
-    def test_create_schema(self):
-        mydb = MySqlBloc()
-        mydb.create_schema('blockchainuniversity')
-        self.test_my_create_table()
-        mydb.tancar()
+    Mydb = MySqlBloc()
 
-    def test_my_create_table(self):
-        mydb = MySqlBloc()
-        mydb.afegir_schema('blockchainuniversity')
+    def test_drop_schema(self, nom_schema):
+        sql = f"DROP DATABASE `{nom_schema}`"
+        TestMysql.Mydb.exportar_sql(sql)
+        TestMysql.Mydb.tancar()
+
+    def test_create_schema(self, nom_schema):
+        TestMysql.Mydb.create_schema(nom_schema)
+        TestMysql.Mydb.tancar()
+
+    def test_my_create_table(self, nom_schema):
+        TestMysql.Mydb.afegir_schema(nom_schema)
         line = ("CREATE TABLE `usuari` ("
                 "`id` int NOT NULL,"
                 "`public_key` varchar(45) DEFAULT NULL,"
                 "`nom` varchar(45) DEFAULT NULL,"
                 "PRIMARY KEY (`id`)) ")
-        mydb.exportar_sql(line)
+        TestMysql.Mydb.exportar_sql(line)
         line = ("CREATE TABLE `documents` ("
                 "`id` INT NOT NULL,"
                 "`id_tipus` INT NULL,"
                 "`id_usuari` INT NULL,"
                 "`pdf` BINARY(64) NULL,"
                 "PRIMARY KEY (`id`))")
-        mydb.exportar_sql(line)
+        TestMysql.Mydb.exportar_sql(line)
         line = ("CREATE TABLE `private_key` ("
                 "`id_usuari` INT NOT NULL,"
                 "`private_key` longtext NULL,"
                 "PRIMARY KEY (`id_usuari`))")
-        mydb.exportar_sql(line)
+        TestMysql.Mydb.exportar_sql(line)
         line = ("CREATE TABLE `public_key` ("
                 "`id_usuari` INT NOT NULL,"
                 "`public_key` longtext NULL,"
                 "PRIMARY KEY (`id_usuari`))")
-        mydb.exportar_sql(line)
-        mydb.tancar()
+        TestMysql.Mydb.exportar_sql(line)
+        TestMysql.Mydb.tancar()
 
-    def test_create_usuari(self):
-        mydb = MySqlBloc()
-        mydb.afegir_schema('blockchainuniversity')
-        line = "INSERT INTO usuari (`id`, `nom`) VALUES (1050411, 'Pau')"
-        id_usuari = 1050411
-        id_nom = 'Pau'
-        sql = f'INSERT INTO usuari (`id`, `nom`) VALUES({id_usuari}, "{id_nom}")'
-        mydb.exportar_sql(sql)
+    def test_create_usuari(self, nom_schema, id_usuari, nom):
+        TestMysql.Mydb.afegir_schema(nom_schema)
+        sql = f'INSERT INTO usuari (`id`, `nom`) VALUES({id_usuari}, "{nom}")'
+        TestMysql.Mydb.exportar_sql(sql)
         key = RSA.generate(1024)
         private_key = key.exportKey('PEM').decode('ascii')
         public_key = key.publickey()
         string_key = public_key.exportKey('PEM').decode('ascii')
         sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{private_key}")'
-        mydb.exportar_sql(sql)
+        TestMysql.Mydb.exportar_sql(sql)
         sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{string_key}")'
-        mydb.exportar_sql(sql)
-
-    def test_drop_schema(self):
-        mydb = MySqlBloc()
-        mydb.exportar_sql("DROP DATABASE `blockchainuniversity`")
-        mydb.tancar()
-
-    def test_creacio_key(self):
-        self.assertEqual(Interaccio.creacio_key(1050404), True)
+        TestMysql.Mydb.exportar_sql(sql)
+        
+    def test_create_usuaris(self, nom_schema):
+        id_usuari = 1050411
+        nom = 'Pau'
+        self.test_create_usuari(nom_schema, id_usuari, nom)
+        id_usuari = 1050401
+        nom = 'Pere'
+        self.test_create_usuari(nom_schema, id_usuari, nom)
+        id_usuari = 1050402
+        nom = 'Joan'
+        self.test_create_usuari(nom_schema, id_usuari, nom)
+    
+    def test_create_blockChain_all(self, nom_schema):
+        if TestMysql.Mydb.existeix(nom_schema, "", "", ""):
+            self.test_drop_schema(nom_schema)
+        self.test_create_schema(nom_schema)
+        self.test_my_create_table(nom_schema)
+        self.test_create_usuaris(nom_schema)
 
     def test_existeix(self):
-        mydb = MySqlBloc()
-        self.assertEqual(mydb.existeix('private_key', 'id_usuari', 1050404), True)
-        self.assertEqual(mydb.existeix('private_key', 'id_usuari', 5050404), False)
+        self.assertEqual(TestMysql.Mydb.existeix('private_key', 'id_usuari', 1050404), True)
+        self.assertEqual(TestMysql.Mydb.existeix('private_key', 'id_usuari', 5050404), False)
 
     def test_clau_(self):
         id_usuari = 1050411
-        mydb = MySqlBloc()
-        mydb.afegir_schema('blockchainuniversity')
-        privat_key = mydb.clau_privada(id_usuari)
-        public_key = mydb.clau_publica(id_usuari)
+        TestMysql.Mydb.afegir_schema('blockchainuniversity')
+        privat_key = TestMysql.Mydb.clau_privada(id_usuari)
+        public_key = TestMysql.Mydb.clau_publica(id_usuari)
         self.assertTrue(privat_key.public_key(), public_key)
-
-
