@@ -128,9 +128,9 @@ class TestMysql(unittest.TestCase):
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', None, None, None), True)
         self.assertEqual(self.mydb.existeix('noSchema', None, None, None), False)
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', None, None), True)
-        self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'noTaula', None, None), False)
+        self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'no_Taula', None, None), False)
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'public_key', None), True)
-        self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'noColumna', None), False)
+        self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'no_Columna', None), False)
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'id', '1050401'), True)
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'id', '1070401'), False)
 

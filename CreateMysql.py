@@ -50,7 +50,7 @@ class MySqlBloc:
         self._cursor.execute(sql)
 
     def guardar_usuari(self, id_usuari, nom):
-        sql = f'INSERT INTO usuari (`id`, `nom`) VALUES({id_usuari}, "{nom}")create table usuari(    id            int null,    nom           int null,    missing_value int null);'
+        sql = f'INSERT INTO usuari (`id`, `nom`) VALUES({id_usuari}, "{nom}")'
         self.exportar_sql(sql)
         key = RSA.generate(1024)
         private_key = key.exportKey('PEM').decode('ascii')
@@ -64,7 +64,7 @@ class MySqlBloc:
     def esborrar_schema(self, schema):
         if self.existeix(schema, None, None, None):
             sql = f"DROP DATABASE `{schema}`"
-            self.mydb.exportar_sql(sql)
+            self.exportar_sql(sql)
 
     def tancar(self):
         self._cursor.close()
@@ -101,7 +101,7 @@ class MySqlBloc:
 class CreacioInicial(MySqlBloc):
 
     def __init__(self, schema):
-        super().__init__(self)
+        super().__init__()
         self.afegir_schema(schema)
         self.schema = schema
 
@@ -143,7 +143,7 @@ class CreacioInicial(MySqlBloc):
 
     def emplenar_schema(self):
         if self.existeix(self.schema, None, None, None):
-            self.esborrar(self.schema)
+            self.esborrar_schema(self.schema)
         self.crear_schema(self.schema)
         self.crear_taules()
         self.crear_usuaris()
