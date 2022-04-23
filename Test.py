@@ -164,5 +164,10 @@ class TestMysql(unittest.TestCase):
         mydb.tancar()
 
     def test_creacio_key(self):
-        self.assertEqual(Interaccio.creacio_key(1050402), True)
+        self.assertEqual(Interaccio.creacio_key(1050404), True)
+
+    def test_existeix(self):
+        mydb = MySqlBloc()
+        self.assertEqual(mydb.existeix('private_key', 'id_usuari', 1050404), True)
+        self.assertEqual(mydb.existeix('private_key', 'id_usuari', 5050404), False)
 

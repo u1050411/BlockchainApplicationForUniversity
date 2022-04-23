@@ -35,17 +35,7 @@ class Usuari:
 
     @property  # retorna clau publica
     def identity(self):
-        return binascii.hexlify(self._public_key.exportKey(format='DER')).decode('ascii')
-
-    # @property  # retorna clau privada
-    # def private_key(self):
-    #     return self._private_key
-    #
-    # @private_key.setter  # fiquem clau
-    # def private_key(self, key):
-    #     self._private_key = key  # Creació de la clau privada
-    #     self._public_key = self._private_key.publickey()  # Creació de la clau pública que és part de la clau privada
-    #     self._signatura = PKCS1_v1_5.new(self._private_key)  # Signatura
+        return binascii.hexlify(self._public_key.exportKey(format='PEM')).decode('ascii')
 
 
 class Document:
@@ -252,21 +242,51 @@ class BlockchainUniversity:
         return new_bloc.index
 
 
-class Interaccio:
+class Interaccio(Usuari):
+
+    def __init__(self, id_usuari, nom, priv_key):
+        super().__init__(id_usuari, nom)
+        if priv_key is None:
+            self.private_key = self.private_key()
+        else:
+            self.private_key = priv_key
+        self.generar_key(self.private_key)
+        self._private_key = priv_key
+        self._signatura = None  # Signatura
+
+    @property  # retorna clau privada
+    def private_key(self):
+        mydb = MySqlBloc()
+        mydb.afegir_schema('blockchainuniversity')
+        sql2 = f'select private_key from private_key where id_usuari = {self.id} LIMIT 1'
+        mydb.importar_sql(sql2)
+        key64 = mydb.miCursor.fetchone()
+        if self.private_key is None:
+            pass
+
+    @staticmethod
+    def generar_key(self, key):
+        self._private_key = key  # Creació de la clau privada
+        self._public_key = self._private_key.publickey()  # Creació de la clau pública que és part de la clau privada
+        self._signatura = PKCS1_v1_5.new(self._private_key)  # Signatura
+
+        def sign(self, data):
+            h = SHA1.new(data)
+            return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
 
     @staticmethod
     def creacio_key(id_usuari):
-        key = RSA.generate(2048)
-        key_string3 = key.exportKey('PEM')
-        sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{key_string3}")'
+        key = RSA.generate(1024)
+        key_string = key.exportKey('PEM').decode('ascii')
+        sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{key_string}")'
         mydb = MySqlBloc()
         mydb.afegir_schema('blockchainuniversity')
         mydb.exportar_sql(sql)
-        sql2 = f'select private_key from private_key where id_usuari = {id_usuari}'
+        sql2 = f'select private_key from private_key where id_usuari = {id_usuari} LIMIT 1'
         mydb.importar_sql(sql2)
         key64 = mydb.miCursor.fetchone()
-        key_der = b64decode(key64[0])
-        key_pub = RSA.importKey(key_der)
+        key_der_string = key64[0]
+        key_pub = RSA.importKey(key_der_string)
         result = 0
         if key == key_pub:
             result = 1
