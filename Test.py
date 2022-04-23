@@ -1,11 +1,8 @@
 import unittest
 
-import mysql.connector
-from Crypto.PublicKey import RSA
-
-from CreateMysql import MySqlBloc, CreacioInicial
-from BlockchainUniversity import Usuari, Universitat, Estudiant, Transaccio, Professor, TransaccioProfessor, Bloc, \
+from BlockchainUniversity import Universitat, Estudiant, Transaccio, Professor, TransaccioProfessor, Bloc, \
     BlockchainUniversity
+from CreateMysql import MySqlBloc, CreacioInicial
 
 
 class TestUsuaris(unittest.TestCase):
@@ -111,10 +108,10 @@ class TestMysql(unittest.TestCase):
     def tearDown(self):
         self.mydb.tancar()
 
-    def test_drop_schema(self):
+    def test_esborrar_schema(self):
         self.mydb.esborrar_schema('BlockchainUniversity')
 
-    def test_create_schema(self):
+    def test_crear_schema(self):
         self.mydb.crear_schema('BlockchainUniversity')
 
     def test_guardar_usuari(self):
