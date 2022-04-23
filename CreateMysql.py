@@ -102,8 +102,9 @@ class CreacioInicial(MySqlBloc):
 
     def __init__(self, schema):
         super().__init__()
-        self.afegir_schema(schema)
-        self.schema = schema
+        if self.existeix(schema, None, None, None):
+            self.esborrar_schema(schema)
+        self.crear_schema(schema)
 
     def crear_taules(self):
         sql = ("CREATE TABLE `usuari` ("
@@ -142,8 +143,5 @@ class CreacioInicial(MySqlBloc):
         self.guardar_usuari(id_usuari, nom)
 
     def emplenar_schema(self):
-        if self.existeix(self.schema, None, None, None):
-            self.esborrar_schema(self.schema)
-        self.crear_schema(self.schema)
         self.crear_taules()
         self.crear_usuaris()

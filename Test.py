@@ -115,6 +115,8 @@ class TestMysql(unittest.TestCase):
         self.mydb.crear_schema('BlockchainUniversity')
 
     def test_guardar_usuari(self):
+        creacio = CreacioInicial('BlockchainUniversity')
+        creacio.crear_taules()
         self.mydb = MySqlBloc()
         self.mydb.afegir_schema('BlockchainUniversity')
         id_usuari = 1050411
@@ -122,6 +124,8 @@ class TestMysql(unittest.TestCase):
         self.mydb.guardar_usuari(id_usuari, nom)
 
     def test_existeix(self):
+        creacio = CreacioInicial('BlockchainUniversity')
+        creacio.emplenar_schema()
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', None, None, None), True)
         self.assertEqual(self.mydb.existeix('noSchema', None, None, None), False)
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', None, None), True)
