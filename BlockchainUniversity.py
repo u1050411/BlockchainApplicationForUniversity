@@ -48,6 +48,10 @@ class Document:
 
 
 class Universitat(Usuari):
+    def __init__(self, id_usuari, nom):
+        super().__init__(id_usuari, nom)
+        self.private_key = None
+
     pass
 
 

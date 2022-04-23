@@ -5,53 +5,145 @@ from Crypto.PublicKey import RSA
 class MySqlBloc:
 
     def __init__(self):
-        self.miConexio = mysql.connector.connect(host='localhost', user='root', passwd='root')
-        self.miCursor = self.miConexio.cursor()
+        self._conexio = mysql.connector.connect(host='localhost', user='root', passwd='root')
+        self._cursor = self._conexio.cursor()
 
-    def create_schema(self, nom):
-        line = "CREATE DATABASE " + nom
-        self.miCursor.execute(line)
-        self.miConexio = mysql.connector.connect(host='localhost', user='root', passwd='root', db=nom)
-        self.miCursor = self.miConexio.cursor()
+    @property
+    def conexio(self):
+        return self._conexio
 
-    def afegir_schema(self, nom):
-        self.miConexio = mysql.connector.connect(host='localhost', user='root', passwd='root', db=nom)
-        self.miCursor = self.miConexio.cursor()
+    @conexio.setter
+    def conexio(self, conexio):
+        self._conexio = conexio
+
+    @property
+    def cursor(self):
+        return self._cursor
+
+    @conexio.setter
+    def cursor(self, cursor):
+        self._cursor = cursor
+
+    def crear_schema(self, schema):
+        if not self.existeix(schema, None, None, None):
+            line = "CREATE DATABASE " + schema
+            self._cursor.execute(line)
+            self._conexio = mysql.connector.connect(host='localhost', user='root', passwd='root', db=schema)
+            self._cursor = self._conexio.cursor()
+
+    def afegir_schema(self, schema):
+        self._conexio = mysql.connector.connect(host='localhost', user='root', passwd='root', db=schema)
+        self._cursor = self._conexio.cursor()
 
     def executar_sql(self, columnes, dades):
-        self.miCursor.execute(columnes, dades)
-        self.miConexio.commit()
+        self._cursor.execute(columnes, dades)
+        self._conexio.commit()
 
     def select_sql(self, sql):
-        self.miCursor.execute(sql)
+        self._cursor.execute(sql)
 
     def exportar_sql(self, sql):
-        self.miCursor.execute(sql)
-        self.miConexio.commit()
+        self._cursor.execute(sql)
+        self._conexio.commit()
 
     def importar_sql(self, sql):
-        self.miCursor.execute(sql)
+        self._cursor.execute(sql)
+
+    def guardar_usuari(self, id_usuari, nom):
+        sql = f'INSERT INTO usuari (`id`, `nom`) VALUES({id_usuari}, "{nom}")create table usuari(    id            int null,    nom           int null,    missing_value int null);'
+        self.exportar_sql(sql)
+        key = RSA.generate(1024)
+        private_key = key.exportKey('PEM').decode('ascii')
+        public_key = key.publickey()
+        string_key = public_key.exportKey('PEM').decode('ascii')
+        sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{private_key}")'
+        self.exportar_sql(sql)
+        sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{string_key}")'
+        self.exportar_sql(sql)
+
+    def esborrar_schema(self, schema):
+        if self.existeix(schema, None, None, None):
+            sql = f"DROP DATABASE `{schema}`"
+            self.mydb.exportar_sql(sql)
 
     def tancar(self):
-        self.miCursor.close()
-        self.miConexio.close()
+        self._cursor.close()
+        self._conexio.close()
 
-    # Retorna si existeix la dada a la db
-    def existeix(self, taula, columna, dada):
-        sql = f'select {columna} from {taula} where {columna} = {dada} LIMIT 1'
-        self.afegir_schema('blockchainuniversity')
+    # Retorna si existeix la dada
+    def existeix(self, schema, taula, columna, dada):
+        if taula is None:
+            sql = f"SHOW DATABASES like '{schema}'"
+        else:
+            self.afegir_schema(schema)
+            if columna is None:
+                sql = f"SHOW TABLES like '{taula}'"
+            elif dada is None:
+                sql = f"SHOW COLUMNS FROM {taula} WHERE Field = '{columna}'"
+            else:
+                sql = f"select {columna} from {taula} where {columna} = {dada} LIMIT 1"
         self.select_sql(sql)
-        return self.miCursor.fetchone() is not None
+        return self._cursor.fetchone() is not None
 
     def clau_privada(self, id_usuari):
         sql = f'select private_key from private_key where id_usuari = {id_usuari} LIMIT 1'
         self.importar_sql(sql)
-        clau_string = self.miCursor.fetchone()[0]
+        clau_string = self._cursor.fetchone()[0]
         return RSA.importKey(clau_string)
 
     def clau_publica(self, id_usuari):
         sql = f'select public_key from public_key where id_usuari = {id_usuari} LIMIT 1'
         self.importar_sql(sql)
-        clau_string = self.miCursor.fetchone()[0]
+        clau_string = self._cursor.fetchone()[0]
         return RSA.importKey(clau_string)
 
+
+class CreacioInicial(MySqlBloc):
+
+    def __init__(self, schema):
+        super().__init__(self)
+        self.afegir_schema(schema)
+        self.schema = schema
+
+    def crear_taules(self):
+        sql = ("CREATE TABLE `usuari` ("
+                "`id` int NOT NULL,"
+                "`public_key` varchar(45) DEFAULT NULL,"
+                "`nom` varchar(45) DEFAULT NULL,"
+                "PRIMARY KEY (`id`)) ")
+        self.exportar_sql(sql)
+        sql = ("CREATE TABLE `documents` ("
+                "`id` INT NOT NULL,"
+                "`id_tipus` INT NULL,"
+                "`id_usuari` INT NULL,"
+                "`pdf` BINARY(64) NULL,"
+                "PRIMARY KEY (`id`))")
+        self.exportar_sql(sql)
+        sql = ("CREATE TABLE `private_key` ("
+                "`id_usuari` INT NOT NULL,"
+                "`private_key` longtext NULL,"
+                "PRIMARY KEY (`id_usuari`))")
+        self.exportar_sql(sql)
+        sql = ("CREATE TABLE `public_key` ("
+                "`id_usuari` INT NOT NULL,"
+                "`public_key` longtext NULL,"
+                "PRIMARY KEY (`id_usuari`))")
+        self.exportar_sql(sql)
+
+    def crear_usuaris(self):
+        id_usuari = 1050401
+        nom = 'Pau'
+        self.guardar_usuari(id_usuari, nom)
+        id_usuari = 1050402
+        nom = 'Pere'
+        self.guardar_usuari(id_usuari, nom)
+        id_usuari = 1050403
+        nom = 'Joan'
+        self.guardar_usuari(id_usuari, nom)
+
+    def emplenar_schema(self):
+        if self.existeix(self.schema, None, None, None):
+            self.esborrar(self.schema)
+        self.crear_schema(self.schema)
+        self.crear_taules()
+        self.crear_usuaris()
