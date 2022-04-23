@@ -1,6 +1,8 @@
 import unittest
 
 import mysql.connector
+from Crypto.PublicKey import RSA
+
 from CreateMysql import MySqlBloc
 from BlockchainUniversity import Usuari, Universitat, Estudiant, Transaccio, Professor, TransaccioProfessor, Bloc, \
     BlockchainUniversity, Interaccio
@@ -117,7 +119,8 @@ class TestMysql(unittest.TestCase):
 
     def test_create_schema(self):
         mydb = MySqlBloc()
-        mydb.create_schema('blockchainuniversity2')
+        mydb.create_schema('blockchainuniversity')
+        self.test_my_create_table()
         mydb.tancar()
 
     def test_my_create_table(self):
@@ -150,17 +153,24 @@ class TestMysql(unittest.TestCase):
 
     def test_create_usuari(self):
         mydb = MySqlBloc()
-        mydb.afegir_schema('blockchainuniversity2')
-        line = "INSERT INTO usuari (`id`, `nom`) VALUES ('1050411', 'Pau')"
-        mydb.exportar_sql(line)
-        line = "INSERT INTO usuari (`id`, `nom`) VALUES ('1050412', 'Pere')"
-        mydb.exportar_sql(line)
-        line = "INSERT INTO usuari (`id`, `nom`) VALUES ('1050413', 'Joan')"
-        mydb.exportar_sql(line)
+        mydb.afegir_schema('blockchainuniversity')
+        line = "INSERT INTO usuari (`id`, `nom`) VALUES (1050411, 'Pau')"
+        id_usuari = 1050411
+        id_nom = 'Pau'
+        sql = f'INSERT INTO usuari (`id`, `nom`) VALUES({id_usuari}, "{id_nom}")'
+        mydb.exportar_sql(sql)
+        key = RSA.generate(1024)
+        private_key = key.exportKey('PEM').decode('ascii')
+        public_key = key.publickey()
+        string_key = public_key.exportKey('PEM').decode('ascii')
+        sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{private_key}")'
+        mydb.exportar_sql(sql)
+        sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{string_key}")'
+        mydb.exportar_sql(sql)
 
     def test_drop_schema(self):
         mydb = MySqlBloc()
-        mydb.exportar_sql("DROP DATABASE `blockchainuniversity2`")
+        mydb.exportar_sql("DROP DATABASE `blockchainuniversity`")
         mydb.tancar()
 
     def test_creacio_key(self):
@@ -170,4 +180,13 @@ class TestMysql(unittest.TestCase):
         mydb = MySqlBloc()
         self.assertEqual(mydb.existeix('private_key', 'id_usuari', 1050404), True)
         self.assertEqual(mydb.existeix('private_key', 'id_usuari', 5050404), False)
+
+    def test_clau_(self):
+        id_usuari = 1050411
+        mydb = MySqlBloc()
+        mydb.afegir_schema('blockchainuniversity')
+        privat_key = mydb.clau_privada(id_usuari)
+        public_key = mydb.clau_publica(id_usuari)
+        self.assertTrue(privat_key.public_key(), public_key)
+
 

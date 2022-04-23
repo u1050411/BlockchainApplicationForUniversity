@@ -43,25 +43,15 @@ class MySqlBloc:
         self.select_sql(sql)
         return self.miCursor.fetchone() is not None
 
-    # def guardar_clau(self, id_usuari, key, tipus):
-    #     # Recorda que guardar el codi privat és simplement per fer més fàcils les proves. Suprimir en el codi final
-    #     if tipus == 'privat':
-    #         tipus_key = 'private_key'
-    #     elif tipus == 'public':
-    #         tipus_key = 'public_key'
-    #
-    #     key_string = key.exportKey('PEM').decode('ascii')
-    #     sql = f'INSERT INTO private_key (`id_usuari`, `{tipus_key}`) VALUES({id_usuari}, "{key_string}")'
-    #     self.afegir_schema('blockchainuniversity')
-    #
-    #     sql = f'UPDATE `{tipus_key}` SET `{tipus_key}` = {id_usuari} WHERE(`id_usuari` = {id_usuari})'
-    #     try:
-    #         self.exportar_sql(sql)
-    #     except mysql.connector.Error as err:
-    #         print("Something went wrong: {}".format(err))
-
     def clau_privada(self, id_usuari):
         sql = f'select private_key from private_key where id_usuari = {id_usuari} LIMIT 1'
         self.importar_sql(sql)
         clau_string = self.miCursor.fetchone()[0]
         return RSA.importKey(clau_string)
+
+    def clau_publica(self, id_usuari):
+        sql = f'select public_key from public_key where id_usuari = {id_usuari} LIMIT 1'
+        self.importar_sql(sql)
+        clau_string = self.miCursor.fetchone()[0]
+        return RSA.importKey(clau_string)
+
