@@ -20,20 +20,28 @@ UTF_8 = 'utf8'
 
 class Factoria:
 
-    @classmethod
-    def usuari(cls, id_usuari):
-        retorn = None
-        mydb = MySqlBloc()
-        if mydb.existeix('BlockchainUniversity', 'usuari', 'id', id_usuari):
-            mydb.afegir_schema('BlockchainUniversity')
-            user = Usuari()
+    def __init__(self):
+        self.mydb = MySqlBloc()
+        self.id = None
+        self.nom = None
+        self.public_key = None
+
+    def users(self, id_usuari):
+        if self.mydb.existeix('BlockchainUniversity', 'usuari', 'id', id_usuari):
+            self.mydb.afegir_schema('BlockchainUniversity')
             sql = f'select * from usuari where id = {id_usuari} LIMIT 1'
-            usuari = (mydb.importar_sql(sql))
-            user.id_usuari = usuari[0]
-            user.nom = usuari[1]
-            user.public_key = mydb.clau_publica(user.id_usuari)
-            retorn = user
-        return retorn
+            usuari = (self.mydb.importar_sql(sql))
+            self.id = usuari[0]
+            self.nom = usuari[1]
+            self.public_key = self.mydb.clau_publica(user.id_usuari)
+
+    def usuari(self, id_usuari):
+        self.users(id_usuari)
+        user = Usuari()
+        user.id_usuari = self.id
+        user.nom = self.nom
+        user.public_key = self.public_key
+        return user
 
 
 class Usuari:
