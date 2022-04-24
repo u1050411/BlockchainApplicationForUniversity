@@ -1,13 +1,14 @@
 import unittest
 
 from BlockchainUniversity import Universitat, Estudiant, Transaccio, Professor, TransaccioProfessor, Bloc, \
-    BlockchainUniversity, Examen
+    BlockchainUniversity, Examen, Factoria
 from CreateMysql import MySqlBloc, CreacioInicial
 
 class TestFactoria(unittest.TestCase):
 
     def test_factoria(self):
-        Factoria.usuari('1050402')
+        usuari = Factoria.usuari('1050402')
+        print(usuari)
 
 class TestUsuaris(unittest.TestCase):
 
@@ -128,8 +129,10 @@ class TestMysql(unittest.TestCase):
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'no_Taula', None, None), False)
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'nom', None), True)
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'no_Columna', None), False)
-        self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'id', '1050401'), True)
+        self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'id', '1050411'), True)
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'id', '1070401'), False)
+        self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'private_key', 'id_usuari', '1050411'), True)
+        self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'public_key', 'id_usuari', '1050411'), True)
 
     def test_guardar_usuari(self):
         mydb = CreacioInicial('blockchainuniversity')
@@ -140,7 +143,7 @@ class TestMysql(unittest.TestCase):
 
     def test_clau(self):
         self.test_emplenar_shema()
-        id_usuari = 1050401
+        id_usuari = 1050402
         self.mydb.afegir_schema('blockchainuniversity')
         privat_key = self.mydb.clau_privada(id_usuari)
         public_key = self.mydb.clau_publica(id_usuari)

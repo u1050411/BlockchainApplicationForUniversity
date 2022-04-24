@@ -48,7 +48,7 @@ class MySqlBloc:
 
     def importar_sql(self, sql):
         self._cursor.execute(sql)
-        return self._cursor.fetchall()[0]
+        return self._cursor.fetchall()
 
     def esborrar_schema(self, schema):
         if self.existeix(schema, None, None, None):
@@ -75,14 +75,14 @@ class MySqlBloc:
         return self._cursor.fetchone() is not None
 
     def clau_privada(self, id_usuari):
-        sql = f'select private_key from private_key where id_usuari = {id_usuari} LIMIT 1'
-        self.importar_sql(sql)
+        sql = f'select `private_key` from `blockchainuniversity`.`private_key` where `id_usuari` = {id_usuari} LIMIT 1'
+        self._cursor.execute(sql)
         clau_string = self._cursor.fetchone()[0]
         return RSA.importKey(clau_string)
 
     def clau_publica(self, id_usuari):
-        sql = f'select public_key from public_key where id_usuari = {id_usuari} LIMIT 1'
-        self.importar_sql(sql)
+        sql = f'select `public_key` from `blockchainuniversity`.`public_key` where `id_usuari` = {id_usuari} LIMIT 1'
+        self._cursor.execute(sql)
         clau_string = self._cursor.fetchone()[0]
         return RSA.importKey(clau_string)
 

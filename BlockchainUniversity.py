@@ -17,20 +17,20 @@ from CreateMysql import MySqlBloc
 
 UTF_8 = 'utf8'
 
-class factoria:
 
-    def __init__(self):
-        self.mydb = MySqlBloc()
+class Factoria:
 
     @classmethod
     def usuari(self, id_usuari):
-        if self.mydb.existeix('BlockchainUniversity', 'usuari', 'id', id_usuari):
+        mydb = MySqlBloc()
+        if mydb.existeix('BlockchainUniversity', 'usuari', 'id', id_usuari):
+            mydb.afegir_schema('BlockchainUniversity')
             user = Usuari()
             sql = f'select * from usuari where id = {id_usuari} LIMIT 1'
             usuari = (mydb.importar_sql(sql))
-            user.id_usuari = usuari[0]
+            user.id = usuari[0]
             user.nom = usuari[1]
-            user.public_key = mydb.clau_publica(self.id_usuari)
+            user.public_key = mydb.clau_publica(user.id)
             retorn = user
         return retorn
 
@@ -41,7 +41,6 @@ class Usuari:
         self.id = None
         self.nom = None
         self._public_key = None  #
-
 
     # def sign(self, data):
     #     h = SHA1.new(data)
