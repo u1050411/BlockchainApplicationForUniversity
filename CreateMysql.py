@@ -130,6 +130,24 @@ class CreacioInicial(MySqlBloc):
                 "`public_key` longtext NULL,"
                 "PRIMARY KEY (`id_usuari`))")
         self.exportar_sql(sql)
+        sql = ("CREATE TABLE `examen` ("
+               "`id` INT NOT NULL,"
+               "`datai` DATETIME NULL,"
+               "`dataf` DATETIME NULL,"
+               "`id_document` INT NULL,"
+               "`id_professor` INT NULL,"
+               "PRIMARY KEY (`id`))")
+        self.exportar_sql(sql)
+        sql = ("CREATE TABLE `examen` ("
+               "`id` INT NOT NULL,"
+               "`id_estudiant` INT NULL,"
+               "PRIMARY KEY (`id`,`id_estudiant`))")
+        self.exportar_sql(sql)
+        sql = ("CREATE TABLE `tipus_document` ("
+               "`id` INT NOT NULL,"
+               "`id_estudiant` INT NULL,"
+               "PRIMARY KEY (`id`))")
+        self.exportar_sql(sql)
 
     def crear_usuaris(self):
         id_usuari = 1050401
@@ -142,6 +160,7 @@ class CreacioInicial(MySqlBloc):
         nom = 'Joan'
         self.guardar_usuari(id_usuari, nom)
 
-    def emplenar_schema(self):
+    def crear_schema_dades(self):
         self.crear_taules()
         self.crear_usuaris()
+        self.tancar()

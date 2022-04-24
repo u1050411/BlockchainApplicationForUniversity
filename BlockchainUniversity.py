@@ -3,7 +3,7 @@ import collections
 import hashlib
 import json
 from base64 import b64decode
-from datetime import datetime
+from datetime import datetime # .isoformat()
 
 from Crypto import Random
 from Crypto.Hash import SHA1
@@ -47,12 +47,14 @@ class Document:
         self.pdf = pdf
 
 
-class Universitat(Usuari):
-    def __init__(self, id_usuari, nom):
-        super().__init__(id_usuari, nom)
-        self.private_key = None
-
-    pass
+class Universitat:
+    def __init__(self, nom):
+        self.nom = nom
+        random_seed = Random.new().read
+        self._private_key = None  # Creació de la clau privada
+        self._public_key = None  # Creació de la clau pública que és part de la clau privada
+        self._signatura = None  # Signatura
+        self.private_key = RSA.generate(1024, random_seed)
 
 
 class Professor(Usuari):
@@ -244,3 +246,17 @@ class BlockchainUniversity:
         self.afegir_bloc(new_bloc, hash_actual)
         self.transaccio_noconfirmades = []
         return new_bloc.index
+
+
+class Examen:
+
+    def __init__(self, id_document, data_inicial, data_final, professor, document):
+        self.id_document = id_document
+        self.data_inicial = data_inicial
+        self.data_final = data_final
+        self.professor = professor
+        self.document = document
+        self.estudiants = []
+
+    def afegir_estudiants(self, estudiant):
+        self.estudiants.append(estudiant)

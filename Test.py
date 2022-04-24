@@ -10,8 +10,6 @@ class TestUsuaris(unittest.TestCase):
     def test_creation(self):
         udg = Universitat("Universitat de Girona")
         print(udg.nom)
-        print(udg.identity)
-        print(udg.private_key)
 
 
 class TestUniversitat(unittest.TestCase):
@@ -125,7 +123,7 @@ class TestMysql(unittest.TestCase):
 
     def test_existeix(self):
         creacio = CreacioInicial('BlockchainUniversity')
-        creacio.emplenar_schema()
+        creacio.crear_schema_dades()
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', None, None, None), True)
         self.assertEqual(self.mydb.existeix('noSchema', None, None, None), False)
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', None, None), True)
@@ -136,6 +134,8 @@ class TestMysql(unittest.TestCase):
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'id', '1070401'), False)
 
     def test_clau(self):
+        creacio = CreacioInicial('BlockchainUniversity')
+        creacio.crear_schema_dades()
         id_usuari = 1050401
         self.mydb.afegir_schema('blockchainuniversity')
         privat_key = self.mydb.clau_privada(id_usuari)
@@ -145,8 +145,7 @@ class TestMysql(unittest.TestCase):
 
 class TestCreacioInicial(unittest.TestCase):
 
-    def test_emplenarShema(self):
+    def test_emplenar_shema(self):
         mydb = CreacioInicial('blockchainuniversity')
-        mydb.emplenar_schema()
-
+        mydb.crear_schema_dades()
 
