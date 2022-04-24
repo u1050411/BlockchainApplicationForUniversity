@@ -48,6 +48,7 @@ class MySqlBloc:
 
     def importar_sql(self, sql):
         self._cursor.execute(sql)
+        return self._cursor.fetchall()[0]
 
     def esborrar_schema(self, schema):
         if self.existeix(schema, None, None, None):
@@ -149,7 +150,7 @@ class CreacioInicial(MySqlBloc):
         self.exportar_sql(sql)
 
     def crear_usuaris(self):
-        id_usuari = 1050401
+        id_usuari = 1050411
         nom = 'Pau'
         self.guardar_usuari(id_usuari, nom)
         id_usuari = 1050402

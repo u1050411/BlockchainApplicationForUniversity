@@ -8,8 +8,8 @@ from CreateMysql import MySqlBloc, CreacioInicial
 class TestUsuaris(unittest.TestCase):
 
     def test_creation(self):
-        udg = Universitat("Universitat de Girona")
-        print(udg.nom)
+        estudiant = Estudiant(1050411)
+
 
 
 class TestUniversitat(unittest.TestCase):
