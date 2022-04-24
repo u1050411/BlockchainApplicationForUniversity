@@ -20,11 +20,19 @@ UTF_8 = 'utf8'
 
 class Usuari:
 
-    def __init__(self, id_usuari, nom):
-        self.id = id_usuari
-        self.nom = nom
-        self._public_key = None  # Creació de la clau pública que és part de la clau privada
-        self.assignatures = []
+    def __init__(self, id_usuari):
+        mydb = MySqlBloc()
+        mydb.self.mydb.existeix('BlockchainUniversity', 'usuari', 'id', '1070401')
+
+    @classmethod
+    def crear(self, id_usuari):
+        mydb = MySqlBloc()
+        if mydb.existeix('BlockchainUniversity', 'usuari', 'id', id_usuari):
+        sql = f'select * from usuari where id = {id_usuari} LIMIT 1'
+        usuari = (mydb.importar_sql(sql))
+        self.id_usuari = usuari[0]
+        self.nom = usuari[1]
+        self.public_key = mydb.clau_publica(self.id_usuari)
 
     # def sign(self, data):
     #     h = SHA1.new(data)
@@ -33,7 +41,6 @@ class Usuari:
     @property  # retorna clau publica
     def public_key(self):
         return self._public_key
-        # return binascii.hexlify(self._public_key.exportKey(format='PEM')).decode('ascii')
 
     @public_key.setter
     def public_key(self, public_key):
