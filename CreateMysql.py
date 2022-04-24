@@ -86,6 +86,18 @@ class MySqlBloc:
         clau_string = self._cursor.fetchone()[0]
         return RSA.importKey(clau_string)
 
+    def guardar_usuari(self, id_usuari, nom):
+        sql = f'INSERT INTO usuari (`id`, `nom`) VALUES({id_usuari}, "{nom}")'
+        self.exportar_sql(sql)
+        key = RSA.generate(1024)
+        private_key = key.exportKey('PEM').decode('ascii')
+        public_key = key.publickey()
+        string_key = public_key.exportKey('PEM').decode('ascii')
+        sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{private_key}")'
+        self.exportar_sql(sql)
+        sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{string_key}")'
+        self.exportar_sql(sql)
+
 
 class CreacioInicial(MySqlBloc):
 
@@ -93,7 +105,6 @@ class CreacioInicial(MySqlBloc):
         super().__init__()
         if self.existeix(schema, None, None, None):
             self.esborrar_schema(schema)
-        self.crear_schema(schema)
 
     def crear_taules(self):
         sql = ("CREATE TABLE `usuari` ("
@@ -137,20 +148,8 @@ class CreacioInicial(MySqlBloc):
                "PRIMARY KEY (`id`))")
         self.exportar_sql(sql)
 
-    def guardar_usuari(self, id_usuari, nom):
-        sql = f'INSERT INTO usuari (`id`, `nom`) VALUES({id_usuari}, "{nom}")'
-        self.exportar_sql(sql)
-        key = RSA.generate(1024)
-        private_key = key.exportKey('PEM').decode('ascii')
-        public_key = key.publickey()
-        string_key = public_key.exportKey('PEM').decode('ascii')
-        sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{private_key}")'
-        self.exportar_sql(sql)
-        sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{string_key}")'
-        self.exportar_sql(sql)
-
     def crear_usuaris(self):
-        id_usuari = 1050411
+        id_usuari = 1050401
         nom = 'Pau'
         self.guardar_usuari(id_usuari, nom)
         id_usuari = 1050402

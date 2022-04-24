@@ -4,17 +4,18 @@ from BlockchainUniversity import Universitat, Estudiant, Transaccio, Professor, 
     BlockchainUniversity, Examen, Factoria
 from CreateMysql import MySqlBloc, CreacioInicial
 
+
 class TestFactoria(unittest.TestCase):
 
     def test_factoria(self):
         usuari = Factoria.usuari('1050402')
         print(usuari)
 
+
 class TestUsuaris(unittest.TestCase):
 
     def test_creation(self):
-        estudiant = Estudiant(1050411)
-
+        estudiant = Estudiant.crear_usuari(1050411, 'Pau', None)
 
 
 class TestUniversitat(unittest.TestCase):
@@ -109,40 +110,45 @@ class TestMysql(unittest.TestCase):
         self.mydb = MySqlBloc()
 
     def tearDown(self):
+        self.test_creacio_inicial()
         self.mydb.tancar()
 
     def test_esborrar_schema(self):
         self.mydb.esborrar_schema('BlockchainUniversity')
+        self.assertEqual(self.mydb.existeix('BlockchainUniversity', None, None, None), False)
 
     def test_crear_schema(self):
         self.mydb.crear_schema('BlockchainUniversity')
+        self.assertEqual(self.mydb.existeix('BlockchainUniversity', None, None, None), True)
 
-    def test_emplenar_shema(self):
-        mydb = CreacioInicial('blockchainuniversity')
-        mydb.crear_schema_dades()
+    def test_creacio_inicial(self):
+        CreacioInicial('blockchainuniversity')
+        self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'id', '1050403'), True)
+
 
     def test_existeix(self):
-        self.test_emplenar_shema()
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', None, None, None), True)
         self.assertEqual(self.mydb.existeix('noSchema', None, None, None), False)
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', None, None), True)
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'no_Taula', None, None), False)
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'nom', None), True)
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'no_Columna', None), False)
-        self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'id', '1050411'), True)
+        self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'id', '1050403'), True)
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'id', '1070401'), False)
-        self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'private_key', 'id_usuari', '1050411'), True)
-        self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'public_key', 'id_usuari', '1050411'), True)
+        self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'private_key', 'id_usuari', '1050403'), True)
+        self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'public_key', 'id_usuari', '1050403'), True)
 
     def test_guardar_usuari(self):
-        mydb = CreacioInicial('blockchainuniversity')
-        mydb.crear_taules()
+        mydb = MySqlBloc()
         id_usuari = 1050411
         nom = 'Pau'
         mydb.guardar_usuari(id_usuari, nom)
+        self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'id', '1050411'), True)
+        self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'nom', 'Pau'), True)
+        self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'private_key', 'id_usuari', '1050411'), True)
+        self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'public_key', 'id_usuari', '1050411'), True)
 
     def test_clau(self):
-        self.test_emplenar_shema()
         id_usuari = 1050402
         self.mydb.afegir_schema('blockchainuniversity')
         privat_key = self.mydb.clau_privada(id_usuari)

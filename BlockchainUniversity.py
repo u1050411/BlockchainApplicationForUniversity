@@ -21,16 +21,17 @@ UTF_8 = 'utf8'
 class Factoria:
 
     @classmethod
-    def usuari(self, id_usuari):
+    def usuari(cls, id_usuari):
+        retorn = None
         mydb = MySqlBloc()
         if mydb.existeix('BlockchainUniversity', 'usuari', 'id', id_usuari):
             mydb.afegir_schema('BlockchainUniversity')
             user = Usuari()
             sql = f'select * from usuari where id = {id_usuari} LIMIT 1'
             usuari = (mydb.importar_sql(sql))
-            user.id = usuari[0]
+            user.id_usuari = usuari[0]
             user.nom = usuari[1]
-            user.public_key = mydb.clau_publica(user.id)
+            user.public_key = mydb.clau_publica(user.id_usuari)
             retorn = user
         return retorn
 
@@ -38,13 +39,21 @@ class Factoria:
 class Usuari:
 
     def __init__(self):
-        self.id = None
+        self.id_usuari = None
         self.nom = None
         self._public_key = None  #
 
     # def sign(self, data):
     #     h = SHA1.new(data)
     #     return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
+
+    @classmethod
+    def crear_usuari(cls, id_usuari, nom, public_key):
+        cls.id = id_usuari
+        cls.nom = nom
+        cls.public_key = public_key
+        mydb = MySqlBloc()
+        mydb.guardar_usuari(id_usuari, nom)
 
     @property  # retorna clau publica
     def public_key(self):
