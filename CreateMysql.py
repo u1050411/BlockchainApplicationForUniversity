@@ -49,18 +49,6 @@ class MySqlBloc:
     def importar_sql(self, sql):
         self._cursor.execute(sql)
 
-    def guardar_usuari(self, id_usuari, nom):
-        sql = f'INSERT INTO usuari (`id`, `nom`) VALUES({id_usuari}, "{nom}")'
-        self.exportar_sql(sql)
-        key = RSA.generate(1024)
-        private_key = key.exportKey('PEM').decode('ascii')
-        public_key = key.publickey()
-        string_key = public_key.exportKey('PEM').decode('ascii')
-        sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{private_key}")'
-        self.exportar_sql(sql)
-        sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{string_key}")'
-        self.exportar_sql(sql)
-
     def esborrar_schema(self, schema):
         if self.existeix(schema, None, None, None):
             sql = f"DROP DATABASE `{schema}`"
@@ -109,7 +97,6 @@ class CreacioInicial(MySqlBloc):
     def crear_taules(self):
         sql = ("CREATE TABLE `usuari` ("
                 "`id` int NOT NULL,"
-                "`public_key` varchar(45) DEFAULT NULL,"
                 "`nom` varchar(45) DEFAULT NULL,"
                 "PRIMARY KEY (`id`)) ")
         self.exportar_sql(sql)
@@ -138,15 +125,27 @@ class CreacioInicial(MySqlBloc):
                "`id_professor` INT NULL,"
                "PRIMARY KEY (`id`))")
         self.exportar_sql(sql)
-        sql = ("CREATE TABLE `examen` ("
-               "`id` INT NOT NULL,"
-               "`id_estudiant` INT NULL,"
-               "PRIMARY KEY (`id`,`id_estudiant`))")
+        sql = ("CREATE TABLE `examen_alumne` ("
+               "`id_examen` INT NOT NULL,"
+               "`id_estudiant` INT NOT NULL,"
+               "PRIMARY KEY (`id_examen`,`id_estudiant`))")
         self.exportar_sql(sql)
         sql = ("CREATE TABLE `tipus_document` ("
                "`id` INT NOT NULL,"
                "`id_estudiant` INT NULL,"
                "PRIMARY KEY (`id`))")
+        self.exportar_sql(sql)
+
+    def guardar_usuari(self, id_usuari, nom):
+        sql = f'INSERT INTO usuari (`id`, `nom`) VALUES({id_usuari}, "{nom}")'
+        self.exportar_sql(sql)
+        key = RSA.generate(1024)
+        private_key = key.exportKey('PEM').decode('ascii')
+        public_key = key.publickey()
+        string_key = public_key.exportKey('PEM').decode('ascii')
+        sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{private_key}")'
+        self.exportar_sql(sql)
+        sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{string_key}")'
         self.exportar_sql(sql)
 
     def crear_usuaris(self):

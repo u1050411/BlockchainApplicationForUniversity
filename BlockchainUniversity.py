@@ -3,7 +3,7 @@ import collections
 import hashlib
 import json
 from base64 import b64decode
-from datetime import datetime # .isoformat()
+from datetime import datetime  # .isoformat()
 
 from Crypto import Random
 from Crypto.Hash import SHA1
@@ -23,28 +23,29 @@ class Usuari:
     def __init__(self, id_usuari, nom):
         self.id = id_usuari
         self.nom = nom
-        # random_seed = Random.new().read
-        # self._private_key = None  # Creació de la clau privada
         self._public_key = None  # Creació de la clau pública que és part de la clau privada
-        # self._signatura = None  # Signatura
-        # self.private_key = RSA.generate(1024, random_seed)
+        self.assignatures = []
 
     # def sign(self, data):
     #     h = SHA1.new(data)
     #     return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
 
     @property  # retorna clau publica
-    def identity(self):
-        return binascii.hexlify(self._public_key.exportKey(format='PEM')).decode('ascii')
+    def public_key(self):
+        return self._public_key
+        # return binascii.hexlify(self._public_key.exportKey(format='PEM')).decode('ascii')
+
+    @public_key.setter
+    def public_key(self, public_key):
+        self._public_key = public_key
 
 
-class Document:
+class Professor(Usuari):
+    pass
 
-    def __init__(self, id_document, id_tipus, usuari, pdf):
-        self.id_document = id_document
-        self.id_tipus = id_tipus
-        self.usuari = usuari
-        self.pdf = pdf
+
+class Estudiant(Usuari):
+    pass
 
 
 class Universitat:
@@ -55,14 +56,6 @@ class Universitat:
         self._public_key = None  # Creació de la clau pública que és part de la clau privada
         self._signatura = None  # Signatura
         self.private_key = RSA.generate(1024, random_seed)
-
-
-class Professor(Usuari):
-    pass
-
-
-class Estudiant(Usuari):
-    pass
 
 
 class Transaccio:
@@ -248,7 +241,25 @@ class BlockchainUniversity:
         return new_bloc.index
 
 
-class Examen:
+class Assignatura:
+
+    def __init__(self, id_assignatura, nom, professor):
+        self.id_assignatura = id_assignatura
+        self.nom = nom
+        self.professor = professor
+        self.alumnes = []
+
+
+class Document:
+
+    def __init__(self, id_document, id_tipus, usuari, pdf):
+        self.id_document = id_document
+        self.id_tipus = id_tipus
+        self.usuari = usuari
+        self.pdf = pdf
+
+
+class Examen(Document):
 
     def __init__(self, id_document, data_inicial, data_final, professor, document):
         self.id_document = id_document
@@ -256,7 +267,7 @@ class Examen:
         self.data_final = data_final
         self.professor = professor
         self.document = document
-        self.estudiants = []
+        self.assignatures = []
 
     def afegir_estudiants(self, estudiant):
         self.estudiants.append(estudiant)
