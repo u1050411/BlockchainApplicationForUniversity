@@ -4,6 +4,10 @@ from BlockchainUniversity import Universitat, Estudiant, Transaccio, Professor, 
     BlockchainUniversity, Examen
 from CreateMysql import MySqlBloc, CreacioInicial
 
+class TestFactoria(unittest.TestCase):
+
+    def test_factoria(self):
+        Factoria.usuari('1050402')
 
 class TestUsuaris(unittest.TestCase):
 
