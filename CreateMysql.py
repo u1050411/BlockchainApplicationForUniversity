@@ -48,7 +48,7 @@ class MySqlBloc:
 
     def importar_sql(self, sql):
         self._cursor.execute(sql)
-        return self._cursor.fetchall()
+        return self._cursor.fetchall()[0]
 
     def esborrar_schema(self, schema):
         if self.existeix(schema, None, None, None):
@@ -105,6 +105,8 @@ class CreacioInicial(MySqlBloc):
         super().__init__()
         if self.existeix(schema, None, None, None):
             self.esborrar_schema(schema)
+        self.crear_schema(schema)
+        self.crear_schema_dades()
 
     def crear_taules(self):
         sql = ("CREATE TABLE `usuari` ("
