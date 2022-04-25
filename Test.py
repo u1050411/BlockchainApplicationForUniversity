@@ -3,8 +3,8 @@ from random import Random
 
 from Crypto.PublicKey import RSA
 
-from BlockchainUniversity import Universitat, Estudiant, Transaccio, Professor, TransaccioProfessor, Bloc, \
-    BlockchainUniversity, Examen, Factoria, Usuari
+from BlockchainUniversity import Universitat, Estudiant, Transaccio, Professor, TransaccioExamen, Bloc, \
+    BlockchainUniversity, Examen, FactoriaUsuaris, Usuari
 from CreateMysql import MySqlBloc, CreacioInicial
 
 
@@ -12,7 +12,7 @@ class TestFactoria(unittest.TestCase):
 
     def test_factoria(self):
         CreacioInicial('blockchainuniversity')
-        factoria = Factoria()
+        factoria = FactoriaUsuaris()
         usuari = factoria.usuari(1050402)
         self.assertEqual(usuari.id, 1050402)
         self.assertEqual(usuari.nom, 'Pere')
@@ -50,7 +50,7 @@ class TestTransaction(unittest.TestCase):
         professor = Professor('Teo')
         t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
         cua.append(t1)
-        t2 = TransaccioProfessor(professor, 'DocumentEncriptat', 'Hash', 10)
+        t2 = TransaccioExamen(professor, 'DocumentEncriptat', 'Hash', 10)
         cua.append(t2)
         for x in cua:
             x.display_transaccio()
@@ -105,7 +105,7 @@ class TestBlockchainUniversity(unittest.TestCase):
         professor = Professor('Teo')
         t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
         bloc_chain.afegir_nova_transaccio(t1)
-        t2 = TransaccioProfessor(professor, 'DocumentEncriptat', 'idDocument', 10)
+        t2 = TransaccioExamen(professor, 'DocumentEncriptat', 'idDocument', 10)
         bloc_chain.afegir_nova_transaccio(t2)
 
         for x in bloc_chain.transaccio_noconfirmades:

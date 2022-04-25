@@ -18,7 +18,7 @@ from CreateMysql import MySqlBloc
 UTF_8 = 'utf8'
 
 
-class Factoria:
+class FactoriaUsuaris:
 
     def __init__(self):
         self.mydb = MySqlBloc()
@@ -97,26 +97,59 @@ class Universitat:
         self.private_key = RSA.generate(1024, random_seed)
 
 
-class Transaccio:
-    # Classe on guardem les dades de les transaccions
-    def __init__(self, emissor, document, id_document):
-        self.emissor = emissor
-        self.document = document
-        self.id_document = id_document
-        self._nota = 0
-        self._time = datetime.now()
+class FactoriaTransaccions:
 
-    @property
-    def nota(self):
-        return self._nota
+    def __init__(self):
+        self.mydb = MySqlBloc()
+        self.emissor = None
+        self.receptor = None
+        self.document = None
+        self._time = None
+
+    def factoria(self, id_transaccio):
+        if self.mydb.existeix('BlockchainUniversity', 'usuari', 'id', id_usuari):
+            self.mydb.afegir_schema('BlockchainUniversity')
+            sql = f'select * from usuari where id = {id_usuari} LIMIT 1'
+            usuari = (self.mydb.importar_sql(sql))
+            self.id = usuari[0]
+            self.nif = usuari[1]
+            self.nom = usuari[2]
+            self.cognom = usuari[3]
+            self.public_key = self.mydb.clau_publica(id_usuari)
+
+    def examen(self, id_usuari):
+        self.users(id_usuari)
+        self.emissor = self.emissor
+        self.receptor = self.receptor
+        self.document = self.document
+        self.time = self.time
+        return user
+
+
+class Transaccio:
+
+    # Classe on guardem les dades de les transaccions
+    def __init__(self, emissor, receptor, document):
+        self.emissor = None
+        self.receptor = None
+        self.document = None
+        self._time = None
+
+    def sign(self, data):
+        h = SHA1.new(data)
+        return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
+
+    @classmethod
+    def crear_transaccio(cls, emissor, receptor, document):
+        cls.emissor = emissor
+        cls.receptor = receptor
+        cls.document = document
+        cls._time = datetime.now()
+        return cls
 
     @property
     def time(self):
         return self._time
-
-    @nota.setter
-    def nota(self, nota):
-        self._nota = nota
 
     @time.setter
     def time(self, time):
@@ -126,20 +159,17 @@ class Transaccio:
 
     def to_dict(self):
         return collections.OrderedDict({
-            'Emissor': self.emissor.identity,
-            'ID Document': self.id_document,
-            'Document': self.document,
-            'Nota': self.nota,
+            'Emissor': self.emissor.id,
+            'Receptor': self.receptor.id,
+            'Document': self.document.numdoc(),
             'Data': self.time})
 
     def display_transaccio(self):
-        print(f"""sender: {self.emissor.identity} 
+        print(f"""sender: {self.emissor.id} 
 -----
-recipient: {self.id_document}
+receptor: {self.receptor.id}
 -----
-value: {self.document}
------
-nota: {self.nota}
+value: {self.document.numdoc()}
 -----
 time: {self.time}
 -----
@@ -156,11 +186,10 @@ time: {self.time}
         return json.dumps(self.__dict__, sort_keys=True, default=str)
 
 
-class TransaccioProfessor(Transaccio):
+class TransaccioExamen(Transaccio):
 
-    def __init__(self, emissor, document, id_document, nota):
-        super().__init__(emissor, document, id_document)
-        self.nota = nota
+    def __init__(self, emissor, receptor, document):
+        super().__init__(emissor, receptor, document)
 
 
 class Bloc:
@@ -300,13 +329,14 @@ class Document:
 
 class Examen(Document):
 
-    def __init__(self, id_document, data_inicial, data_final, professor, document):
+    def __init__(self, id_document, data_inicial, data_final, professor, estudiant, document, nota):
         self.id_document = id_document
         self.data_inicial = data_inicial
         self.data_final = data_final
         self.professor = professor
+        self.estudiant = estudiant
         self.document = document
-        self.assignatures = []
+        self.nota = nota
 
     def afegir_estudiants(self, estudiant):
         self.estudiants.append(estudiant)
