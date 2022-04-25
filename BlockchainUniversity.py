@@ -42,7 +42,7 @@ class Factoria:
     def usuari(self, id_usuari):
         self.users(id_usuari)
         user = Usuari()
-        user.id_usuari = self.id
+        user.id = self.id
         user.nom = self.nom
         user.public_key = self.public_key
         return user
@@ -68,8 +68,7 @@ class Usuari:
         cls.nom = nom
         cls.cognom = cognom
         cls.public_key = public_key
-        mydb = MySqlBloc()
-        mydb.guardar_usuari(id_usuari, nom)
+        return cls
 
     @property  # retorna clau publica
     def public_key(self):

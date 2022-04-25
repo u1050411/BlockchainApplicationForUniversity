@@ -1,4 +1,7 @@
 import unittest
+from random import Random
+
+from Crypto.PublicKey import RSA
 
 from BlockchainUniversity import Universitat, Estudiant, Transaccio, Professor, TransaccioProfessor, Bloc, \
     BlockchainUniversity, Examen, Factoria, Usuari
@@ -11,14 +14,20 @@ class TestFactoria(unittest.TestCase):
         CreacioInicial('blockchainuniversity')
         factoria = Factoria()
         usuari = factoria.usuari(1050402)
-        self.assertEqual(usuari.id_usuari, 1050402)
+        self.assertEqual(usuari.id, 1050402)
         self.assertEqual(usuari.nom, 'Pere')
 
 
 class TestUsuaris(unittest.TestCase):
 
     def test_creation(self):
-        estudiant = Estudiant.crear_usuari(1050411, 'Pau', None)
+        public_key = RSA.generate(1024).publickey()
+        estudiant = Estudiant.crear_usuari(1050406, '40332505G', 'Marta', "Rodriguez", public_key)
+        self.assertEqual(estudiant.id, 1050406)
+        self.assertEqual(estudiant.nif, '40332505G')
+        self.assertEqual(estudiant.nom, 'Marta')
+        self.assertEqual(estudiant.cognom, 'Rodriguez')
+        self.assertEqual(estudiant.public_key, public_key)
 
 
 class TestUniversitat(unittest.TestCase):
