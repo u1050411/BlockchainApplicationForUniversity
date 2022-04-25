@@ -70,7 +70,8 @@ class MySqlBloc:
             elif dada is None:
                 sql = f"SHOW COLUMNS FROM {taula} WHERE Field = '{columna}'"
             else:
-                sql = f"select {columna} from {taula} where {columna} = {dada} LIMIT 1"
+                # sql = f"select {columna} from {taula} where {columna} = {dada} LIMIT 1"
+                sql = f"select `{columna}` from `{taula}` where `{columna}` = '{dada}' LIMIT 1"
         self.select_sql(sql)
         return self._cursor.fetchone() is not None
 
@@ -111,7 +112,7 @@ class CreacioInicial(MySqlBloc):
     def crear_taules(self):
         sql = ("CREATE TABLE `usuari` ("
                "`id` int NOT NULL,"
-               "`nif` varchar(8) NOT NULL,"
+               "`nif` varchar(9) NOT NULL,"
                "`nom` varchar(45) DEFAULT NULL,"
                "`cognom` varchar(100) DEFAULT NULL,"
                "PRIMARY KEY (`id`, `nif`)) ")
@@ -158,17 +159,17 @@ class CreacioInicial(MySqlBloc):
         nif = '40373947T'
         nom = 'Pau'
         cognom = 'de Jesus Bras'
-        self.guardar_usuari(id_usuari, nom)
+        self.guardar_usuari(id_usuari, nif, nom, cognom)
         id_usuari = 1050402
         nif = '40373946E'
         nom = 'Pere'
         cognom = 'de la Rosa'
-        self.guardar_usuari(id_usuari, nom)
+        self.guardar_usuari(id_usuari, nif, nom, cognom)
         id_usuari = 1050403
         nif = '40332506M'
         nom = 'Joan'
         cognom = 'Bras Dos Santos'
-        self.guardar_usuari(id_usuari, nom)
+        self.guardar_usuari(id_usuari, nif, nom, cognom)
 
     def crear_schema_dades(self):
         self.crear_taules()
