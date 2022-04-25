@@ -34,7 +34,9 @@ class Factoria:
             sql = f'select * from usuari where id = {id_usuari} LIMIT 1'
             usuari = (self.mydb.importar_sql(sql))
             self.id = usuari[0]
-            self.nom = usuari[1]
+            self.nif = usuari[1]
+            self.nom = usuari[2]
+            self.cognom = usuari[3]
             self.public_key = self.mydb.clau_publica(id_usuari)
 
     def usuari(self, id_usuari):

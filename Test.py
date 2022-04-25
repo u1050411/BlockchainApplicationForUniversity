@@ -1,7 +1,7 @@
 import unittest
 
 from BlockchainUniversity import Universitat, Estudiant, Transaccio, Professor, TransaccioProfessor, Bloc, \
-    BlockchainUniversity, Examen, Factoria
+    BlockchainUniversity, Examen, Factoria, Usuari
 from CreateMysql import MySqlBloc, CreacioInicial
 
 
@@ -9,7 +9,8 @@ class TestFactoria(unittest.TestCase):
 
     def test_factoria(self):
         CreacioInicial('blockchainuniversity')
-        usuari = Factoria.usuari('1050402')
+        factoria = Factoria()
+        usuari = factoria.usuari(1050402)
         self.assertEqual(usuari.id_usuari, 1050402)
         self.assertEqual(usuari.nom, 'Pere')
 
@@ -158,7 +159,7 @@ class TestMysql(unittest.TestCase):
         self.assertTrue(privat_key.public_key(), public_key)
 
 
-class Test_examen:
+class TestExamen(unittest.TestCase):
 
     def test_creacio_examen(self):
         mydb = CreacioInicial('blockchainuniversity')
