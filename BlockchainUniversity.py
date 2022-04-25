@@ -23,7 +23,9 @@ class Factoria:
     def __init__(self):
         self.mydb = MySqlBloc()
         self.id = None
+        self.nif = None
         self.nom = None
+        self.cognom = None
         self.public_key = None
 
     def users(self, id_usuari):
@@ -33,7 +35,7 @@ class Factoria:
             usuari = (self.mydb.importar_sql(sql))
             self.id = usuari[0]
             self.nom = usuari[1]
-            self.public_key = self.mydb.clau_publica(user.id_usuari)
+            self.public_key = self.mydb.clau_publica(id_usuari)
 
     def usuari(self, id_usuari):
         self.users(id_usuari)
@@ -47,18 +49,22 @@ class Factoria:
 class Usuari:
 
     def __init__(self):
-        self.id_usuari = None
+        self.id = None
+        self.nif = None
         self.nom = None
-        self._public_key = None  #
+        self.cognom = None
+        self.public_key = None
 
     # def sign(self, data):
     #     h = SHA1.new(data)
     #     return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
 
     @classmethod
-    def crear_usuari(cls, id_usuari, nom, public_key):
+    def crear_usuari(cls, id_usuari, nif, nom, cognom, public_key):
         cls.id = id_usuari
+        cls.nif = nif
         cls.nom = nom
+        cls.cognom = cognom
         cls.public_key = public_key
         mydb = MySqlBloc()
         mydb.guardar_usuari(id_usuari, nom)

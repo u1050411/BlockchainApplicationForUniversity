@@ -86,8 +86,8 @@ class MySqlBloc:
         clau_string = self._cursor.fetchone()[0]
         return RSA.importKey(clau_string)
 
-    def guardar_usuari(self, id_usuari, nom):
-        sql = f'INSERT INTO usuari (`id`, `nom`) VALUES({id_usuari}, "{nom}")'
+    def guardar_usuari(self, id_usuari, nif,  nom, cognom):
+        sql = f'INSERT INTO usuari (`id`, `nif`, `nom`, `cognom`) VALUES({id_usuari}, "{nif}", "{nom}", "{cognom}")'
         self.exportar_sql(sql)
         key = RSA.generate(1024)
         private_key = key.exportKey('PEM').decode('ascii')
@@ -110,26 +110,29 @@ class CreacioInicial(MySqlBloc):
 
     def crear_taules(self):
         sql = ("CREATE TABLE `usuari` ("
-                "`id` int NOT NULL,"
-                "`nom` varchar(45) DEFAULT NULL,"
-                "PRIMARY KEY (`id`)) ")
+               "`id` int NOT NULL,"
+               "`nif` varchar(8) NOT NULL,"
+               "`nom` varchar(45) DEFAULT NULL,"
+               "`cognom` varchar(100) DEFAULT NULL,"
+               "PRIMARY KEY (`id`, `nif`)) ")
+
         self.exportar_sql(sql)
         sql = ("CREATE TABLE `documents` ("
-                "`id` INT NOT NULL,"
-                "`id_tipus` INT NULL,"
-                "`id_usuari` INT NULL,"
-                "`pdf` BINARY(64) NULL,"
-                "PRIMARY KEY (`id`))")
+               "`id` INT NOT NULL,"
+               "`id_tipus` INT NULL,"
+               "`id_usuari` INT NULL,"
+               "`pdf` BINARY(64) NULL,"
+               "PRIMARY KEY (`id`))")
         self.exportar_sql(sql)
         sql = ("CREATE TABLE `private_key` ("
-                "`id_usuari` INT NOT NULL,"
-                "`private_key` longtext NULL,"
-                "PRIMARY KEY (`id_usuari`))")
+               "`id_usuari` INT NOT NULL,"
+               "`private_key` longtext NULL,"
+               "PRIMARY KEY (`id_usuari`))")
         self.exportar_sql(sql)
         sql = ("CREATE TABLE `public_key` ("
-                "`id_usuari` INT NOT NULL,"
-                "`public_key` longtext NULL,"
-                "PRIMARY KEY (`id_usuari`))")
+               "`id_usuari` INT NOT NULL,"
+               "`public_key` longtext NULL,"
+               "PRIMARY KEY (`id_usuari`))")
         self.exportar_sql(sql)
         sql = ("CREATE TABLE `examen` ("
                "`id` INT NOT NULL,"
@@ -151,14 +154,20 @@ class CreacioInicial(MySqlBloc):
         self.exportar_sql(sql)
 
     def crear_usuaris(self):
-        id_usuari = 1050401
+        id_usuari = 1050411
+        nif = '40373947T'
         nom = 'Pau'
+        cognom = 'de Jesus Bras'
         self.guardar_usuari(id_usuari, nom)
         id_usuari = 1050402
+        nif = '40373946E'
         nom = 'Pere'
+        cognom = 'de la Rosa'
         self.guardar_usuari(id_usuari, nom)
         id_usuari = 1050403
+        nif = '40332506M'
         nom = 'Joan'
+        cognom = 'Bras Dos Santos'
         self.guardar_usuari(id_usuari, nom)
 
     def crear_schema_dades(self):

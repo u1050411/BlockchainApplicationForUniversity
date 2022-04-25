@@ -8,8 +8,10 @@ from CreateMysql import MySqlBloc, CreacioInicial
 class TestFactoria(unittest.TestCase):
 
     def test_factoria(self):
+        CreacioInicial('blockchainuniversity')
         usuari = Factoria.usuari('1050402')
-        print(usuari)
+        self.assertEqual(usuari.id_usuari, 1050402)
+        self.assertEqual(usuari.nom, 'Pere')
 
 
 class TestUsuaris(unittest.TestCase):
@@ -110,7 +112,7 @@ class TestMysql(unittest.TestCase):
         self.mydb = MySqlBloc()
 
     def tearDown(self):
-        self.test_creacio_inicial()
+        CreacioInicial('blockchainuniversity')
         self.mydb.tancar()
 
     def test_esborrar_schema(self):
@@ -124,7 +126,6 @@ class TestMysql(unittest.TestCase):
     def test_creacio_inicial(self):
         CreacioInicial('blockchainuniversity')
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', 'usuari', 'id', '1050403'), True)
-
 
     def test_existeix(self):
         self.assertEqual(self.mydb.existeix('BlockchainUniversity', None, None, None), True)
