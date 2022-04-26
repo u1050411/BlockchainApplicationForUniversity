@@ -116,14 +116,6 @@ class CreacioInicial(MySqlBloc):
                "`nom` varchar(45) DEFAULT NULL,"
                "`cognom` varchar(100) DEFAULT NULL,"
                "PRIMARY KEY (`id`, `nif`)) ")
-
-        self.exportar_sql(sql)
-        sql = ("CREATE TABLE `documents` ("
-               "`id` INT NOT NULL,"
-               "`id_tipus` INT NULL,"
-               "`id_usuari` INT NULL,"
-               "`pdf` BINARY(64) NULL,"
-               "PRIMARY KEY (`id`))")
         self.exportar_sql(sql)
         sql = ("CREATE TABLE `private_key` ("
                "`id_usuari` INT NOT NULL,"
@@ -134,6 +126,21 @@ class CreacioInicial(MySqlBloc):
                "`id_usuari` INT NOT NULL,"
                "`public_key` longtext NULL,"
                "PRIMARY KEY (`id_usuari`))")
+        self.exportar_sql(sql)
+        sql = ("CREATE TABLE `transaccio` ("
+               "`id` INT NOT NULL,"
+               "`id_emisor` INT NOT NULL,"
+               "`id_receptor` INT NOT NULL,"
+               "`id_document` INT NOT NULL,"
+               "`data` DATETIME NOT NULL,"
+               "PRIMARY KEY(`id`, `id_emisor`, `id_receptor`, `id_document`, `data`))")
+        self.exportar_sql(sql)
+        sql = ("CREATE TABLE `documents` ("
+               "`id` INT NOT NULL,"
+               "`id_tipus` INT NULL,"
+               "`id_usuari` INT NULL,"
+               "`pdf` BINARY(64) NULL,"
+               "PRIMARY KEY (`id`))")
         self.exportar_sql(sql)
         sql = ("CREATE TABLE `examen` ("
                "`id` INT NOT NULL,"
