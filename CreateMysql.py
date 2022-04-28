@@ -1,12 +1,20 @@
 import mysql.connector
 from Crypto.PublicKey import RSA
+from mysql.connector import errorcode
 
 
 class MySqlBloc:
 
-    def __init__(self):
-        self._conexio = mysql.connector.connect(host='localhost', user='root', passwd='root')
-        self._cursor = self._conexio.cursor()
+    def __init__(self, ip, usuari, password):
+        try:
+            self._conexio = mysql.connector.connect(host=ip, user=usuari, passwd=password)
+            self._cursor = self._conexio.cursor()
+        except mysql.connector.Error as err:
+            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+                print("Hi ha un error en l'intent de conexio")
+            else:
+                print(err)
+            exit(1)
 
     @property
     def conexio(self):
@@ -24,30 +32,47 @@ class MySqlBloc:
     def cursor(self, cursor):
         self._cursor = cursor
 
+    def afegir_schema(self, schema):
+        try:
+            self.conexio.database = schema
+        except mysql.connector.Error as err:
+            if err.errno == errorcode.ER_BAD_DB_ERROR:
+                print("Database no existeix")
+            else:
+                print(err)
+            exit(1)
+
     def crear_schema(self, schema):
         if not self.existeix(schema, None, None, None):
-            line = "CREATE DATABASE " + schema
-            self._cursor.execute(line)
-            self._conexio = mysql.connector.connect(host='localhost', user='root', passwd='root', db=schema)
-            self._cursor = self._conexio.cursor()
-
-    def afegir_schema(self, schema):
-        self._conexio = mysql.connector.connect(host='localhost', user='root', passwd='root', db=schema)
-        self._cursor = self._conexio.cursor()
-
-    def executar_sql(self, columnes, dades):
-        self._cursor.execute(columnes, dades)
-        self._conexio.commit()
+            try:
+                line = "CREATE DATABASE " + schema
+                self._cursor.execute(line)
+                self.afegir_schema(schema)
+            except mysql.connector.Error as err:
+                print("Error al crear la base de dades : {}".format(err))
+                exit(1)
 
     def select_sql(self, sql):
-        self._cursor.execute(sql)
+        try:
+            self._cursor.execute(sql)
+        except mysql.connector.Error as err:
+            print("Error Mysql : {}".format(err))
+            exit(1)
 
     def exportar_sql(self, sql):
-        self._cursor.execute(sql)
-        self._conexio.commit()
+        try:
+            self._cursor.execute(sql)
+            self._conexio.commit()
+        except mysql.connector.Error as err:
+            print("Error Mysql : {}".format(err))
+            exit(1)
 
     def importar_sql(self, sql):
-        self._cursor.execute(sql)
+        try:
+            self._cursor.execute(sql)
+        except mysql.connector.Error as err:
+            print("Error Mysql : {}".format(err))
+            exit(1)
         return self._cursor.fetchall()[0]
 
     def esborrar_schema(self, schema):
@@ -56,8 +81,12 @@ class MySqlBloc:
             self.exportar_sql(sql)
 
     def tancar(self):
-        self._cursor.close()
-        self._conexio.close()
+        try:
+            self._cursor.close()
+            self._conexio.close()
+        except mysql.connector.Error as err:
+            print(err)
+            exit(1)
 
     # Retorna si existeix la dada
     def existeix(self, schema, taula, columna, dada):
@@ -77,15 +106,13 @@ class MySqlBloc:
 
     def clau_privada(self, id_usuari):
         sql = f'select `private_key` from `blockchainuniversity`.`private_key` where `id_usuari` = {id_usuari} LIMIT 1'
-        self._cursor.execute(sql)
-        clau_string = self._cursor.fetchone()[0]
-        return RSA.importKey(clau_string)
+        clau_string = self.importar_sql(sql)
+        return RSA.importKey(clau_string[0])
 
     def clau_publica(self, id_usuari):
         sql = f'select `public_key` from `blockchainuniversity`.`public_key` where `id_usuari` = {id_usuari} LIMIT 1'
-        self._cursor.execute(sql)
-        clau_string = self._cursor.fetchone()[0]
-        return RSA.importKey(clau_string)
+        clau_string = self.importar_sql(sql)
+        return RSA.importKey(clau_string[0])
 
     def guardar_usuari(self, id_usuari, nif,  nom, cognom):
         sql = f'INSERT INTO usuari (`id`, `nif`, `nom`, `cognom`) VALUES({id_usuari}, "{nif}", "{nom}", "{cognom}")'
@@ -99,86 +126,74 @@ class MySqlBloc:
         sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{string_key}")'
         self.exportar_sql(sql)
 
-
-class CreacioInicial(MySqlBloc):
-
-    def __init__(self, schema):
-        super().__init__()
-        if self.existeix(schema, None, None, None):
-            self.esborrar_schema(schema)
-        self.crear_schema(schema)
-        self.crear_schema_dades()
-
     def crear_taules(self):
-        sql = ("CREATE TABLE `usuari` ("
-               "`id` int NOT NULL,"
-               "`nif` varchar(9) NOT NULL,"
-               "`nom` varchar(45) DEFAULT NULL,"
-               "`cognom` varchar(100) DEFAULT NULL,"
-               "PRIMARY KEY (`id`, `nif`)) ")
-        self.exportar_sql(sql)
-        sql = ("CREATE TABLE `private_key` ("
-               "`id_usuari` INT NOT NULL,"
-               "`private_key` longtext NULL,"
-               "PRIMARY KEY (`id_usuari`))")
-        self.exportar_sql(sql)
-        sql = ("CREATE TABLE `public_key` ("
-               "`id_usuari` INT NOT NULL,"
-               "`public_key` longtext NULL,"
-               "PRIMARY KEY (`id_usuari`))")
-        self.exportar_sql(sql)
-        sql = ("CREATE TABLE `transaccio` ("
-               "`id` INT NOT NULL,"
-               "`id_emisor` INT NOT NULL,"
-               "`id_receptor` INT NOT NULL,"
-               "`id_document` INT NOT NULL,"
-               "`data` DATETIME NOT NULL,"
-               "PRIMARY KEY(`id`, `id_emisor`, `id_receptor`, `id_document`, `data`))")
-        self.exportar_sql(sql)
-        sql = ("CREATE TABLE `documents` ("
-               "`id` INT NOT NULL,"
-               "`id_tipus` INT NULL,"
-               "`id_usuari` INT NULL,"
-               "`pdf` BINARY(64) NULL,"
-               "PRIMARY KEY (`id`))")
-        self.exportar_sql(sql)
-        sql = ("CREATE TABLE `examen` ("
-               "`id` INT NOT NULL,"
-               "`datai` DATETIME NULL,"
-               "`dataf` DATETIME NULL,"
-               "`id_document` INT NULL,"
-               "`id_professor` INT NULL,"
-               "PRIMARY KEY (`id`))")
-        self.exportar_sql(sql)
-        sql = ("CREATE TABLE `examen_alumne` ("
-               "`id_examen` INT NOT NULL,"
-               "`id_estudiant` INT NOT NULL,"
-               "PRIMARY KEY (`id_examen`,`id_estudiant`))")
-        self.exportar_sql(sql)
-        sql = ("CREATE TABLE `tipus_document` ("
-               "`id` INT NOT NULL,"
-               "`id_estudiant` INT NULL,"
-               "PRIMARY KEY (`id`))")
-        self.exportar_sql(sql)
+        sqls = ["CREATE TABLE `usuari` ("
+                "`id` int NOT NULL,"
+                "`nif` varchar(9) NOT NULL,"
+                "`nom` varchar(45) DEFAULT NULL,"
+                "`cognom` varchar(100) DEFAULT NULL,"
+                "PRIMARY KEY (`id`, `nif`)) ",
+
+                "CREATE TABLE `private_key` ("
+                "`id_usuari` INT NOT NULL,"
+                "`private_key` longtext NULL,"
+                "PRIMARY KEY (`id_usuari`))",
+
+                "CREATE TABLE `public_key` ("
+                "`id_usuari` INT NOT NULL,"
+                "`public_key` longtext NULL,"
+                "PRIMARY KEY (`id_usuari`))",
+
+                "CREATE TABLE `transaccio` ("
+                "`id` INT NOT NULL,"
+                "`id_emisor` INT NOT NULL,"
+                "`id_receptor` INT NOT NULL,"
+                "`id_document` INT NOT NULL,"
+                "`data` DATETIME NOT NULL,"
+                "PRIMARY KEY(`id`, `id_emisor`, `id_receptor`, `id_document`, `data`))",
+
+                "CREATE TABLE `documents` ("
+                "`id` INT NOT NULL,"
+                "`id_tipus` INT NULL,"
+                "`id_usuari` INT NULL,"
+                "`pdf` BINARY(64) NULL,"
+                "PRIMARY KEY (`id`))",
+
+                "CREATE TABLE `examen` ("
+                "`id` INT NOT NULL,"
+                "`datai` DATETIME NULL,"
+                "`dataf` DATETIME NULL,"
+                "`id_document` INT NULL,"
+                "`id_professor` INT NULL,"
+                "PRIMARY KEY (`id`))",
+
+                "CREATE TABLE `examen_alumne` ("
+                "`id_examen` INT NOT NULL,"
+                "`id_estudiant` INT NOT NULL,"
+                "PRIMARY KEY (`id_examen`,`id_estudiant`))",
+
+                "CREATE TABLE `tipus_document` ("
+                "`id` INT NOT NULL,"
+                "`id_estudiant` INT NULL,"
+                "PRIMARY KEY (`id`))"]
+
+        for sql in sqls:
+            self.exportar_sql(sql)
 
     def crear_usuaris(self):
-        id_usuari = 1050411
-        nif = '40373947T'
-        nom = 'Pau'
-        cognom = 'de Jesus Bras'
-        self.guardar_usuari(id_usuari, nif, nom, cognom)
-        id_usuari = 1050402
-        nif = '40373946E'
-        nom = 'Pere'
-        cognom = 'de la Rosa'
-        self.guardar_usuari(id_usuari, nif, nom, cognom)
-        id_usuari = 1050403
-        nif = '40332506M'
-        nom = 'Joan'
-        cognom = 'Bras Dos Santos'
-        self.guardar_usuari(id_usuari, nif, nom, cognom)
+        usuaris = [[1050411, '40373747T', 'Pau', 'de Jesus Bras'],
+                   [1050402, '40373946E', 'Pere', 'de la Rosa'],
+                   [1050403, '40332506M', 'Cristina', 'Sabari Vidal'],
+                   [2050404, '40332507Y', 'Albert', 'Marti Sabari'],
+                   [2000256, '40332508Y', 'Teodor Maria', 'Jove Lagunas']]
 
-    def crear_schema_dades(self):
-        self.crear_taules()
-        self.crear_usuaris()
-        self.tancar()
+        for id_usuari, nif, nom, cognom in usuaris:
+            self.guardar_usuari(id_usuari, nif, nom, cognom)
+
+    @staticmethod
+    def crear_schema_dades(mydb, schema):
+        mydb.esborrar_schema(schema)
+        mydb.crear_schema(schema)
+        mydb.crear_taules()
+        mydb.crear_usuaris()
+

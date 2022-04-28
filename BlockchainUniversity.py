@@ -2,81 +2,52 @@ import binascii
 import collections
 import hashlib
 import json
-from base64 import b64decode
-from datetime import datetime  # .isoformat()
+from datetime import datetime
 
-from Crypto import Random
 from Crypto.Hash import SHA1
-from Crypto.PublicKey import RSA
-from Crypto.Signature import PKCS1_v1_5
-
-# from pandas.io import json
-from nacl.encoding import Base64Encoder
 
 from CreateMysql import MySqlBloc
+
+# from pandas.io import json
 
 UTF_8 = 'utf8'
 
 
-class FactoriaUsuaris:
+class Factoria:
 
     def __init__(self):
-        self.mydb = MySqlBloc()
-        self.id = None
-        self.nif = None
-        self.nom = None
-        self.cognom = None
-        self.public_key = None
+        pass
 
-    def users(self, id_usuari):
-        if self.mydb.existeix('BlockchainUniversity', 'usuari', 'id', id_usuari):
-            self.mydb.afegir_schema('BlockchainUniversity')
+    @staticmethod
+    def build_usuari_from_db(my_db, id_usuari, tipus):
+        if my_db.existeix('BlockchainUniversity', 'usuari', 'id', id_usuari):
             sql = f'select * from usuari where id = {id_usuari} LIMIT 1'
-            usuari = (self.mydb.importar_sql(sql))
-            self.id = usuari[0]
-            self.nif = usuari[1]
-            self.nom = usuari[2]
-            self.cognom = usuari[3]
-            self.public_key = self.mydb.clau_publica(id_usuari)
-
-    def usuari(self, id_usuari):
-        self.users(id_usuari)
-        user = Usuari()
-        user.id = self.id
-        user.nom = self.nom
-        user.public_key = self.public_key
-        return user
+            usuari = (my_db.importar_sql(sql))
+            nif = usuari[1]
+            nom = usuari[2]
+            cognom = usuari[3]
+            public_key = my_db.clau_publica(id_usuari)
+            if tipus == 'estudiant':
+                estudiant = Estudiant(id_usuari, nif, nom, cognom, public_key)
+                return estudiant
+            elif tipus == 'professor':
+                professor = Professor(id_usuari, nif, nom, cognom, public_key)
+                return professor
+        return None
 
 
 class Usuari:
 
-    def __init__(self):
-        self.id = None
-        self.nif = None
-        self.nom = None
-        self.cognom = None
-        self.public_key = None
+    def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None):
+        self.id = id_usuari
+        self.nif = nif
+        self.nom = nom
+        self.cognom = cognom
+        self.public_key = public_key
 
-    # def sign(self, data):
-    #     h = SHA1.new(data)
-    #     return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
-
-    @classmethod
-    def crear_usuari(cls, id_usuari, nif, nom, cognom, public_key):
-        cls.id = id_usuari
-        cls.nif = nif
-        cls.nom = nom
-        cls.cognom = cognom
-        cls.public_key = public_key
-        return cls
-
-    @property  # retorna clau publica
-    def public_key(self):
-        return self._public_key
-
-    @public_key.setter
-    def public_key(self, public_key):
-        self._public_key = public_key
+    def sign(self, data):
+        h = SHA1.new(data)
+        return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
 
 
 class Professor(Usuari):
@@ -88,42 +59,10 @@ class Estudiant(Usuari):
 
 
 class Universitat:
-    def __init__(self, nom):
+    def __init__(self, nom, private_key, public_key):
         self.nom = nom
-        random_seed = Random.new().read
-        self._private_key = None  # Creació de la clau privada
-        self._public_key = None  # Creació de la clau pública que és part de la clau privada
-        self._signatura = None  # Signatura
-        self.private_key = RSA.generate(1024, random_seed)
-
-
-class FactoriaTransaccions:
-
-    def __init__(self):
-        self.mydb = MySqlBloc()
-        self.emissor = None
-        self.receptor = None
-        self.document = None
-        self._time = None
-
-    def factoria(self, id_transaccio):
-        if self.mydb.existeix('BlockchainUniversity', 'usuari', 'id', id_usuari):
-            self.mydb.afegir_schema('BlockchainUniversity')
-            sql = f'select * from usuari where id = {id_usuari} LIMIT 1'
-            usuari = (self.mydb.importar_sql(sql))
-            self.id = usuari[0]
-            self.nif = usuari[1]
-            self.nom = usuari[2]
-            self.cognom = usuari[3]
-            self.public_key = self.mydb.clau_publica(id_usuari)
-
-    def examen(self, id_usuari):
-        self.users(id_usuari)
-        self.emissor = self.emissor
-        self.receptor = self.receptor
-        self.document = self.document
-        self.time = self.time
-        return user
+        self._private_key = private_key  # Creació de la clau privada
+        self._public_key = public_key  # Creació de la clau pública que és part de la clau privada
 
 
 class Transaccio:
@@ -309,18 +248,17 @@ class BlockchainUniversity:
         return new_bloc.index
 
 
-class Assignatura:
-
-    def __init__(self, id_assignatura, nom, professor):
-        self.id_assignatura = id_assignatura
-        self.nom = nom
-        self.professor = professor
-        self.alumnes = []
+# class Assignatura:
+#
+#     def __init__(self, id_assignatura, nom, professor):
+#         self.id_assignatura = id_assignatura
+#         self.nom = nom
+#         self.professor = professor
+#         self.alumnes = []
 
 
 class Document:
-
-    def __init__(self, id_document, id_tipus, usuari, pdf):
+    def __init__(self, id_document = None, id_tipus = None, usuari = None, pdf = None):
         self.id_document = id_document
         self.id_tipus = id_tipus
         self.usuari = usuari
