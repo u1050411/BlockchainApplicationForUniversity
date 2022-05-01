@@ -5,9 +5,9 @@ from mysql.connector import errorcode
 
 class MySqlBloc:
 
-    def __init__(self, ip, usuari, password):
+    def __init__(self, ip=None, usuari=None, password=None, db=None):
         try:
-            self._conexio = mysql.connector.connect(host=ip, user=usuari, passwd=password)
+            self._conexio = mysql.connector.connect(host=ip, user=usuari, passwd=password, database=db)
             self._cursor = self._conexio.cursor()
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
@@ -127,24 +127,24 @@ class MySqlBloc:
         self.exportar_sql(sql)
 
     def crear_taules(self):
-        sqls = ["CREATE TABLE `usuari` ("
+        sqls = ["CREATE TABLE if not exists `usuari` ("
                 "`id` int NOT NULL,"
                 "`nif` varchar(9) NOT NULL,"
                 "`nom` varchar(45) DEFAULT NULL,"
                 "`cognom` varchar(100) DEFAULT NULL,"
                 "PRIMARY KEY (`id`, `nif`)) ",
 
-                "CREATE TABLE `private_key` ("
+                "CREATE TABLE if not exists `private_key` ("
                 "`id_usuari` INT NOT NULL,"
                 "`private_key` longtext NULL,"
                 "PRIMARY KEY (`id_usuari`))",
 
-                "CREATE TABLE `public_key` ("
+                "CREATE TABLE if not exists `public_key` ("
                 "`id_usuari` INT NOT NULL,"
                 "`public_key` longtext NULL,"
                 "PRIMARY KEY (`id_usuari`))",
 
-                "CREATE TABLE `transaccio` ("
+                "CREATE TABLE if not exists `transaccio` ("
                 "`id` INT NOT NULL,"
                 "`id_emisor` INT NOT NULL,"
                 "`id_receptor` INT NOT NULL,"
@@ -152,14 +152,15 @@ class MySqlBloc:
                 "`data` DATETIME NOT NULL,"
                 "PRIMARY KEY(`id`, `id_emisor`, `id_receptor`, `id_document`, `data`))",
 
-                "CREATE TABLE `documents` ("
-                "`id` INT NOT NULL,"
+                "CREATE TABLE if not exists `documents` ("
+                "`id_document` INT NOT NULL,"
                 "`id_tipus` INT NULL,"
+                "`versio` INT NULL,"
                 "`id_usuari` INT NULL,"
-                "`pdf` BINARY(64) NULL,"
-                "PRIMARY KEY (`id`))",
+                "`pdf` LONGBLOB NOT NULL,"
+                "PRIMARY KEY (`id_document`, `id_tipus`, `versio`))",
 
-                "CREATE TABLE `examen` ("
+                "CREATE TABLE if not exists `examen` ("
                 "`id` INT NOT NULL,"
                 "`datai` DATETIME NULL,"
                 "`dataf` DATETIME NULL,"
@@ -167,12 +168,12 @@ class MySqlBloc:
                 "`id_professor` INT NULL,"
                 "PRIMARY KEY (`id`))",
 
-                "CREATE TABLE `examen_alumne` ("
+                "CREATE TABLE if not exists `examen_alumne` ("
                 "`id_examen` INT NOT NULL,"
                 "`id_estudiant` INT NOT NULL,"
                 "PRIMARY KEY (`id_examen`,`id_estudiant`))",
 
-                "CREATE TABLE `tipus_document` ("
+                "CREATE TABLE if not exists `tipus_document` ("
                 "`id` INT NOT NULL,"
                 "`id_estudiant` INT NULL,"
                 "PRIMARY KEY (`id`))"]
