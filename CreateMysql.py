@@ -1,3 +1,5 @@
+import base64
+
 import mysql.connector
 from Crypto.PublicKey import RSA
 from mysql.connector import errorcode
@@ -5,9 +7,9 @@ from mysql.connector import errorcode
 
 class MySqlBloc:
 
-    def __init__(self, ip=None, usuari=None, password=None, db=None):
+    def __init__(self, ip=None, usuari=None, password=None):
         try:
-            self._conexio = mysql.connector.connect(host=ip, user=usuari, passwd=password, database=db)
+            self._conexio = mysql.connector.connect(host=ip, user=usuari, passwd=password)
             self._cursor = self._conexio.cursor()
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
@@ -126,6 +128,19 @@ class MySqlBloc:
         sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{string_key}")'
         self.exportar_sql(sql)
 
+    def guardar_document(self, num_document, nom_fitxer):
+        pdf_file = open(nom_fitxer, "rb")
+        save_pdf = base64.b64encode(pdf_file.read())
+        pdf_file.close()
+        num_document = str(num_document)
+        id_document = int(num_document[0:-8])
+        id_tipus = int(num_document[-8:-4])
+        versio = int(num_document[-4:])
+        id_usuari = 1050412
+        sql = f'INSERT INTO documents (`id_document`, `id_tipus`, `versio`, `id_usuari`, `pdf`) VALUES({id_document}, ' \
+              f'{id_tipus}, {versio}, {id_usuari}, "{save_pdf}") '
+        self.exportar_sql(sql)
+
     def crear_taules(self):
         sqls = ["CREATE TABLE if not exists `usuari` ("
                 "`id` int NOT NULL,"
@@ -154,10 +169,10 @@ class MySqlBloc:
 
                 "CREATE TABLE if not exists `documents` ("
                 "`id_document` INT NOT NULL,"
-                "`id_tipus` INT NULL,"
-                "`versio` INT NULL,"
+                "`id_tipus` INT NOT NULL,"
+                "`versio` INT NOT NULL,"
                 "`id_usuari` INT NULL,"
-                "`pdf` LONGBLOB NOT NULL,"
+                "`pdf` LONGBLOB  NULL,"
                 "PRIMARY KEY (`id_document`, `id_tipus`, `versio`))",
 
                 "CREATE TABLE if not exists `examen` ("
@@ -190,6 +205,19 @@ class MySqlBloc:
 
         for id_usuari, nif, nom, cognom in usuaris:
             self.guardar_usuari(id_usuari, nif, nom, cognom)
+
+    def crear_documents(self):
+        documents = [[100010001, f'C:/Users/u1050/PycharmProjects/'
+                                 f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'],
+                     [100020001, f'C:/Users/u1050/PycharmProjects/'
+                                 f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'],
+                     [100030001, f'C:/Users/u1050/PycharmProjects/'
+                                 f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'],
+                     [100040001, f'C:/Users/u1050/PycharmProjects/'
+                                 f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf']]
+
+        for num_document, pdf in documents:
+            self.guardar_document(num_document, pdf)
 
     @staticmethod
     def crear_schema_dades(mydb, schema):

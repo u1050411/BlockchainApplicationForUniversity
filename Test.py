@@ -1,3 +1,5 @@
+import base64
+import subprocess
 import unittest
 from random import Random
 
@@ -5,21 +7,7 @@ from Crypto.PublicKey import RSA
 
 from BlockchainUniversity import Universitat, Estudiant, Transaccio, Professor, TransaccioExamen, Bloc,  Examen, Usuari, Factoria
 from CreateMysql import MySqlBloc
-
-
-class TestFactoria(unittest.TestCase):
-
-    def test_factoria(self):
-        schema = 'blockchainuniversity'
-        my_db = MySqlBloc('localhost', 'root', 'root')
-        my_db.crear_schema_dades(my_db, schema)
-        my_db.afegir_schema(schema)
-        estudiant = Factoria.build_usuari_from_db(my_db, 1050402, 'estudiant')
-        self.assertEqual(estudiant.id, 1050402)
-        self.assertEqual(estudiant.nom, 'Pere')
-        professor = Factoria.build_usuari_from_db(my_db, 2000256, 'professor')
-        self.assertEqual(professor.id, 2000256)
-        self.assertEqual(professor.nom, 'Teodor Maria')
+from PyPDF2 import PdfFileMerger, PdfFileReader
 
 
 class TestUsuaris(unittest.TestCase):
@@ -41,12 +29,17 @@ class TestUniversitat(unittest.TestCase):
 class TestTransaction(unittest.TestCase):
 
     def test_creation(self):
-        emissor = Estudiant('Pau')
-        transaccio = Transaccio(emissor, 'DocumentEncriptat', 'idDocument')
-        self.assertEqual(transaccio.emissor, emissor)
-        self.assertEqual(transaccio.document, 'DocumentEncriptat')
-        self.assertEqual(transaccio.nota, 0)
-        self.assertEqual(transaccio.id_document, 'Hash')
+        schema = 'blockchainuniversity'
+        my_db = MySqlBloc('localhost', 'root', 'root')
+        my_db.crear_schema_dades(my_db, schema)
+        my_db.afegir_schema(schema)
+        receptor = Factoria.build_usuari_from_db(my_db, 1050402, 'estudiant')
+        emissor = Factoria.build_usuari_from_db(my_db, 2000256, 'professor')
+        transaccio = Transaccio(emissor, receptor, 'idDocument')
+        # self.assertEqual(transaccio.emissor, emissor)
+        # self.assertEqual(transaccio.document, 'DocumentEncriptat')
+        # self.assertEqual(transaccio.nota, 0)
+        # self.assertEqual(transaccio.id_document, 'Hash')
 
     def test_posarNota(self):
         cua = []
@@ -145,13 +138,12 @@ class TestMysql(unittest.TestCase):
 
     def test_exportar_sql(self):
         MySqlBloc.crear_schema_dades(self.my_db, self.schema)
-        sql = "CREATE TABLE `TaulaProva` (" \
+        sql = "CREATE TABLE if not exists `TaulaProva` (" \
               "`id` int NOT NULL,"\
               "`nif` varchar(9) NOT NULL," \
               "`nom` varchar(45) DEFAULT NULL,"\
               "`cognom` varchar(100) DEFAULT NULL,"\
               "PRIMARY KEY (`id`, `nif`)) "
-        self.my_db.afegir_schema(self.schema)
         self.my_db.exportar_sql(sql)
         self.assertEqual(self.my_db.existeix(self.schema, 'TaulaProva', None, None), True)
 
@@ -159,13 +151,11 @@ class TestMysql(unittest.TestCase):
         schema = self.schema
         self.my_db.esborrar_schema(schema)
         self.my_db.crear_schema(schema)
-        self.my_db.afegir_schema(schema)
         self.my_db.crear_taules()
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', None, None), True)
 
     def test_crear_usuaris(self):
         self.test_crear_taules()
-        self.my_db.afegir_schema(self.schema)
         self.my_db.crear_usuaris()
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'id', '1050403'), True)
 
@@ -188,7 +178,6 @@ class TestMysql(unittest.TestCase):
         nif = '40373944C'
         nom = 'Pablo'
         cognom = 'Gutierrez'
-        self.my_db.afegir_schema(self.schema)
         self.my_db.guardar_usuari(id_usuari, nif, nom, cognom)
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'id', '1050411'), True)
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'nom', 'Pere'), True)
@@ -198,17 +187,74 @@ class TestMysql(unittest.TestCase):
     def test_clau(self):
         MySqlBloc.crear_schema_dades(self.my_db, self.schema)
         id_usuari = 1050402
-        self.my_db.afegir_schema(self.schema)
         privat_key = self.my_db.clau_privada(id_usuari)
         public_key = self.my_db.clau_publica(id_usuari)
         self.assertTrue(privat_key.public_key(), public_key)
+
+    def test_crear_documents(self):
+        MySqlBloc.crear_schema_dades(self.my_db, self.schema)
+        self.my_db.crear_documents()
+
+
+
+class TestFactoria(unittest.TestCase):
+
+    def test_factoria(self):
+        schema = 'blockchainuniversity'
+        my_db = MySqlBloc('localhost', 'root', 'root')
+        my_db.crear_schema_dades(my_db, schema)
+        estudiant = Factoria.build_usuari_from_db(my_db, 1050402, 'estudiant')
+        self.assertEqual(estudiant.id, 1050402)
+        self.assertEqual(estudiant.nom, 'Pere')
+        professor = Factoria.build_usuari_from_db(my_db, 2000256, 'professor')
+        self.assertEqual(professor.id, 2000256)
+        self.assertEqual(professor.nom, 'Teodor Maria')
 
 
 class TestExamen(unittest.TestCase):
 
     def test_creacio_examen(self):
-        MySqlBloc.crear_schema_dades(self.mydb, self.schema)
-        examen = Examen()
+        my_db = MySqlBloc('localhost', 'root', 'root')
+        my_db.crear_schema_dades(my_db, 'blockchainuniversity')
+        estudiant = Factoria.build_usuari_from_db(my_db, 1050402, 'estudiant')
+        professor = Factoria.build_usuari_from_db(my_db, 2000256, 'professor')
+
+        examen = Examen(1000101, '01052022', '01052022', professor, estudiant, None, 0)
+
+    # def test_llegir_pdf(self):
+    #     nom_fitxer = f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
+    #     pdf_file = open(nom_fitxer, "rb")
+    #     my_db = MySqlBloc('localhost', 'root', 'root')
+    #     my_db.crear_schema_dades(my_db, 'blockchainuniversity')
+    #     id_document = 1
+    #     id_tipus = 1
+    #     versio = 1
+    #     id_usuari = 1050412
+    #     save_pdf = base64.b64encode(pdf_file.read())
+    #     pdf_file.close()
+    #     sql = f'INSERT INTO documents (`id_document`, `id_tipus`, `versio`, `id_usuari`, `pdf`) VALUES({id_document}, ' \
+    #           f'{id_tipus}, {versio}, {id_usuari}, "{save_pdf}") '
+    #     my_db.exportar_sql(sql)
+
+
+
+    # def test_print_pdf(self, pdffile, printer_name):
+    #     # acroread = r'C:\Program Files (x86)\Adobe\Reader 11.0\Reader\AcroRd32.exe'
+    #     acrobat = r'C:\Program Files (x86)\Adobe\Acrobat 11.0\Acrobat\Acrobat.exe'
+    #
+    #     # '"%s"'is to wrap double quotes around paths
+    #     # as subprocess will use list2cmdline internally if we pass it a list
+    #     # which escapes double quotes and Adobe Reader doesn't like that
+    #
+    #     cmd = '"{}" /N /T "{}" "{}"'.format(acrobat, pdffile, printer_name)
+    #
+    #     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #     stdout, stderr = proc.communicate()
+    #     exit_code = proc.wait()
+
+
+
+
 
 
 
