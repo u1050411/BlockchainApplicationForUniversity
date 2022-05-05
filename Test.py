@@ -226,7 +226,7 @@ class TestFactoria(unittest.TestCase):
         my_db = MySqlBloc('localhost', 'root', 'root')
         my_db.crear_schema_dades(my_db, 'blockchainuniversity')
         examen = Factoria.build_examen_from_db(my_db, 10000)
-        print(examen)
+        self.assertEqual(examen.id_document, 10000)
 
 
 class TestExamen(unittest.TestCase):
@@ -238,9 +238,9 @@ class TestExamen(unittest.TestCase):
 
         nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
+        pdf = my_db.recuperar_fitxer(nom_fitxer)
+        examen = Examen(1000101, professor, pdf, '01052022', '01052022')
 
-        examen = Examen(1000101, '01052022', '01052022', professor, estudiant, None, 0)
-        examen = Examen(int_document, professor, pdf, nota, data_examen, data_inicial, data_final)
 
     # def test_llegir_pdf(self):
     #     nom_fitxer = f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
