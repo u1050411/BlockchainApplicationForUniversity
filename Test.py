@@ -159,6 +159,10 @@ class TestMysql(unittest.TestCase):
         self.my_db.crear_usuaris()
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'id', '1050403'), True)
 
+    def test_crear_examens(self):
+        MySqlBloc.crear_schema_dades(self.my_db, self.schema)
+        self.my_db.crear_examens()
+
     def test_existeix(self):
         MySqlBloc.crear_schema_dades(self.my_db, self.schema)
         self.assertEqual(self.my_db.existeix(self.schema, None, None, None), True)
@@ -191,15 +195,23 @@ class TestMysql(unittest.TestCase):
         public_key = self.my_db.clau_publica(id_usuari)
         self.assertTrue(privat_key.public_key(), public_key)
 
-    def test_crear_documents(self):
+    def test_crear_examens(self):
         MySqlBloc.crear_schema_dades(self.my_db, self.schema)
-        self.my_db.crear_documents()
-
+        nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
+                     f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
+        pdf = MySqlBloc.recuperar_fitxer(nom_fitxer)
+        professor = Factoria.build_usuari_from_db(self.my_db, 2000256, 'professor')
+        examen = Examen(10100, professor, pdf, '00000000', '00000000')
+        estudiant1 = Factoria.build_usuari_from_db(self.my_db, 1050411, 'estudiant')
+        examen.estudiants.append(estudiant1)
+        estudiant2 = Factoria.build_usuari_from_db(self.my_db, 1050402, 'estudiant')
+        examen.estudiants.append(estudiant2)
+        self.my_db.guardar_examen(examen)
 
 
 class TestFactoria(unittest.TestCase):
 
-    def test_factoria(self):
+    def test_usuari(self):
         schema = 'blockchainuniversity'
         my_db = MySqlBloc('localhost', 'root', 'root')
         my_db.crear_schema_dades(my_db, schema)
@@ -210,16 +222,25 @@ class TestFactoria(unittest.TestCase):
         self.assertEqual(professor.id, 2000256)
         self.assertEqual(professor.nom, 'Teodor Maria')
 
+    def test_examen(self):
+        my_db = MySqlBloc('localhost', 'root', 'root')
+        my_db.crear_schema_dades(my_db, 'blockchainuniversity')
+        examen = Factoria.build_examen_from_db(my_db, 10000)
+        print(examen)
+
 
 class TestExamen(unittest.TestCase):
 
     def test_creacio_examen(self):
         my_db = MySqlBloc('localhost', 'root', 'root')
         my_db.crear_schema_dades(my_db, 'blockchainuniversity')
-        estudiant = Factoria.build_usuari_from_db(my_db, 1050402, 'estudiant')
         professor = Factoria.build_usuari_from_db(my_db, 2000256, 'professor')
 
+        nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
+                     f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
+
         examen = Examen(1000101, '01052022', '01052022', professor, estudiant, None, 0)
+        examen = Examen(int_document, professor, pdf, nota, data_examen, data_inicial, data_final)
 
     # def test_llegir_pdf(self):
     #     nom_fitxer = f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'

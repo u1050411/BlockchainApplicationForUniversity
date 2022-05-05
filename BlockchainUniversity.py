@@ -35,6 +35,36 @@ class Factoria:
                 return professor
         return None
 
+    def build_examen_from_db(my_db, num_document):
+        id_document = MySqlBloc.dades_num(num_document)[0]
+        if my_db.existeix('BlockchainUniversity', 'examen', 'id_document', id_document):
+            sql = f'select id_document, professor, data_examen, data_inicial, data_final, pdf  ' \
+                  f'from `examen` where `id_document` = {id_document} LIMIT 1'
+            id_document, id_professor, id_professor, data_examen, data_inicial, data_final, pdf, nota = (my_db.importar_sql(sql))
+            int_document = id_document+"01"+00
+            professor = Factoria.build_usuari_from_db(my_db, id_professor, 'professor')
+            examen = Examen(int_document, professor, pdf, nota, data_examen, data_inicial, data_final)
+            return examen
+
+        return None
+
+    # def build_document_from_db(my_db, num_document):
+    #     if my_db.existeix('BlockchainUniversity', 'examen', 'id_document', num_document):
+    #         id_document = MySqlBloc.dades_num(num_document)[0]
+    #         sql = f'select * from usuari where id = {id_usuari} LIMIT 1'
+    #         usuari = (my_db.importar_sql(sql))
+    #         nif = usuari[1]
+    #         nom = usuari[2]
+    #         cognom = usuari[3]
+    #         public_key = my_db.clau_publica(id_usuari)
+    #         if tipus == 'estudiant':
+    #             estudiant = Estudiant(id_usuari, nif, nom, cognom, public_key)
+    #             return estudiant
+    #         elif tipus == 'professor':
+    #             professor = Professor(id_usuari, nif, nom, cognom, public_key)
+    #             return professor
+    #     return None
+
 
 class Usuari:
 
@@ -68,23 +98,15 @@ class Universitat:
 class Transaccio:
 
     # Classe on guardem les dades de les transaccions
-    def __init__(self, emissor, receptor, document):
-        self.emissor = None
-        self.receptor = None
-        self.document = None
-        self._time = None
+    def __init__(self, emissor=None, receptor=None, document=None):
+        self.emissor = emissor
+        self.receptor = receptor
+        self.document = document
+        self._time = datetime.now().isoformat()
 
     def sign(self, data):
         h = SHA1.new(data)
         return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
-
-    @classmethod
-    def crear_transaccio(cls, emissor, receptor, document):
-        cls.emissor = emissor
-        cls.receptor = receptor
-        cls.document = document
-        cls._time = datetime.now()
-        return cls
 
     @property
     def time(self):
@@ -127,16 +149,16 @@ time: {self.time}
 
 class TransaccioExamen(Transaccio):
 
-    def __init__(self, emissor, receptor, document):
+    def __init__(self, emissor=None, receptor=None, document=None):
         super().__init__(emissor, receptor, document)
 
 
 class Bloc:
     # Classe creació del bloc
 
-    def __init__(self, index, hash_bloc_anterior, transaccio):
+    def __init__(self, index=None, hash_bloc_anterior=None, transaccio=None):
         self._index = index
-        self._timestamp = datetime.now()
+        self._timestamp = datetime.now().isoformat()
         self.hash_bloc_anterior = hash_bloc_anterior
         self._transaccio = transaccio
         self.nonce = 0
@@ -258,7 +280,7 @@ class BlockchainUniversity:
 
 
 class Document:
-    def __init__(self, id_document = None, id_tipus = None, usuari = None, pdf = None):
+    def __init__(self, id_document=None, id_tipus=None, usuari=None, pdf=None):
         self.id_document = id_document
         self.id_tipus = id_tipus
         self.usuari = usuari
@@ -267,14 +289,30 @@ class Document:
 
 class Examen(Document):
 
-    def __init__(self, id_document, data_inicial, data_final, professor, estudiant, document, nota):
+    def __init__(self, id_document=None, professor=None, pdf=None, data_inicial =None, data_final=None):
         self.id_document = id_document
+        self.data_creacio = datetime.now().isoformat()
         self.data_inicial = data_inicial
         self.data_final = data_final
         self.professor = professor
-        self.estudiant = estudiant
-        self.document = document
-        self.nota = nota
+        self.estudiants = []
+        self.pdf = pdf
+        self.nota = 0
 
     def afegir_estudiants(self, estudiant):
         self.estudiants.append(estudiant)
+
+
+
+
+
+
+
+# class FitxersPdf:
+#     OUTPUT_DIR = Path('data')
+#
+#
+#     def llegirPdf(self):
+# # read the binary signature
+# with open(signature_file_name, 'rb') as f:
+#     read_signature = f.read()

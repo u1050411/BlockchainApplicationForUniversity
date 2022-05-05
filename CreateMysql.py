@@ -1,4 +1,5 @@
 import base64
+from datetime import datetime
 
 import mysql.connector
 from Crypto.PublicKey import RSA
@@ -101,7 +102,6 @@ class MySqlBloc:
             elif dada is None:
                 sql = f"SHOW COLUMNS FROM {taula} WHERE Field = '{columna}'"
             else:
-                # sql = f"select {columna} from {taula} where {columna} = {dada} LIMIT 1"
                 sql = f"select `{columna}` from `{taula}` where `{columna}` = '{dada}' LIMIT 1"
         self.select_sql(sql)
         return self._cursor.fetchone() is not None
@@ -116,7 +116,7 @@ class MySqlBloc:
         clau_string = self.importar_sql(sql)
         return RSA.importKey(clau_string[0])
 
-    def guardar_usuari(self, id_usuari, nif,  nom, cognom):
+    def guardar_usuari(self, id_usuari, nif, nom, cognom):
         sql = f'INSERT INTO usuari (`id`, `nif`, `nom`, `cognom`) VALUES({id_usuari}, "{nif}", "{nom}", "{cognom}")'
         self.exportar_sql(sql)
         key = RSA.generate(1024)
@@ -128,18 +128,41 @@ class MySqlBloc:
         sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{string_key}")'
         self.exportar_sql(sql)
 
-    def guardar_document(self, num_document, nom_fitxer):
+    @staticmethod
+    def dades_num(num_document):
+        num_document = str(num_document)
+        id_document = int(num_document[0:-4])
+        id_tipus = int(num_document[-4:-2])
+        versio = int(num_document[-2:])
+        return [id_document, id_tipus, versio]
+
+    @staticmethod
+    def recuperar_fitxer(nom_fitxer):
         pdf_file = open(nom_fitxer, "rb")
         save_pdf = base64.b64encode(pdf_file.read())
         pdf_file.close()
-        num_document = str(num_document)
-        id_document = int(num_document[0:-8])
-        id_tipus = int(num_document[-8:-4])
-        versio = int(num_document[-4:])
-        id_usuari = 1050412
-        sql = f'INSERT INTO documents (`id_document`, `id_tipus`, `versio`, `id_usuari`, `pdf`) VALUES({id_document}, ' \
-              f'{id_tipus}, {versio}, {id_usuari}, "{save_pdf}") '
-        self.exportar_sql(sql)
+        return save_pdf
+
+    def guardar_examen(self, examen):
+        id_document, id_tipus, versio = self.dades_num(examen.id_document)
+        if id_tipus == 1:
+            if versio == 0:
+                id_usuari = examen.professor.id
+                data_examen = examen.data_creacio
+                data_inici = examen.data_inicial
+                data_final = examen.data_final
+                save_pdf = examen.pdf
+                estudiants = examen.estudiants
+
+            sql = f'INSERT INTO examen (`id_document`, `id_professor`, `data_examen`, `data_inici`, `data_final`, ' \
+                  f'`pdf`) VALUES({id_document}, {id_usuari}, "{data_examen}", "{data_inici}", "{data_final}", ' \
+                  f'"{save_pdf}")'
+            self.exportar_sql(sql)
+
+            for estudiant in estudiants:
+                sql = f'INSERT INTO estudiant_examen (`id_document`, `id_estudiant`) ' \
+                      f'VALUES({id_document}, "{estudiant.id}")'
+                self.exportar_sql(sql)
 
     def crear_taules(self):
         sqls = ["CREATE TABLE if not exists `usuari` ("
@@ -167,31 +190,31 @@ class MySqlBloc:
                 "`data` DATETIME NOT NULL,"
                 "PRIMARY KEY(`id`, `id_emisor`, `id_receptor`, `id_document`, `data`))",
 
-                "CREATE TABLE if not exists `documents` ("
-                "`id_document` INT NOT NULL,"
-                "`id_tipus` INT NOT NULL,"
-                "`versio` INT NOT NULL,"
-                "`id_usuari` INT NULL,"
-                "`pdf` LONGBLOB  NULL,"
-                "PRIMARY KEY (`id_document`, `id_tipus`, `versio`))",
+                # "CREATE TABLE if not exists `document` ("
+                # "`id_document` INT NOT NULL,"
+                # "PRIMARY KEY (`id_document`))",
 
                 "CREATE TABLE if not exists `examen` ("
-                "`id` INT NOT NULL,"
-                "`datai` DATETIME NULL,"
-                "`dataf` DATETIME NULL,"
-                "`id_document` INT NULL,"
-                "`id_professor` INT NULL,"
-                "PRIMARY KEY (`id`))",
+                "`id_document` INT NOT NULL,"
+                "`id_professor` INT NOT NULL,"
+                "`data_examen` DATETIME NOT NULL,"
+                "`data_inici` DATETIME NULL,"
+                "`data_final` DATETIME NULL,"
+                "`pdf` LONGBLOB  NULL,"
+                "PRIMARY KEY (`id_document`))",
 
-                "CREATE TABLE if not exists `examen_alumne` ("
-                "`id_examen` INT NOT NULL,"
+                "CREATE TABLE if not exists `estudiant_examen` ("
+                "`id_document` INT NOT NULL,"
                 "`id_estudiant` INT NOT NULL,"
-                "PRIMARY KEY (`id_examen`,`id_estudiant`))",
+                "PRIMARY KEY (`id_document`, `id_estudiant`))",
 
-                "CREATE TABLE if not exists `tipus_document` ("
-                "`id` INT NOT NULL,"
-                "`id_estudiant` INT NULL,"
-                "PRIMARY KEY (`id`))"]
+                "CREATE TABLE if not exists `usuari_examen` ("
+                "`id_document` INT NOT NULL,"
+                "`id_resposta` INT NOT NULL,"
+                "`data` DATETIME NOT NULL,"
+                "`id_usuari` INT NOT NULL,"
+                "`pdf` LONGBLOB  NULL,"
+                "PRIMARY KEY (`id_document`, `id_resposta`))"]
 
         for sql in sqls:
             self.exportar_sql(sql)
@@ -205,19 +228,22 @@ class MySqlBloc:
 
         for id_usuari, nif, nom, cognom in usuaris:
             self.guardar_usuari(id_usuari, nif, nom, cognom)
+        # nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
+        #              f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
+        # self.my_db.guardar_examen(10100, nom_fitxer, 1050411, '00000000', '00000000')
 
-    def crear_documents(self):
-        documents = [[100010001, f'C:/Users/u1050/PycharmProjects/'
-                                 f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'],
-                     [100020001, f'C:/Users/u1050/PycharmProjects/'
-                                 f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'],
-                     [100030001, f'C:/Users/u1050/PycharmProjects/'
-                                 f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'],
-                     [100040001, f'C:/Users/u1050/PycharmProjects/'
-                                 f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf']]
+    def crear_examens(self):
+        examens = [[10000, f'C:/Users/u1050/PycharmProjects/'
+                           f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf', 2050404, '0', '0'],
+                   [10001, f'C:/Users/u1050/PycharmProjects/'
+                           f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'],
+                   [10002, f'C:/Users/u1050/PycharmProjects/'
+                           f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'],
+                   [10003, f'C:/Users/u1050/PycharmProjects/'
+                           f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf']]
 
-        for num_document, pdf in documents:
-            self.guardar_document(num_document, pdf)
+        for num_document, nom_fitxer, id_professor, datai, dataf in examens:
+            self.crear_examen(num_document, nom_fitxer, id_professor, datai, dataf)
 
     @staticmethod
     def crear_schema_dades(mydb, schema):
@@ -225,4 +251,3 @@ class MySqlBloc:
         mydb.crear_schema(schema)
         mydb.crear_taules()
         mydb.crear_usuaris()
-
