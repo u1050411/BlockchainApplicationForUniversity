@@ -70,13 +70,18 @@ class MySqlBloc:
             print("Error Mysql : {}".format(err))
             exit(1)
 
-    def importar_sql(self, sql):
+    def importar_llista_sql(self, sql):
         try:
             self._cursor.execute(sql)
         except mysql.connector.Error as err:
             print("Error Mysql : {}".format(err))
             exit(1)
-        return self._cursor.fetchall()[0]
+        return self._cursor.fetchall()
+
+    def importar_sql(self, sql):
+        llista = self.importar_llista_sql(sql)
+        return llista[0]
+        # return self._cursor.fetchall()[0]
 
     def esborrar_schema(self, schema):
         if self.existeix(schema, None, None, None):
@@ -132,9 +137,8 @@ class MySqlBloc:
     def dades_num(num_document):
         num_document = str(num_document)
         id_document = int(num_document[0:-4])
-        id_tipus = int(num_document[-4:-2])
-        versio = int(num_document[-2:])
-        return [id_document, id_tipus, versio]
+        id_tipus = int(num_document[-4:])
+        return [id_document, id_tipus]
 
     @staticmethod
     def recuperar_fitxer(nom_fitxer):
@@ -144,15 +148,14 @@ class MySqlBloc:
         return save_pdf
 
     def guardar_examen(self, examen):
-        id_document, id_tipus, versio = self.dades_num(examen.id_document)
+        id_document, id_tipus = self.dades_num(examen.id_document)
         if id_tipus == 1:
-            if versio == 0:
-                id_usuari = examen.professor.id
-                data_examen = examen.data_creacio
-                data_inici = examen.data_inicial
-                data_final = examen.data_final
-                save_pdf = examen.pdf
-                estudiants = examen.estudiants
+            id_usuari = examen.professor.id
+            data_examen = examen.data_creacio
+            data_inici = examen.data_inicial
+            data_final = examen.data_final
+            save_pdf = examen.pdf
+            estudiants = examen.estudiants
 
             sql = f'INSERT INTO examen (`id_document`, `id_professor`, `data_examen`, `data_inici`, `data_final`, ' \
                   f'`pdf`) VALUES({id_document}, {id_usuari}, "{data_examen}", "{data_inici}", "{data_final}", ' \
@@ -163,6 +166,12 @@ class MySqlBloc:
                 sql = f'INSERT INTO estudiant_examen (`id_document`, `id_estudiant`) ' \
                       f'VALUES({id_document}, "{estudiant.id}")'
                 self.exportar_sql(sql)
+
+    # def guardar_resposta_examen(self, id_document, resposta):
+    #     id_document, id_tipus = self.dades_num(resposta.id_document)
+    #     sql = f'INSERT INTO examen (`id_document`, `id_resposta`, `data_creacio`, `id_usuari`, `pdf`) ' \
+    #           f'VALUES({resposta.id_document}, {resposta.id_resposta}, "{resposta.data_creacio}", ' \
+    #           f'"{resposta.usuari.id}","{resposta.pdf}")'
 
     def crear_taules(self):
         sqls = ["CREATE TABLE if not exists `usuari` ("
@@ -208,10 +217,10 @@ class MySqlBloc:
                 "`id_estudiant` INT NOT NULL,"
                 "PRIMARY KEY (`id_document`, `id_estudiant`))",
 
-                "CREATE TABLE if not exists `usuari_examen` ("
+                "CREATE TABLE if not exists `resposta_examen` ("
                 "`id_document` INT NOT NULL,"
                 "`id_resposta` INT NOT NULL,"
-                "`data` DATETIME NOT NULL,"
+                "`data_creacio` DATETIME NOT NULL,"
                 "`id_usuari` INT NOT NULL,"
                 "`pdf` LONGBLOB  NULL,"
                 "PRIMARY KEY (`id_document`, `id_resposta`))"]
@@ -228,26 +237,30 @@ class MySqlBloc:
 
         for id_usuari, nif, nom, cognom in usuaris:
             self.guardar_usuari(id_usuari, nif, nom, cognom)
-        # nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
-        #              f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
-        # self.my_db.guardar_examen(10100, nom_fitxer, 1050411, '00000000', '00000000')
 
     def crear_examens(self):
-        examens = [[10000, f'C:/Users/u1050/PycharmProjects/'
-                           f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf', 2050404, '0', '0'],
-                   [10001, f'C:/Users/u1050/PycharmProjects/'
-                           f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'],
-                   [10002, f'C:/Users/u1050/PycharmProjects/'
-                           f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'],
-                   [10003, f'C:/Users/u1050/PycharmProjects/'
-                           f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf']]
+        examens = [[10001, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
+                           f'/pdf/GEINF DOC1 full de TFG_V2.pdf', 2050404, '00000000', '00000000'],
+                   [20001, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
+                           f'/pdf/GEINF DOC1 full de TFG_V2.pdf', 2000256, '00000000', '00000000'],
+                   [30001, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
+                           f'/pdf/GEINF DOC1 full de TFG_V2.pdf', 2000256, '00000000', '00000000'],
+                   [40001, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
+                           f'/pdf/GEINF DOC1 full de TFG_V2.pdf', 2050404, '00000000', '00000000']]
 
-        for num_document, nom_fitxer, id_professor, datai, dataf in examens:
-            self.crear_examen(num_document, nom_fitxer, id_professor, datai, dataf)
+        for num_document, nom_fitxer, id_professor, data_inicial, data_final in examens:
+            save_pdf = self.recuperar_fitxer(nom_fitxer)
+            data_creacio = datetime.now().isoformat()
+            sql = f'INSERT INTO `examen` (`id_document`, `id_professor`, `data_examen`, `data_inici`' \
+                  f', `data_final`, `pdf`) ' \
+                  f'VALUES({num_document}, {id_professor}, "{data_creacio}", "{data_inicial}",' \
+                  f' "{data_final}", "{save_pdf}")'
+            self.exportar_sql(sql)
 
     @staticmethod
-    def crear_schema_dades(mydb, schema):
-        mydb.esborrar_schema(schema)
-        mydb.crear_schema(schema)
-        mydb.crear_taules()
-        mydb.crear_usuaris()
+    def crear_schema_dades(my_db, schema):
+        my_db.esborrar_schema(schema)
+        my_db.crear_schema(schema)
+        my_db.crear_taules()
+        my_db.crear_usuaris()
+        my_db.crear_examens()

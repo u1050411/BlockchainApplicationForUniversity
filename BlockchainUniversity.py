@@ -11,6 +11,8 @@ from CreateMysql import MySqlBloc
 # from pandas.io import json
 
 UTF_8 = 'utf8'
+ESTUDIANT = 'estudiant'
+PROFESSOR = 'professor'
 
 
 class Factoria:
@@ -27,43 +29,47 @@ class Factoria:
             nom = usuari[2]
             cognom = usuari[3]
             public_key = my_db.clau_publica(id_usuari)
-            if tipus == 'estudiant':
+            if tipus == ESTUDIANT:
                 estudiant = Estudiant(id_usuari, nif, nom, cognom, public_key)
                 return estudiant
-            elif tipus == 'professor':
+            elif tipus == PROFESSOR:
                 professor = Professor(id_usuari, nif, nom, cognom, public_key)
                 return professor
         return None
 
+    @staticmethod
     def build_examen_from_db(my_db, num_document):
         id_document = MySqlBloc.dades_num(num_document)[0]
         if my_db.existeix('BlockchainUniversity', 'examen', 'id_document', id_document):
-            sql = f'select id_document, professor, data_examen, data_inicial, data_final, pdf  ' \
+            sql = f'select `id_document`, `professor`, `data_examen`, `data_inicial`, `data_final`, `pdf`, `nota`  ' \
                   f'from `examen` where `id_document` = {id_document} LIMIT 1'
-            id_document, id_professor, id_professor, data_examen, data_inicial, data_final, pdf, nota = (my_db.importar_sql(sql))
-            int_document = id_document+"01"+00
-            professor = Factoria.build_usuari_from_db(my_db, id_professor, 'professor')
-            examen = Examen(int_document, professor, pdf, nota, data_examen, data_inicial, data_final)
+            id_document, professor, data_examen, data_inicial, data_final, pdf, nota = my_db.importar_sql(sql)
+            id_examen, tipus = my_db.dades_num(id_document)
+            if tipus == 1:
+                examen = Examen(id_document, professor, pdf, data_inicial, data_final)
+                sqlu = f'select `id_estudiant` from `estudiant_examen` where `id_document` = {id_document}'
+                estudiants = my_db.importar_llista_sql(sqlu)
+                if estudiants is not None:
+                    for id_estudiant in estudiants:
+                        estudiant = Factoria.build_usuari_from_db(my_db, id_estudiant, ESTUDIANT)
+                        examen.estudiants.append(estudiant)
+
+                    sqlr = f'select id_resposta, data_creacio, id_usuari, pdf  ' \
+                           f'from `resposta_examen` where `id_document` = {id_document}'
+                    respostes = my_db.importar_llista_sql(sqlr)
+                    for sql_resposta in respostes:
+                        id_resposta, data_creacio, id_usuari, pdf = sql_resposta
+                        num_tipus = id_usuari[0]
+                        if num_tipus == 2:
+                            tipus = PROFESSOR
+                        else:
+                            tipus = ESTUDIANT
+                        usuari = Factoria.build_usuari_from_db(my_db, id_estudiant, tipus)
+                        resposta = RespostaExamen(id_resposta, usuari, pdf)
+                        resposta.data_creacio = data_creacio
+                        examen.respostes.append(resposta)
             return examen
-
         return None
-
-    # def build_document_from_db(my_db, num_document):
-    #     if my_db.existeix('BlockchainUniversity', 'examen', 'id_document', num_document):
-    #         id_document = MySqlBloc.dades_num(num_document)[0]
-    #         sql = f'select * from usuari where id = {id_usuari} LIMIT 1'
-    #         usuari = (my_db.importar_sql(sql))
-    #         nif = usuari[1]
-    #         nom = usuari[2]
-    #         cognom = usuari[3]
-    #         public_key = my_db.clau_publica(id_usuari)
-    #         if tipus == 'estudiant':
-    #             estudiant = Estudiant(id_usuari, nif, nom, cognom, public_key)
-    #             return estudiant
-    #         elif tipus == 'professor':
-    #             professor = Professor(id_usuari, nif, nom, cognom, public_key)
-    #             return professor
-    #     return None
 
 
 class Usuari:
@@ -75,9 +81,9 @@ class Usuari:
         self.cognom = cognom
         self.public_key = public_key
 
-    def sign(self, data):
-        h = SHA1.new(data)
-        return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
+    # def sign(self, data):
+    #     h = SHA1.new(data)
+    #     return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
 
 
 class Professor(Usuari):
@@ -270,15 +276,6 @@ class BlockchainUniversity:
         return new_bloc.index
 
 
-# class Assignatura:
-#
-#     def __init__(self, id_assignatura, nom, professor):
-#         self.id_assignatura = id_assignatura
-#         self.nom = nom
-#         self.professor = professor
-#         self.alumnes = []
-
-
 class Document:
     def __init__(self, id_document=None, id_tipus=None, usuari=None, pdf=None):
         self.id_document = id_document
@@ -289,24 +286,50 @@ class Document:
 
 class Examen(Document):
 
-    def __init__(self, id_document=None, professor=None, pdf=None, data_inicial =None, data_final=None):
+    def __init__(self, id_document=None, professor=None, pdf=None, data_inicial=None, data_final=None):
         self.id_document = id_document
         self.data_creacio = datetime.now().isoformat()
         self.data_inicial = data_inicial
         self.data_final = data_final
         self.professor = professor
         self.estudiants = []
+        self.respostes = []
         self.pdf = pdf
         self.nota = 0
 
     def afegir_estudiants(self, estudiant):
         self.estudiants.append(estudiant)
 
+    @staticmethod
+    def seguent_numero(my_db):
+        sql = f"select Max(`id_document`) from `examen`"
+        num_maxim = my_db.importar_sql(sql)[0]
+        id_document, tipus = my_db.dades_num(num_maxim)
+        return id_document + 1
+
+    # sembla que no fa falta
+    # def afegir_resposta(self, resposta_examen):
+    #     self.respostes.append(resposta_examen)
 
 
+class RespostaExamen:
+
+    def __init__(self, id_resposta=None, usuari=None, pdf=None):
+        self.id_resposta = id_resposta
+        self.usuari = usuari
+        self.data_creacio = datetime.now().isoformat()
+        self.pdf = pdf
 
 
-
+    @staticmethod
+    def seguent_numero(my_db, id_document):
+        sql = f"select Max(`id_resposta`) from `resposta_examen` where `id_document` = {id_document}"
+        num_maxim = my_db.importar_sql(sql)[0]
+        if num_maxim is None:
+            id_document = 0
+        else:
+            id_document, tipus = my_db.dades_num(num_maxim)
+        return id_document + 1
 
 # class FitxersPdf:
 #     OUTPUT_DIR = Path('data')
