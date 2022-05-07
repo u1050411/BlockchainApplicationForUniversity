@@ -46,23 +46,23 @@ class TestTransaction(unittest.TestCase):
         # self.assertEqual(transaccio.nota, 0)
         # self.assertEqual(transaccio.id_document, 'Hash')
 
-    def test_posarNota(self):
-        cua = []
-        estudiant = Estudiant('Pau')
-        professor = Professor('Teo')
-        t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
-        cua.append(t1)
-        t2 = TransaccioExamen(professor, 'DocumentEncriptat', 'Hash', 10)
-        cua.append(t2)
-        for x in cua:
-            x.display_transaccio()
-            print('--------------')
-
-    @staticmethod
-    def test_sign_transaction():
-        estudiant = Estudiant('Pau')
-        t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
-        t1.sign_transaction()
+    # def test_posarNota(self):
+    #     cua = []
+    #     estudiant = Estudiant('Pau')
+    #     professor = Professor('Teo')
+    #     t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
+    #     cua.append(t1)
+    #     t2 = TransaccioExamen(professor, 'DocumentEncriptat', 'Hash', 10)
+    #     cua.append(t2)
+    #     for x in cua:
+    #         x.display_transaccio()
+    #         print('--------------')
+    #
+    # @staticmethod
+    # def test_sign_transaction():
+    #     estudiant = Estudiant('Pau')
+    #     t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
+    #     t1.sign_transaction()
 
     def test_to_Json(self):
         estudiant = Estudiant('Pau')
@@ -84,12 +84,14 @@ class TestBloc(unittest.TestCase):
         self.assertEqual(bloc_prova.transaccio, t1)
         self.assertEqual(bloc_prova.hash_bloc_anterior, '0')
 
-    def test_calcular_Hash(self):
-        estudiant = Estudiant('Albert')
-        t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
-        bloc_prova = Bloc(0, '0', t1)
-        hash_anterior = bloc_prova.calcular_hash()
-        print(hash_anterior)
+    #Revisar dona un hash diferent cada cop
+    # def test_calcular_Hash(self):
+    #     estudiant = Estudiant('Albert')
+    #     t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
+    #     bloc_prova = Bloc(0, '0', t1)
+    #     hash_anterior = bloc_prova.calcular_hash()
+    #     print(hash_anterior)
+    #     # self.assertEqual(hash_anterior, '62a1420789f37ee5ddfb6524170c3cf0f5a7083f007e85bcd119bf814befef5a')
 
 
 class TestBlockchainUniversity(unittest.TestCase):
@@ -159,13 +161,21 @@ class TestMysql(unittest.TestCase):
         self.my_db.crear_taules()
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', None, None), True)
 
+    def test_retorn_schema(self):
+        self.my_db.afegir_schema(self.schema)
+        schema = self.my_db.schema
+        self.assertEqual(self.schema, schema)
+
     def test_crear_usuaris(self):
         self.test_crear_taules()
         self.my_db.crear_usuaris()
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'id', '1050403'), True)
 
     def test_crear_examens(self):
-        MySqlBloc.crear_schema_dades(self.my_db, self.schema)
+        self.my_db.esborrar_schema(self.schema)
+        self.my_db.crear_schema(self.schema)
+        self.my_db.crear_taules()
+        self.my_db.crear_usuaris()
         self.my_db.crear_examens()
 
     def test_existeix(self):
@@ -202,8 +212,8 @@ class TestMysql(unittest.TestCase):
 
     def test_seguent_numero(self):
         MySqlBloc.crear_schema_dades(self.my_db, self.schema)
-        num_maxim = self.my_db.numero_maxim_document('examen', 'id_document')
-        print(num_maxim)
+        num_maxim = self.my_db.seguent_id_examen()
+        self.assertIsNotNone(num_maxim)
 
     def test_guardar_resposta(self):
         MySqlBloc.crear_schema_dades(self.my_db, self.schema)
@@ -211,9 +221,8 @@ class TestMysql(unittest.TestCase):
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
         pdf = self.my_db.recuperar_fitxer(nom_fitxer)
         estudiant = Factoria.build_usuari_from_db(self.my_db, 1050411, ESTUDIANT)
-        id_resposta = RespostaExamen.seguent_numero(self.my_db, 100001)
+        id_resposta = self.my_db.seguent_id_resposta(100001)
         resposta = RespostaExamen(id_resposta, estudiant, pdf)
-
         self.my_db.guardar_resposta_examen(10001, resposta)
 
 
@@ -233,8 +242,9 @@ class TestFactoria(unittest.TestCase):
     def test_examen(self):
         my_db = MySqlBloc('localhost', 'root', 'root')
         my_db.crear_schema_dades(my_db, 'blockchainuniversity')
-        examen = Factoria.build_examen_from_db(my_db, 10000)
-        self.assertEqual(examen.id_document, 10000)
+        examen = Factoria.build_examen_from_db(my_db, 10001)
+        self.assertEqual(examen.id_document, 10001)
+        self.assertEqual(examen.professor.id, 2050404)
 
 
 class TestExamen(unittest.TestCase):
@@ -245,19 +255,21 @@ class TestExamen(unittest.TestCase):
         nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
         pdf = MySqlBloc.recuperar_fitxer(nom_fitxer)
-        professor = Factoria.build_usuari_from_db(self.my_db, 2000256, PROFESSOR)
+        professor = Factoria.build_usuari_from_db(my_db, 2000256, PROFESSOR)
         examen = Examen(10001, professor, pdf, '00000000', '00000000')
-        estudiant1 = Factoria.build_usuari_from_db(self.my_db, 1050411, ESTUDIANT)
+        estudiant1 = Factoria.build_usuari_from_db(my_db, 1050411, ESTUDIANT)
         examen.estudiants.append(estudiant1)
-        estudiant2 = Factoria.build_usuari_from_db(self.my_db, 1050402, ESTUDIANT)
+        estudiant2 = Factoria.build_usuari_from_db(my_db, 1050402, ESTUDIANT)
         examen.estudiants.append(estudiant2)
-        self.my_db.guardar_examen(examen)
+        self.assertEqual(examen.estudiants[0], estudiant1)
+        self.assertEqual(examen.pdf, pdf)
+        self.assertEqual(examen.professor, professor)
 
     def test_seguent_numero(self):
         my_db = MySqlBloc('localhost', 'root', 'root')
         my_db.crear_schema_dades(my_db, 'blockchainuniversity')
-        num_document = Examen.seguent_numero(my_db)
-        print(num_document)
+        num_document = my_db.seguent_id_examen()
+        self.assertIsNotNone(num_document)
 
 
 class TestRespostaExamen(unittest.TestCase):
@@ -269,13 +281,17 @@ class TestRespostaExamen(unittest.TestCase):
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
         pdf = MySqlBloc.recuperar_fitxer(nom_fitxer)
         estudiant1 = Factoria.build_usuari_from_db(my_db, 1050411, ESTUDIANT)
-        RespostaExamen(100001, estudiant1, pdf)
+        resposta = RespostaExamen(100001, estudiant1, pdf)
+        self.assertEqual(resposta.id_resposta, 100001)
+        self.assertEqual(resposta.usuari, estudiant1)
+        self.assertEqual(resposta.pdf, pdf)
 
     def test_seguent_numero(self):
         my_db = MySqlBloc('localhost', 'root', 'root')
         my_db.crear_schema_dades(my_db, 'blockchainuniversity')
-        num_document = RespostaExamen.seguent_numero(my_db, 100001)
-        print(num_document)
+        num_document = my_db.seguent_id_resposta(100001)
+        self.assertIsNotNone(num_document)
+
 
 
     # def test_llegir_pdf(self):

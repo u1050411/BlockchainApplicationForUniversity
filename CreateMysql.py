@@ -29,6 +29,11 @@ class MySqlBloc:
     def conexio(self):
         return self._conexio
 
+    @property
+    def schema(self):
+        sql = f'SELECT DATABASE() FROM DUAL'
+        return self.importar_sql(sql)[0]
+
     @conexio.setter
     def conexio(self, conexio):
         self._conexio = conexio
@@ -84,10 +89,27 @@ class MySqlBloc:
             exit(1)
         return self._cursor.fetchall()
 
+    def importar_estudiants_examen(self, id_document):
+        sql = f'select `id_estudiant` from `estudiant_examen` where `id_document` = {id_document}'
+        return self.importar_llista_sql(sql)
+
+    def importar_respostes(self, id_document):
+        sql = f'select id_resposta, data_creacio, id_usuari, pdf  ' \
+               f'from `resposta_examen` where `id_document` = {id_document}'
+        return self.importar_llista_sql(sql)
+
     def importar_sql(self, sql):
         llista = self.importar_llista_sql(sql)
         return llista[0]
-        # return self._cursor.fetchall()[0]
+
+    def importar_usuari(self, id_usuari):
+        sql = f'select * from usuari where id = {id_usuari} LIMIT 1'
+        return self.importar_sql(sql)
+
+    def importar_examen(self, id_document):
+        sql = f'select `id_document`, `id_professor`, `data_examen`, `data_inici`, `data_final`, `pdf`, `nota`  ' \
+              f'from `examen` where `id_document` = {id_document} LIMIT 1'
+        return self.importar_sql(sql)
 
     def esborrar_schema(self, schema):
         if self.existeix(schema, None, None, None):
@@ -117,6 +139,27 @@ class MySqlBloc:
         self.select_sql(sql)
         return self._cursor.fetchone() is not None
 
+    def existeix_usuari(self, id_usuari):
+        return self.existeix(self.schema, 'usuari', 'id', id_usuari)
+
+    def existeix_examen(self, id_document):
+        return self.existeix('BlockchainUniversity', 'examen', 'id_document', id_document)
+
+    def seguent_id_examen(self):
+        sql = f"select Max(`id_document`) from `examen`"
+        num_maxim = self.importar_sql(sql)[0]
+        id_document, tipus = self.dades_num(num_maxim)
+        return id_document + 1
+
+    def seguent_id_resposta(self, id_document):
+        sql = f"select Max(`id_resposta`) from `resposta_examen` where `id_document` = {id_document}"
+        num_maxim = self.importar_sql(sql)[0]
+        if num_maxim is None:
+            id_document = 0
+        else:
+            id_document, tipus = self.dades_num(num_maxim)
+        return id_document + 1
+
     def clau_privada(self, id_usuari):
         sql = f'select `private_key` from `blockchainuniversity`.`private_key` where `id_usuari` = {id_usuari} LIMIT 1'
         clau_string = self.importar_sql(sql)
@@ -136,7 +179,6 @@ class MySqlBloc:
         sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{public_key}")'
         self.exportar_sql(sql)
 
-
     def guardar_usuari(self, id_usuari, nif, nom, cognom):
         sql = f'INSERT INTO usuari (`id`, `nif`, `nom`, `cognom`) VALUES({id_usuari}, "{nif}", "{nom}", "{cognom}")'
         self.exportar_sql(sql)
@@ -148,7 +190,6 @@ class MySqlBloc:
         self.exportar_sql(sql)
         sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{string_key}")'
         self.exportar_sql(sql)
-
 
     @staticmethod
     def dades_num(num_document):
@@ -225,6 +266,7 @@ class MySqlBloc:
                 "CREATE TABLE if not exists `examen` ("
                 "`id_document` INT NOT NULL,"
                 "`id_professor` INT NOT NULL,"
+                "`nota` INT NULL,"
                 "`data_examen` DATETIME NOT NULL,"
                 "`data_inici` DATETIME NULL,"
                 "`data_final` DATETIME NULL,"
