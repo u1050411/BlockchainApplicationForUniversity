@@ -5,6 +5,12 @@ import mysql.connector
 from Crypto.PublicKey import RSA
 from mysql.connector import errorcode
 
+# from BlockchainUniversity import Usuari
+
+UTF_8 = 'utf8'
+ESTUDIANT = 'estudiant'
+PROFESSOR = 'professor'
+
 
 class MySqlBloc:
 
@@ -121,6 +127,16 @@ class MySqlBloc:
         clau_string = self.importar_sql(sql)
         return RSA.importKey(clau_string[0])
 
+    # Aquest Metode es per fer mes facils els test - No anira codi final
+    def guardar_clau_privada(self, id_usuari, private_key):
+        sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{private_key}")'
+        self.exportar_sql(sql)
+
+    def guardar_clau_publica(self, id_usuari, public_key):
+        sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{public_key}")'
+        self.exportar_sql(sql)
+
+
     def guardar_usuari(self, id_usuari, nif, nom, cognom):
         sql = f'INSERT INTO usuari (`id`, `nif`, `nom`, `cognom`) VALUES({id_usuari}, "{nif}", "{nom}", "{cognom}")'
         self.exportar_sql(sql)
@@ -132,6 +148,7 @@ class MySqlBloc:
         self.exportar_sql(sql)
         sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{string_key}")'
         self.exportar_sql(sql)
+
 
     @staticmethod
     def dades_num(num_document):
