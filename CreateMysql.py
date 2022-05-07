@@ -167,11 +167,13 @@ class MySqlBloc:
                       f'VALUES({id_document}, "{estudiant.id}")'
                 self.exportar_sql(sql)
 
-    # def guardar_resposta_examen(self, id_document, resposta):
-    #     id_document, id_tipus = self.dades_num(resposta.id_document)
-    #     sql = f'INSERT INTO examen (`id_document`, `id_resposta`, `data_creacio`, `id_usuari`, `pdf`) ' \
-    #           f'VALUES({resposta.id_document}, {resposta.id_resposta}, "{resposta.data_creacio}", ' \
-    #           f'"{resposta.usuari.id}","{resposta.pdf}")'
+    def guardar_resposta_examen(self, id_document, resposta):
+        document, tipus = self.dades_num(id_document)
+        if tipus == 1:
+            sql = f'INSERT INTO resposta_examen (`id_document`, `id_resposta`, `data_creacio`, `id_usuari`, `pdf`) ' \
+                  f'VALUES({id_document}, {resposta.id_resposta}, "{resposta.data_creacio}", ' \
+                  f'"{resposta.usuari.id}","{resposta.pdf}")'
+            self.exportar_sql(sql)
 
     def crear_taules(self):
         sqls = ["CREATE TABLE if not exists `usuari` ("

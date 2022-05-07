@@ -25,16 +25,15 @@ class Factoria:
         if my_db.existeix('BlockchainUniversity', 'usuari', 'id', id_usuari):
             sql = f'select * from usuari where id = {id_usuari} LIMIT 1'
             usuari = (my_db.importar_sql(sql))
-            nif = usuari[1]
-            nom = usuari[2]
-            cognom = usuari[3]
-            public_key = my_db.clau_publica(id_usuari)
-            if tipus == ESTUDIANT:
-                estudiant = Estudiant(id_usuari, nif, nom, cognom, public_key)
-                return estudiant
-            elif tipus == PROFESSOR:
-                professor = Professor(id_usuari, nif, nom, cognom, public_key)
-                return professor
+            if usuari is not None:
+                id_us, nif, nom, cognom = usuari
+                public_key = my_db.clau_publica(id_usuari)
+                if tipus == ESTUDIANT:
+                    estudiant = Estudiant(id_usuari, nif, nom, cognom, public_key)
+                    return estudiant
+                elif tipus == PROFESSOR:
+                    professor = Professor(id_usuari, nif, nom, cognom, public_key)
+                    return professor
         return None
 
     @staticmethod
@@ -59,12 +58,7 @@ class Factoria:
                     respostes = my_db.importar_llista_sql(sqlr)
                     for sql_resposta in respostes:
                         id_resposta, data_creacio, id_usuari, pdf = sql_resposta
-                        num_tipus = id_usuari[0]
-                        if num_tipus == 2:
-                            tipus = PROFESSOR
-                        else:
-                            tipus = ESTUDIANT
-                        usuari = Factoria.build_usuari_from_db(my_db, id_estudiant, tipus)
+                        usuari = Factoria.build_usuari_from_db(my_db, id_estudiant, ESTUDIANT)
                         resposta = RespostaExamen(id_resposta, usuari, pdf)
                         resposta.data_creacio = data_creacio
                         examen.respostes.append(resposta)

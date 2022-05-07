@@ -14,6 +14,7 @@ UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
 PROFESSOR = 'professor'
 
+
 class TestUsuaris(unittest.TestCase):
 
     def test_creation(self):
@@ -203,6 +204,17 @@ class TestMysql(unittest.TestCase):
         MySqlBloc.crear_schema_dades(self.my_db, self.schema)
         num_maxim = self.my_db.numero_maxim_document('examen', 'id_document')
         print(num_maxim)
+
+    def test_guardar_resposta(self):
+        MySqlBloc.crear_schema_dades(self.my_db, self.schema)
+        nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
+                     f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
+        pdf = self.my_db.recuperar_fitxer(nom_fitxer)
+        estudiant = Factoria.build_usuari_from_db(self.my_db, 1050411, ESTUDIANT)
+        id_resposta = RespostaExamen.seguent_numero(self.my_db, 100001)
+        resposta = RespostaExamen(id_resposta, estudiant, pdf)
+
+        self.my_db.guardar_resposta_examen(10001, resposta)
 
 
 class TestFactoria(unittest.TestCase):
