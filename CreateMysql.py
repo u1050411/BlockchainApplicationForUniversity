@@ -107,7 +107,7 @@ class MySqlBloc:
         return self.importar_sql(sql)
 
     def importar_examen(self, id_document):
-        sql = f'select `id_document`, `id_professor`, `data_examen`, `data_inici`, `data_final`, `pdf`, `nota`  ' \
+        sql = f'select `id_document`, `id_professor`, `data_examen`, `data_inici`, `data_final`, `pdf` ' \
               f'from `examen` where `id_document` = {id_document} LIMIT 1'
         return self.importar_sql(sql)
 
@@ -207,7 +207,7 @@ class MySqlBloc:
 
     def guardar_examen(self, examen):
         id_document = examen.id_document
-        id_usuari = examen.professor.id
+        id_usuari = examen.usuari.id
         data_examen = examen.data_creacio
         data_inici = examen.data_inicial
         data_final = examen.data_final
@@ -224,9 +224,9 @@ class MySqlBloc:
                   f'VALUES({id_document}, "{estudiant.id}")'
             self.exportar_sql(sql)
 
-    def guardar_resposta_examen(self, id_document, resposta):
+    def guardar_resposta_examen(self, resposta):
         sql = f'INSERT INTO resposta_examen (`id_document`, `id_resposta`, `data_creacio`, `id_usuari`, `pdf`) ' \
-              f'VALUES({id_document}, {resposta.id_resposta}, "{resposta.data_creacio}", ' \
+              f'VALUES({resposta.id_document}, {resposta.id_resposta}, "{resposta.data_creacio}", ' \
               f'"{resposta.usuari.id}","{resposta.pdf}")'
         self.exportar_sql(sql)
 

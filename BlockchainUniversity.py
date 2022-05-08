@@ -38,8 +38,7 @@ class Factoria:
     @staticmethod
     def build_examen_from_db(my_db, id_document):
         if my_db.existeix_examen(id_document):
-            id_document, id_professor, data_examen, data_inicial, data_final, pdf, \
-            nota = my_db.importar_examen(id_document)
+            id_document, id_professor, data_examen, data_inicial, data_final, pdf = my_db.importar_examen(id_document)
             professor = Factoria.build_usuari_from_db(my_db, id_professor, PROFESSOR)
             examen = Examen(id_document, professor, pdf, data_inicial, data_final)
             estudiants = my_db.importar_estudiants_examen(id_document)
@@ -265,6 +264,7 @@ class BlockchainUniversity:
 class Document:
     def __init__(self, id_document=None, id_tipus=None, usuari=None, pdf=None):
         self.id_document = id_document
+        self.data_creacio = datetime.now().isoformat()
         self.id_tipus = id_tipus
         self.usuari = usuari
         self.pdf = pdf
@@ -273,26 +273,21 @@ class Document:
 class Examen(Document):
 
     def __init__(self, id_document=None, professor=None, pdf=None, data_inicial=None, data_final=None):
-        self.id_document = id_document
-        self.data_creacio = datetime.now().isoformat()
+        super().__init__(id_document, 1, professor, pdf, )
         self.data_inicial = data_inicial
         self.data_final = data_final
-        self.professor = professor
         self.estudiants = []
         self.respostes = []
-        self.pdf = pdf
 
     def afegir_estudiants(self, estudiant):
         self.estudiants.append(estudiant)
 
 
-class RespostaExamen:
+class RespostaExamen(Document):
 
-    def __init__(self, id_resposta=None, usuari=None, pdf=None):
+    def __init__(self, id_document, id_resposta=None, usuari=None, pdf=None):
+        super().__init__(id_document, 2, usuari, pdf, )
         self.id_resposta = id_resposta
-        self.usuari = usuari
-        self.data_creacio = datetime.now().isoformat()
-        self.pdf = pdf
 
 # class FitxersPdf:
 #     OUTPUT_DIR = Path('data')

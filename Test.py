@@ -63,7 +63,6 @@ class CreacioTaulaTest:
                 "CREATE TABLE if not exists `examen` ("
                 "`id_document` INT NOT NULL,"
                 "`id_professor` INT NOT NULL,"
-                "`nota` INT NULL,"
                 "`data_examen` DATETIME NOT NULL,"
                 "`data_inici` DATETIME NULL,"
                 "`data_final` DATETIME NULL,"
@@ -73,6 +72,7 @@ class CreacioTaulaTest:
                 "CREATE TABLE if not exists `estudiant_examen` ("
                 "`id_document` INT NOT NULL,"
                 "`id_estudiant` INT NOT NULL,"
+                "`nota` INT NULL,"
                 "PRIMARY KEY (`id_document`, `id_estudiant`))",
 
                 "CREATE TABLE if not exists `resposta_examen` ("
@@ -319,9 +319,9 @@ class TestMysql(unittest.TestCase):
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
         pdf = self.my_db.recuperar_fitxer(nom_fitxer)
         estudiant = Factoria.build_usuari_from_db(self.my_db, 1050411, ESTUDIANT)
-        id_resposta = self.my_db.seguent_id_resposta(100001)
-        resposta = RespostaExamen(id_resposta, estudiant, pdf)
-        self.my_db.guardar_resposta_examen(10001, resposta)
+        id_resposta = self.my_db.seguent_id_resposta(1)
+        resposta = RespostaExamen(1,id_resposta, estudiant, pdf)
+        self.my_db.guardar_resposta_examen(resposta)
 
 
 class TestFactoria(unittest.TestCase):
@@ -342,7 +342,7 @@ class TestFactoria(unittest.TestCase):
     def test_examen(self):
         examen = Factoria.build_examen_from_db(self.my_db, 1)
         self.assertEqual(examen.id_document, 1)
-        self.assertEqual(examen.professor.id, 2050404)
+        self.assertEqual(examen.usuari.id, 2050404)
 
 
 class TestExamen(unittest.TestCase):
@@ -364,7 +364,7 @@ class TestExamen(unittest.TestCase):
         examen.estudiants.append(estudiant2)
         self.assertEqual(examen.estudiants[0], estudiant1)
         self.assertEqual(examen.pdf, pdf)
-        self.assertEqual(examen.professor, professor)
+        self.assertEqual(examen.usuari, professor)
 
     def test_seguent_numero(self):
         num_document = self.my_db.seguent_id_examen()
@@ -383,7 +383,7 @@ class TestRespostaExamen(unittest.TestCase):
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
         pdf = MySqlBloc.recuperar_fitxer(nom_fitxer)
         estudiant1 = Factoria.build_usuari_from_db(self.my_db, 1050411, ESTUDIANT)
-        resposta = RespostaExamen(1, estudiant1, pdf)
+        resposta = RespostaExamen(1, 1, estudiant1, pdf)
         self.assertEqual(resposta.id_resposta, 1)
         self.assertEqual(resposta.usuari, estudiant1)
         self.assertEqual(resposta.pdf, pdf)
