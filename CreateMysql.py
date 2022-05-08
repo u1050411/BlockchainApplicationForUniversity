@@ -206,30 +206,27 @@ class MySqlBloc:
         return save_pdf
 
     def guardar_examen(self, examen):
-        id_document, id_tipus = self.dades_num(examen.id_document)
-        if id_tipus == 1:
-            id_usuari = examen.professor.id
-            data_examen = examen.data_creacio
-            data_inici = examen.data_inicial
-            data_final = examen.data_final
-            save_pdf = examen.pdf
-            estudiants = examen.estudiants
+        id_document = examen.id_document
+        id_usuari = examen.professor.id
+        data_examen = examen.data_creacio
+        data_inici = examen.data_inicial
+        data_final = examen.data_final
+        save_pdf = examen.pdf
+        estudiants = examen.estudiants
 
-            sql = f'INSERT INTO examen (`id_document`, `id_professor`, `data_examen`, `data_inici`, `data_final`, ' \
-                  f'`pdf`) VALUES({id_document}, {id_usuari}, "{data_examen}", "{data_inici}", "{data_final}", ' \
-                  f'"{save_pdf}")'
+        sql = f'INSERT INTO examen (`id_document`, `id_professor`, `data_examen`, `data_inici`, `data_final`, ' \
+              f'`pdf`) VALUES({id_document}, {id_usuari}, "{data_examen}", "{data_inici}", "{data_final}", ' \
+              f'"{save_pdf}")'
+        self.exportar_sql(sql)
+
+        for estudiant in estudiants:
+            sql = f'INSERT INTO estudiant_examen (`id_document`, `id_estudiant`) ' \
+                  f'VALUES({id_document}, "{estudiant.id}")'
             self.exportar_sql(sql)
-
-            for estudiant in estudiants:
-                sql = f'INSERT INTO estudiant_examen (`id_document`, `id_estudiant`) ' \
-                      f'VALUES({id_document}, "{estudiant.id}")'
-                self.exportar_sql(sql)
 
     def guardar_resposta_examen(self, id_document, resposta):
-        document, tipus = self.dades_num(id_document)
-        if tipus == 1:
-            sql = f'INSERT INTO resposta_examen (`id_document`, `id_resposta`, `data_creacio`, `id_usuari`, `pdf`) ' \
-                  f'VALUES({id_document}, {resposta.id_resposta}, "{resposta.data_creacio}", ' \
-                  f'"{resposta.usuari.id}","{resposta.pdf}")'
-            self.exportar_sql(sql)
+        sql = f'INSERT INTO resposta_examen (`id_document`, `id_resposta`, `data_creacio`, `id_usuari`, `pdf`) ' \
+              f'VALUES({id_document}, {resposta.id_resposta}, "{resposta.data_creacio}", ' \
+              f'"{resposta.usuari.id}","{resposta.pdf}")'
+        self.exportar_sql(sql)
 

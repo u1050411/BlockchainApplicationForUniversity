@@ -40,22 +40,20 @@ class Factoria:
         if my_db.existeix_examen(id_document):
             id_document, id_professor, data_examen, data_inicial, data_final, pdf, \
             nota = my_db.importar_examen(id_document)
-            id_examen, tipus = my_db.dades_num(id_document)
-            if tipus == 1:
-                professor = Factoria.build_usuari_from_db(my_db, id_professor, PROFESSOR)
-                examen = Examen(id_document, professor, pdf, data_inicial, data_final)
-                estudiants = my_db.importar_estudiants_examen(id_document)
-                if estudiants is not None:
-                    for id_estudiant in estudiants:
-                        estudiant = Factoria.build_usuari_from_db(my_db, id_estudiant, ESTUDIANT)
-                        examen.estudiants.append(estudiant)
-                    respostes = my_db.importar_respostes(id_document)
-                    for sql_resposta in respostes:
-                        id_resposta, data_creacio, id_usuari, pdf = sql_resposta
-                        usuari = Factoria.build_usuari_from_db(my_db, id_estudiant, ESTUDIANT)
-                        resposta = RespostaExamen(id_resposta, usuari, pdf)
-                        resposta.data_creacio = data_creacio
-                        examen.respostes.append(resposta)
+            professor = Factoria.build_usuari_from_db(my_db, id_professor, PROFESSOR)
+            examen = Examen(id_document, professor, pdf, data_inicial, data_final)
+            estudiants = my_db.importar_estudiants_examen(id_document)
+            if estudiants is not None:
+                for id_estudiant in estudiants:
+                    estudiant = Factoria.build_usuari_from_db(my_db, id_estudiant, ESTUDIANT)
+                    examen.estudiants.append(estudiant)
+                respostes = my_db.importar_respostes(id_document)
+                for sql_resposta in respostes:
+                    id_resposta, data_creacio, id_usuari, pdf = sql_resposta
+                    usuari = Factoria.build_usuari_from_db(my_db, id_estudiant, ESTUDIANT)
+                    resposta = RespostaExamen(id_resposta, usuari, pdf)
+                    resposta.data_creacio = data_creacio
+                    examen.respostes.append(resposta)
             return examen
         return None
 
@@ -295,9 +293,6 @@ class RespostaExamen:
         self.usuari = usuari
         self.data_creacio = datetime.now().isoformat()
         self.pdf = pdf
-
-
-
 
 # class FitxersPdf:
 #     OUTPUT_DIR = Path('data')
