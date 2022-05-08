@@ -1,11 +1,12 @@
 import base64
+import datetime
 import subprocess
 import unittest
 from random import Random
 
 from Crypto.PublicKey import RSA
 
-from BlockchainUniversity import Universitat, Estudiant, Transaccio, Professor, TransaccioExamen, Bloc, Examen, Usuari, \
+from BlockchainUniversity import Universitat, Estudiant, Transaccio, Professor,  Bloc, Examen, Usuari, \
     Factoria, RespostaExamen
 from CreateMysql import MySqlBloc
 from PyPDF2 import PdfFileMerger, PdfFileReader
@@ -41,10 +42,10 @@ class TestTransaction(unittest.TestCase):
         receptor = Factoria.build_usuari_from_db(my_db, 1050402, ESTUDIANT)
         emissor = Factoria.build_usuari_from_db(my_db, 2000256, PROFESSOR)
         transaccio = Transaccio(emissor, receptor, 'idDocument')
-        # self.assertEqual(transaccio.emissor, emissor)
-        # self.assertEqual(transaccio.document, 'DocumentEncriptat')
-        # self.assertEqual(transaccio.nota, 0)
-        # self.assertEqual(transaccio.id_document, 'Hash')
+        self.assertEqual(transaccio.emissor, emissor)
+        self.assertEqual(transaccio.document, 'DocumentEncriptat')
+        self.assertEqual(transaccio.nota, 0)
+        self.assertEqual(transaccio.id_document, 'Hash')
 
     # def test_posarNota(self):
     #     cua = []
@@ -130,12 +131,109 @@ class TestMysql(unittest.TestCase):
     def tearDown(self):
         self.my_db.tancar()
 
+    @classmethod
+    def crear_schema_test(cls, my_db, schema):
+        my_db.esborrar_schema(schema)
+        my_db.crear_schema(schema)
+        cls.crear_taules()
+        cls.crear_usuaris()
+        cls.crear_examens()
+
+    def crear_schema_dades(self):
+        self.my_db.esborrar_schema(self.schema)
+        self.my_db.crear_schema(self.schema)
+        self.crear_taules()
+        self.crear_usuaris()
+        self.crear_examens()
+
+    def crear_taules(self):
+        sqls = ["CREATE TABLE if not exists `usuari` ("
+                "`id` int NOT NULL,"
+                "`nif` varchar(9) NOT NULL,"
+                "`nom` varchar(45) DEFAULT NULL,"
+                "`cognom` varchar(100) DEFAULT NULL,"
+                "PRIMARY KEY (`id`, `nif`)) ",
+
+                "CREATE TABLE if not exists `private_key` ("
+                "`id_usuari` INT NOT NULL,"
+                "`private_key` longtext NULL,"
+                "PRIMARY KEY (`id_usuari`))",
+
+                "CREATE TABLE if not exists `public_key` ("
+                "`id_usuari` INT NOT NULL,"
+                "`public_key` longtext NULL,"
+                "PRIMARY KEY (`id_usuari`))",
+
+                "CREATE TABLE if not exists `transaccio` ("
+                "`id` INT NOT NULL,"
+                "`id_emisor` INT NOT NULL,"
+                "`id_receptor` INT NOT NULL,"
+                "`id_document` INT NOT NULL,"
+                "`data` DATETIME NOT NULL,"
+                "PRIMARY KEY(`id`, `id_emisor`, `id_receptor`, `id_document`, `data`))",
+
+                # "CREATE TABLE if not exists `document` ("
+                # "`id_document` INT NOT NULL,"
+                # "PRIMARY KEY (`id_document`))",
+
+                "CREATE TABLE if not exists `examen` ("
+                "`id_document` INT NOT NULL,"
+                "`id_professor` INT NOT NULL,"
+                "`nota` INT NULL,"
+                "`data_examen` DATETIME NOT NULL,"
+                "`data_inici` DATETIME NULL,"
+                "`data_final` DATETIME NULL,"
+                "`pdf` LONGBLOB  NULL,"
+                "PRIMARY KEY (`id_document`))",
+
+                "CREATE TABLE if not exists `estudiant_examen` ("
+                "`id_document` INT NOT NULL,"
+                "`id_estudiant` INT NOT NULL,"
+                "PRIMARY KEY (`id_document`, `id_estudiant`))",
+
+                "CREATE TABLE if not exists `resposta_examen` ("
+                "`id_document` INT NOT NULL,"
+                "`id_resposta` INT NOT NULL,"
+                "`data_creacio` DATETIME NOT NULL,"
+                "`id_usuari` INT NOT NULL,"
+                "`pdf` LONGBLOB  NULL,"
+                "PRIMARY KEY (`id_document`, `id_resposta`))"]
+
+        for sql in sqls:
+            self.my_db.exportar_sql(sql)
+
+    def crear_usuaris(self):
+        usuaris = [[1050411, '40373747T', 'Pau', 'de Jesus Bras'],
+                   [1050402, '40373946E', 'Pere', 'de la Rosa'],
+                   [1050403, '40332506M', 'Cristina', 'Sabari Vidal'],
+                   [2050404, '40332507Y', 'Albert', 'Marti Sabari'],
+                   [2000256, '40332508Y', 'Teodor Maria', 'Jove Lagunas']]
+
+        for id_usuari, nif, nom, cognom in usuaris:
+            self.my_db.guardar_usuari(id_usuari, nif, nom, cognom)
+
+    def crear_examens(self):
+        examens = [[10001, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
+                           f'/pdf/GEINF DOC1 full de TFG_V2.pdf', 2050404, '2022-10-01T13:00', '2022-10-01T14:00'],
+                   [20001, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
+                           f'/pdf/GEINF DOC1 full de TFG_V2.pdf', 2000256, '2022-10-01T12:00', '2022-10-01T13:00'],
+                   [30001, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
+                           f'/pdf/GEINF DOC1 full de TFG_V2.pdf', 2000256, '2022-10-01T12:00', '2022-10-01T13:00'],
+                   [40001, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
+                           f'/pdf/GEINF DOC1 full de TFG_V2.pdf', 2050404, '2022-10-01T13:00', '2022-10-01T14:00']]
+
+        for id_document, nom_fitxer, id_professor, data_inicial, data_final in examens:
+            pdf = self.my_db.recuperar_fitxer(nom_fitxer)
+            professor = Factoria.build_usuari_from_db(self.my_db, id_professor, PROFESSOR)
+            examen = Examen(id_document, professor, pdf, data_inicial, data_final)
+            self.my_db.guardar_examen(examen)
+
     def test_afegir(self):
         self.my_db.afegir_schema(self.schema)
         self.assertEqual(self.my_db.existeix(self.schema, None, None, None), True)
 
     def test_esborrar_schema(self):
-        MySqlBloc.crear_schema_dades(self.my_db, self.schema)
+        self.crear_schema_dades()
         self.my_db.esborrar_schema(self.schema)
         self.assertEqual(self.my_db.existeix(self.schema, None, None, None), False)
 
@@ -144,7 +242,7 @@ class TestMysql(unittest.TestCase):
         self.assertEqual(self.my_db.existeix(self.schema, None, None, None), True)
 
     def test_exportar_sql(self):
-        MySqlBloc.crear_schema_dades(self.my_db, self.schema)
+        self.crear_schema_dades()
         sql = "CREATE TABLE if not exists `TaulaProva` (" \
               "`id` int NOT NULL,"\
               "`nif` varchar(9) NOT NULL," \
@@ -158,7 +256,7 @@ class TestMysql(unittest.TestCase):
         schema = self.schema
         self.my_db.esborrar_schema(schema)
         self.my_db.crear_schema(schema)
-        self.my_db.crear_taules()
+        self.crear_taules()
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', None, None), True)
 
     def test_retorn_schema(self):
@@ -168,18 +266,18 @@ class TestMysql(unittest.TestCase):
 
     def test_crear_usuaris(self):
         self.test_crear_taules()
-        self.my_db.crear_usuaris()
+        self.crear_usuaris()
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'id', '1050403'), True)
 
     def test_crear_examens(self):
         self.my_db.esborrar_schema(self.schema)
         self.my_db.crear_schema(self.schema)
-        self.my_db.crear_taules()
-        self.my_db.crear_usuaris()
-        self.my_db.crear_examens()
+        self.crear_taules()
+        self.crear_usuaris()
+        self.crear_examens()
 
     def test_existeix(self):
-        MySqlBloc.crear_schema_dades(self.my_db, self.schema)
+        self.crear_schema_dades()
         self.assertEqual(self.my_db.existeix(self.schema, None, None, None), True)
         self.assertEqual(self.my_db.existeix('noSchema', None, None, None), False)
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', None, None), True)
@@ -192,7 +290,7 @@ class TestMysql(unittest.TestCase):
         self.assertEqual(self.my_db.existeix(self.schema, 'public_key', 'id_usuari', '1050403'), True)
 
     def test_guardar_usuari(self):
-        MySqlBloc.crear_schema_dades(self.my_db, self.schema)
+        self.crear_schema_dades()
         id_usuari = 1050404
         nif = '40373944C'
         nom = 'Pablo'
@@ -204,19 +302,19 @@ class TestMysql(unittest.TestCase):
         self.assertEqual(self.my_db.existeix(self.schema, 'public_key', 'id_usuari', '1050411'), True)
 
     def test_clau(self):
-        MySqlBloc.crear_schema_dades(self.my_db, self.schema)
+        self.crear_schema_dades()
         id_usuari = 1050402
         privat_key = self.my_db.clau_privada(id_usuari)
         public_key = self.my_db.clau_publica(id_usuari)
         self.assertTrue(privat_key.public_key(), public_key)
 
     def test_seguent_numero(self):
-        MySqlBloc.crear_schema_dades(self.my_db, self.schema)
+        self.crear_schema_dades()
         num_maxim = self.my_db.seguent_id_examen()
         self.assertIsNotNone(num_maxim)
 
     def test_guardar_resposta(self):
-        MySqlBloc.crear_schema_dades(self.my_db, self.schema)
+        self.crear_schema_dades()
         nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
         pdf = self.my_db.recuperar_fitxer(nom_fitxer)
@@ -228,10 +326,16 @@ class TestMysql(unittest.TestCase):
 
 class TestFactoria(unittest.TestCase):
 
-    def test_usuari(self):
-        schema = 'blockchainuniversity'
+    def setUp(self):
         my_db = MySqlBloc('localhost', 'root', 'root')
-        my_db.crear_schema_dades(my_db, schema)
+        TestMysql.crear_schema_test(my_db, 'blockchainuniversity')
+
+    # def tearDown(self):
+    #     self.my_db.tancar()
+
+    def test_usuari(self):
+
+        # my_db.crear_schema_dades(my_db, schema)
         estudiant = Factoria.build_usuari_from_db(my_db, 1050402, ESTUDIANT)
         self.assertEqual(estudiant.id, 1050402)
         self.assertEqual(estudiant.nom, 'Pere')
@@ -294,6 +398,12 @@ class TestRespostaExamen(unittest.TestCase):
 
 
 
+
+
+
+
+
+
     # def test_llegir_pdf(self):
     #     nom_fitxer = f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
     #     pdf_file = open(nom_fitxer, "rb")
@@ -324,10 +434,3 @@ class TestRespostaExamen(unittest.TestCase):
     #     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     #     stdout, stderr = proc.communicate()
     #     exit_code = proc.wait()
-
-
-
-
-
-
-

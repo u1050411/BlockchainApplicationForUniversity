@@ -148,8 +148,8 @@ class MySqlBloc:
     def seguent_id_examen(self):
         sql = f"select Max(`id_document`) from `examen`"
         num_maxim = self.importar_sql(sql)[0]
-        id_document, tipus = self.dades_num(num_maxim)
-        return id_document + 1
+        # id_document, tipus = self.dades_num(num_maxim)
+        return num_maxim + 1
 
     def seguent_id_resposta(self, id_document):
         sql = f"select Max(`id_resposta`) from `resposta_examen` where `id_document` = {id_document}"
@@ -233,95 +233,3 @@ class MySqlBloc:
                   f'"{resposta.usuari.id}","{resposta.pdf}")'
             self.exportar_sql(sql)
 
-    def crear_taules(self):
-        sqls = ["CREATE TABLE if not exists `usuari` ("
-                "`id` int NOT NULL,"
-                "`nif` varchar(9) NOT NULL,"
-                "`nom` varchar(45) DEFAULT NULL,"
-                "`cognom` varchar(100) DEFAULT NULL,"
-                "PRIMARY KEY (`id`, `nif`)) ",
-
-                "CREATE TABLE if not exists `private_key` ("
-                "`id_usuari` INT NOT NULL,"
-                "`private_key` longtext NULL,"
-                "PRIMARY KEY (`id_usuari`))",
-
-                "CREATE TABLE if not exists `public_key` ("
-                "`id_usuari` INT NOT NULL,"
-                "`public_key` longtext NULL,"
-                "PRIMARY KEY (`id_usuari`))",
-
-                "CREATE TABLE if not exists `transaccio` ("
-                "`id` INT NOT NULL,"
-                "`id_emisor` INT NOT NULL,"
-                "`id_receptor` INT NOT NULL,"
-                "`id_document` INT NOT NULL,"
-                "`data` DATETIME NOT NULL,"
-                "PRIMARY KEY(`id`, `id_emisor`, `id_receptor`, `id_document`, `data`))",
-
-                # "CREATE TABLE if not exists `document` ("
-                # "`id_document` INT NOT NULL,"
-                # "PRIMARY KEY (`id_document`))",
-
-                "CREATE TABLE if not exists `examen` ("
-                "`id_document` INT NOT NULL,"
-                "`id_professor` INT NOT NULL,"
-                "`nota` INT NULL,"
-                "`data_examen` DATETIME NOT NULL,"
-                "`data_inici` DATETIME NULL,"
-                "`data_final` DATETIME NULL,"
-                "`pdf` LONGBLOB  NULL,"
-                "PRIMARY KEY (`id_document`))",
-
-                "CREATE TABLE if not exists `estudiant_examen` ("
-                "`id_document` INT NOT NULL,"
-                "`id_estudiant` INT NOT NULL,"
-                "PRIMARY KEY (`id_document`, `id_estudiant`))",
-
-                "CREATE TABLE if not exists `resposta_examen` ("
-                "`id_document` INT NOT NULL,"
-                "`id_resposta` INT NOT NULL,"
-                "`data_creacio` DATETIME NOT NULL,"
-                "`id_usuari` INT NOT NULL,"
-                "`pdf` LONGBLOB  NULL,"
-                "PRIMARY KEY (`id_document`, `id_resposta`))"]
-
-        for sql in sqls:
-            self.exportar_sql(sql)
-
-    def crear_usuaris(self):
-        usuaris = [[1050411, '40373747T', 'Pau', 'de Jesus Bras'],
-                   [1050402, '40373946E', 'Pere', 'de la Rosa'],
-                   [1050403, '40332506M', 'Cristina', 'Sabari Vidal'],
-                   [2050404, '40332507Y', 'Albert', 'Marti Sabari'],
-                   [2000256, '40332508Y', 'Teodor Maria', 'Jove Lagunas']]
-
-        for id_usuari, nif, nom, cognom in usuaris:
-            self.guardar_usuari(id_usuari, nif, nom, cognom)
-
-    def crear_examens(self):
-        examens = [[10001, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
-                           f'/pdf/GEINF DOC1 full de TFG_V2.pdf', 2050404, '00000000', '00000000'],
-                   [20001, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
-                           f'/pdf/GEINF DOC1 full de TFG_V2.pdf', 2000256, '00000000', '00000000'],
-                   [30001, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
-                           f'/pdf/GEINF DOC1 full de TFG_V2.pdf', 2000256, '00000000', '00000000'],
-                   [40001, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
-                           f'/pdf/GEINF DOC1 full de TFG_V2.pdf', 2050404, '00000000', '00000000']]
-
-        for num_document, nom_fitxer, id_professor, data_inicial, data_final in examens:
-            save_pdf = self.recuperar_fitxer(nom_fitxer)
-            data_creacio = datetime.now().isoformat()
-            sql = f'INSERT INTO `examen` (`id_document`, `id_professor`, `data_examen`, `data_inici`' \
-                  f', `data_final`, `pdf`) ' \
-                  f'VALUES({num_document}, {id_professor}, "{data_creacio}", "{data_inicial}",' \
-                  f' "{data_final}", "{save_pdf}")'
-            self.exportar_sql(sql)
-
-    @staticmethod
-    def crear_schema_dades(my_db, schema):
-        my_db.esborrar_schema(schema)
-        my_db.crear_schema(schema)
-        my_db.crear_taules()
-        my_db.crear_usuaris()
-        my_db.crear_examens()

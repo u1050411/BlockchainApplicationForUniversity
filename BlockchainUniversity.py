@@ -141,10 +141,10 @@ time: {self.time}
         return json.dumps(self.__dict__, sort_keys=True, default=str)
 
 
-class TransaccioExamen(Transaccio):
-
-    def __init__(self, emissor=None, receptor=None, document=None):
-        super().__init__(emissor, receptor, document)
+# class TransaccioExamen(Transaccio):
+#
+#     def __init__(self, emissor=None, receptor=None, examen=None):
+#         super().__init__(emissor, receptor, examen)
 
 
 class Bloc:
@@ -283,7 +283,6 @@ class Examen(Document):
         self.estudiants = []
         self.respostes = []
         self.pdf = pdf
-        self.nota = 0
 
     def afegir_estudiants(self, estudiant):
         self.estudiants.append(estudiant)
