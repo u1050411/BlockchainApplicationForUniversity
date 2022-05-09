@@ -50,7 +50,7 @@ class Factoria:
                 for sql_resposta in respostes:
                     id_resposta, data_creacio, id_usuari, pdf = sql_resposta
                     usuari = Factoria.build_usuari_from_db(my_db, id_estudiant, ESTUDIANT)
-                    resposta = RespostaExamen(id_resposta, usuari, pdf)
+                    resposta = RespostaExamen(id_resposta, id_document, usuari, pdf)
                     resposta.data_creacio = data_creacio
                     examen.respostes.append(resposta)
             return examen
@@ -93,19 +93,19 @@ class Transaccio:
         self.emissor = emissor
         self.receptor = receptor
         self.document = document
-        self._time = datetime.now().isoformat()
+        self._data_creacio = datetime.now().isoformat()
 
     def sign(self, data):
         h = SHA1.new(data)
         return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
 
     @property
-    def time(self):
-        return self._time
+    def data_creacio(self):
+        return self._data_creacio
 
-    @time.setter
-    def time(self, time):
-        self._time = time
+    @data_creacio.setter
+    def data(self, data_creacio):
+        self._data_creacio = data_creacio
 
     # canviar a estructura json
 
@@ -282,12 +282,20 @@ class Examen(Document):
     def afegir_estudiants(self, estudiant):
         self.estudiants.append(estudiant)
 
+    @property
+    def id_document_blockchain(self):
+        return str(self.id_document)+"0001"
+
 
 class RespostaExamen(Document):
 
-    def __init__(self, id_document, id_resposta=None, usuari=None, pdf=None):
-        super().__init__(id_document, 2, usuari, pdf, )
-        self.id_resposta = id_resposta
+    def __init__(self, id_resposta, id_examen=None, usuari=None, pdf=None):
+        super().__init__(id_resposta, 2, usuari, pdf, )
+        self.id_examen = id_examen
+
+    @property
+    def id_document_blockchain(self):
+        return str(self.id_resposta)+"0002"
 
 # class FitxersPdf:
 #     OUTPUT_DIR = Path('data')

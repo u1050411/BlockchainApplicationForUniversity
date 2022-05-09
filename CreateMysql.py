@@ -95,7 +95,7 @@ class MySqlBloc:
 
     def importar_respostes(self, id_document):
         sql = f'select id_resposta, data_creacio, id_usuari, pdf  ' \
-               f'from `resposta_examen` where `id_document` = {id_document}'
+               f'from `resposta_examen` where `id_examen` = {id_document}'
         return self.importar_llista_sql(sql)
 
     def importar_sql(self, sql):
@@ -151,8 +151,8 @@ class MySqlBloc:
         # id_document, tipus = self.dades_num(num_maxim)
         return num_maxim + 1
 
-    def seguent_id_resposta(self, id_document):
-        sql = f"select Max(`id_resposta`) from `resposta_examen` where `id_document` = {id_document}"
+    def seguent_id_resposta(self):
+        sql = f"select Max(`id_resposta`) from `resposta_examen`"
         num_maxim = self.importar_sql(sql)[0]
         if num_maxim is None:
             id_document = 0
@@ -225,8 +225,16 @@ class MySqlBloc:
             self.exportar_sql(sql)
 
     def guardar_resposta_examen(self, resposta):
-        sql = f'INSERT INTO resposta_examen (`id_document`, `id_resposta`, `data_creacio`, `id_usuari`, `pdf`) ' \
-              f'VALUES({resposta.id_document}, {resposta.id_resposta}, "{resposta.data_creacio}", ' \
+        sql = f'INSERT INTO resposta_examen (`id_examen`, `id_resposta`, `data_creacio`, `id_usuari`, `pdf`) ' \
+              f'VALUES({resposta.id_examen}, {resposta.id_document}, "{resposta.data_creacio}", ' \
               f'"{resposta.usuari.id}","{resposta.pdf}")'
         self.exportar_sql(sql)
+
+    def guardar_transaccio(self, transaccio):
+        sql = f'INSERT INTO transaccio (`id_emissor`, `id_receptor`, `id_document`, `data_creacio`) ' \
+              f'VALUES({transaccio.emissor.id}, {transaccio.receptor.id}, "{transaccio.document.id_document}", ' \
+              f'"{transaccio.data_creacio}")'
+        self.exportar_sql(sql)
+
+
 

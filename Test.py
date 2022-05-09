@@ -49,12 +49,11 @@ class CreacioTaulaTest:
                 "PRIMARY KEY (`id_usuari`))",
 
                 "CREATE TABLE if not exists `transaccio` ("
-                "`id` INT NOT NULL,"
-                "`id_emisor` INT NOT NULL,"
+                "`id_emissor` INT NOT NULL,"
                 "`id_receptor` INT NOT NULL,"
                 "`id_document` INT NOT NULL,"
-                "`data` DATETIME NOT NULL,"
-                "PRIMARY KEY(`id`, `id_emisor`, `id_receptor`, `id_document`, `data`))",
+                "`data_creacio` DATETIME NOT NULL,"
+                "PRIMARY KEY(`id_emissor`, `id_receptor`, `id_document`, `data_creacio`))",
 
                 # "CREATE TABLE if not exists `document` ("
                 # "`id_document` INT NOT NULL,"
@@ -76,12 +75,12 @@ class CreacioTaulaTest:
                 "PRIMARY KEY (`id_document`, `id_estudiant`))",
 
                 "CREATE TABLE if not exists `resposta_examen` ("
-                "`id_document` INT NOT NULL,"
                 "`id_resposta` INT NOT NULL,"
+                "`id_examen` INT NOT NULL,"
                 "`data_creacio` DATETIME NOT NULL,"
                 "`id_usuari` INT NOT NULL,"
                 "`pdf` LONGBLOB  NULL,"
-                "PRIMARY KEY (`id_document`, `id_resposta`))"]
+                "PRIMARY KEY (`id_resposta`))"]
 
         for sql in sqls:
             self.my_db.exportar_sql(sql)
@@ -112,6 +111,17 @@ class CreacioTaulaTest:
             examen = Examen(id_document, professor, pdf, data_inicial, data_final)
             self.my_db.guardar_examen(examen)
 
+    def crear_respostes(self):
+        pass
+
+    def crear_transaccions(self):
+        receptor = Factoria.build_usuari_from_db(self.my_db, 1050402, ESTUDIANT)
+        emissor = Factoria.build_usuari_from_db(self.my_db, 2000256, PROFESSOR)
+        nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
+                     f'BlockchainApplicationForUniversity/pdf/Examen_2021_20_10_01_primer_parcial.pdf'
+        pdf = self.my_db.recuperar_fitxer(nom_fitxer)
+        transaccio = Transaccio(emissor, receptor, pdf)
+
 
 class TestUsuaris(unittest.TestCase):
 
@@ -131,18 +141,22 @@ class TestUniversitat(unittest.TestCase):
 
 class TestTransaction(unittest.TestCase):
 
+    def setUp(self):
+        self.my_db = MySqlBloc('localhost', 'root', 'root')
+        self.schema = 'blockchainuniversity'
+        self.test = CreacioTaulaTest(self.my_db, self.schema)
+        self.test.crear_schema_dades()
+
     def test_creation(self):
-        schema = 'blockchainuniversity'
-        my_db = MySqlBloc('localhost', 'root', 'root')
-        my_db.crear_schema_dades(my_db, schema)
-        my_db.afegir_schema(schema)
-        receptor = Factoria.build_usuari_from_db(my_db, 1050402, ESTUDIANT)
-        emissor = Factoria.build_usuari_from_db(my_db, 2000256, PROFESSOR)
-        transaccio = Transaccio(emissor, receptor, 'idDocument')
+        receptor = Factoria.build_usuari_from_db(self.my_db, 1050402, ESTUDIANT)
+        emissor = Factoria.build_usuari_from_db(self.my_db, 2000256, PROFESSOR)
+        nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
+                     f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
+        pdf = self.my_db.recuperar_fitxer(nom_fitxer)
+        transaccio = Transaccio(emissor, receptor, pdf)
         self.assertEqual(transaccio.emissor, emissor)
-        self.assertEqual(transaccio.document, 'DocumentEncriptat')
-        self.assertEqual(transaccio.nota, 0)
-        self.assertEqual(transaccio.id_document, 'Hash')
+        self.assertEqual(transaccio.receptor, receptor)
+        self.assertEqual(transaccio.document, pdf)
 
     # def test_posarNota(self):
     #     cua = []
@@ -319,8 +333,8 @@ class TestMysql(unittest.TestCase):
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
         pdf = self.my_db.recuperar_fitxer(nom_fitxer)
         estudiant = Factoria.build_usuari_from_db(self.my_db, 1050411, ESTUDIANT)
-        id_resposta = self.my_db.seguent_id_resposta(1)
-        resposta = RespostaExamen(1,id_resposta, estudiant, pdf)
+        id_resposta = self.my_db.seguent_id_resposta()
+        resposta = RespostaExamen(id_resposta, 1, estudiant, pdf)
         self.my_db.guardar_resposta_examen(resposta)
 
 
@@ -382,14 +396,15 @@ class TestRespostaExamen(unittest.TestCase):
         nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
         pdf = MySqlBloc.recuperar_fitxer(nom_fitxer)
-        estudiant1 = Factoria.build_usuari_from_db(self.my_db, 1050411, ESTUDIANT)
-        resposta = RespostaExamen(1, 1, estudiant1, pdf)
-        self.assertEqual(resposta.id_resposta, 1)
-        self.assertEqual(resposta.usuari, estudiant1)
+        estudiant = Factoria.build_usuari_from_db(self.my_db, 1050411, ESTUDIANT)
+        resposta = RespostaExamen(1, 1, estudiant, pdf)
+        self.assertEqual(resposta.id_document, 1)
+        self.assertEqual(resposta.id_examen, 1)
+        self.assertEqual(resposta.usuari, estudiant)
         self.assertEqual(resposta.pdf, pdf)
 
     def test_seguent_numero(self):
-        num_document = self.my_db.seguent_id_resposta(1)
+        num_document = self.my_db.seguent_id_resposta()
         self.assertIsNotNone(num_document)
 
 
