@@ -152,10 +152,10 @@ time: {self.time}
 class Bloc:
     # Classe creació del bloc
 
-    def __init__(self, index=None,  transaccio=None, hash_bloc_anterior=None,):
+    def __init__(self, index=None, transaccio_bloc=None, hash_bloc_anterior=None, ):
         self._index = index
         self._timestamp = datetime.now().isoformat()
-        self.transaccio = transaccio
+        self.transaccio = transaccio_bloc
         self.hash_bloc_anterior = hash_bloc_anterior
         self.nonce = 0
 
@@ -180,6 +180,16 @@ class Bloc:
         block_string = json.dumps(self.__dict__, sort_keys=True, default=str)
         return hashlib.sha256(block_string.encode()).hexdigest()
 
+    def guardar_bloc(self, my_db):
+        id_bloc = self.timestamp
+        timestamp = self.timestamp
+        id_emissor = self.transaccio.emissor.id
+        id_receptor = self.transaccio.receptor.id
+        id_doc = self.transaccio.document.id_document_blockchain()
+        transaccio = self.transaccio
+        hash_bloc = self.calcular_hash()
+        my_db.guardar_bloc(id_bloc, timestamp, id_emissor, id_receptor, id_doc, transaccio, hash_bloc)
+
 
 class BlockchainUniversity:
     # Dificultat del hash
@@ -194,7 +204,11 @@ class BlockchainUniversity:
         """
        Creacio del bloc Inicial.
         """
-        genesis_bloc = Bloc(0, '0', "Genesis", "Genesis", [])
+        emissor = Usuari("Genesis")
+        receptor = Usuari("Genesis")
+        document = Document("Genesis")
+        transaccio = Transaccio(emissor, receptor, document)
+        genesis_bloc = Bloc(0, transaccio, 0)
         genesis_bloc.hash = genesis_bloc.calcular_hash()
         self.cadena.append(genesis_bloc)
 
@@ -273,6 +287,10 @@ class Document:
         self.id_tipus = id_tipus
         self.usuari = usuari
         self.pdf = pdf
+
+    @property
+    def id_document_blockchain(self):
+        pass
 
 
 class Examen(Document):

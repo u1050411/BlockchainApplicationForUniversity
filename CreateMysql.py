@@ -200,6 +200,12 @@ class MySqlBloc:
         sql = f'INSERT INTO public_key (`id_usuari`, `public_key`, `data_creacio`, `actiu` ) VALUES({id_usuari}, "{string_key}", "{data_creacio_key}", 1) '
         self.exportar_sql(sql)
 
+    def guardar_bloc(self, id_bloc, time, id_emissor, id_receptor, id_document, transaccio, hash_block):
+        sql = f'INSERT INTO usuari (`id_bloc`, `time`, `id_emissor`, `id_receptor`,`id_document`, `transaccio`, ' \
+              f'`hash`) VALUES({id_bloc}, "{time}", "{id_emissor}", "{id_receptor}",{id_document}, "{transaccio}", ' \
+              f'"{hash_block}")'
+        self.exportar_sql(sql)
+
     @staticmethod
     def dades_num(num_document):
         num_document = str(num_document)

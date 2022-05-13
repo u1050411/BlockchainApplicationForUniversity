@@ -35,7 +35,7 @@ class CreacioTaulaTest:
 
     def crear_taules(self):
         sqls = ["CREATE TABLE if not exists `usuari` ("
-                "`id` int NOT NULL,"
+                "`id` int NOT NULL AUTO_INCREMENT,"
                 "`nif` varchar(9) NOT NULL,"
                 "`nom` varchar(45) DEFAULT NULL,"
                 "`cognom` varchar(100) DEFAULT NULL,"
@@ -54,18 +54,19 @@ class CreacioTaulaTest:
                 "PRIMARY KEY (`id_usuari`))",
 
                 "CREATE TABLE if not exists `transaccio` ("
+                "`id_transaccio` INT NOT NULL AUTO_INCREMENT,"
                 "`id_emissor` INT NOT NULL,"
                 "`id_receptor` INT NOT NULL,"
                 "`id_document` INT NOT NULL,"
                 "`data_creacio` DATETIME NOT NULL,"
-                "PRIMARY KEY(`id_emissor`, `id_receptor`, `id_document`, `data_creacio`))",
+                "PRIMARY KEY(`id_transaccio`))",
 
                 # "CREATE TABLE if not exists `document` ("
                 # "`id_document` INT NOT NULL,"
                 # "PRIMARY KEY (`id_document`))",
 
                 "CREATE TABLE if not exists `examen` ("
-                "`id_document` INT NOT NULL,"
+                "`id_document` INT NOT NULL AUTO_INCREMENT,"
                 "`id_professor` INT NOT NULL,"
                 "`data_examen` DATETIME NOT NULL,"
                 "`data_inici` DATETIME NULL,"
@@ -80,7 +81,7 @@ class CreacioTaulaTest:
                 "PRIMARY KEY (`id_document`, `id_estudiant`))",
 
                 "CREATE TABLE if not exists `resposta_examen` ("
-                "`id_resposta` INT NOT NULL,"
+                "`id_resposta` INT NOT NULL AUTO_INCREMENT,"
                 "`id_examen` INT NOT NULL,"
                 "`data_creacio` DATETIME NOT NULL,"
                 "`id_usuari` INT NOT NULL,"
@@ -88,10 +89,11 @@ class CreacioTaulaTest:
                 "PRIMARY KEY (`id_resposta`))",
 
                 "CREATE TABLE if not exists `bloc` ("
-                "`id_bloc` INT NOT NULL,"
+                "`id_bloc` INT NOT NULL AUTO_INCREMENT,"
+                "`time` DATETIME NOT NULL,"
                 "`id_emissor` INT NOT NULL,"
-                "`id_receptor` DATETIME NOT NULL,"
-                "`id_document` DATETIME NULL,"
+                "`id_receptor` INT NOT NULL,"
+                "`id_document` INT NOT NULL,"
                 "`transaccio` LONGBLOB  NULL,"
                 "`hash` LONGBLOB  NULL,"
                 "PRIMARY KEY (`id_bloc`))",
