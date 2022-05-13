@@ -98,6 +98,11 @@ class MySqlBloc:
                f'from `resposta_examen` where `id_examen` = {id_document}'
         return self.importar_llista_sql(sql)
 
+    def importar_resposta(self, id_document, id_resposta):
+        sql = f'select id_resposta, data_creacio, id_usuari, pdf  from `resposta_examen` ' \
+              f'where `id_examen` = {id_document} and `id_resposta` = {id_resposta}'
+        return self.importar_llista_sql(sql)
+
     def importar_sql(self, sql):
         llista = self.importar_llista_sql(sql)
         return llista[0]

@@ -56,6 +56,11 @@ class Factoria:
             return examen
         return None
 
+    @staticmethod
+    def build_resposta_examen_from_db(my_db, id_document, id_resposta):
+        resposta = my_db.importar_resposta(id_document, id_resposta)
+        return resposta
+
 
 class Usuari:
 
@@ -147,9 +152,11 @@ time: {self.time}
 class Bloc:
     # Classe creació del bloc
 
-    def __init__(self, index=None, hash_bloc_anterior=None, transaccio=None):
+    def __init__(self, index=None, emissor=None, receptor=None, hash_bloc_anterior=None, transaccio=None):
         self._index = index
         self._timestamp = datetime.now().isoformat()
+        self.emissor = emissor
+        self.receptor = receptor
         self.hash_bloc_anterior = hash_bloc_anterior
         self._transaccio = transaccio
         self.nonce = 0
@@ -189,7 +196,7 @@ class BlockchainUniversity:
         """
        Creacio del bloc Inicial.
         """
-        genesis_bloc = Bloc(0, '0', [])
+        genesis_bloc = Bloc(0, '0', "Genesis", "Genesis", [])
         genesis_bloc.hash = genesis_bloc.calcular_hash()
         self.cadena.append(genesis_bloc)
 

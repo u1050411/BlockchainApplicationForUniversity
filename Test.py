@@ -6,6 +6,7 @@ from random import Random
 
 from Crypto.PublicKey import RSA
 
+import BlockchainUniversity
 from BlockchainUniversity import Universitat, Estudiant, Transaccio, Professor, Bloc, Examen, Usuari, \
     Factoria, RespostaExamen
 from CreateMysql import MySqlBloc
@@ -229,28 +230,27 @@ class TestBloc(unittest.TestCase):
 class TestBlockchainUniversity(unittest.TestCase):
 
     def test_crear_genesis_bloc(self):
-        pass
-    # bloc_chain = BlockchainUniversity()
-    # bloc = bloc_chain.ultim_bloc
-    # self.assertEqual(bloc.index, 0)
-    # self.assertEqual(bloc.transaccio, [])
-    # self.assertEqual(bloc.hash_bloc_anterior, '0')
+        bloc_chain = BlockchainUniversity()
+        bloc = bloc_chain.ultim_bloc
+        self.assertEqual(bloc.index, 0)
+        self.assertEqual(bloc.transaccio, [])
+        self.assertEqual(bloc.hash_bloc_anterior, '0')
 
-    # def test_minat(self):
-    #     bloc_chain = BlockchainUniversity()
-    #     estudiant = Estudiant('Pau')
-    #     professor = Professor('Teo')
-    #     t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
-    #     bloc_chain.afegir_nova_transaccio(t1)
-    #     t2 = TransaccioExamen(professor, 'DocumentEncriptat', 'idDocument', 10)
-    #     bloc_chain.afegir_nova_transaccio(t2)
-    #
-    #     for x in bloc_chain.transaccio_noconfirmades:
-    #         y = 0
-    #         if x is not None:
-    #             print(bloc_chain.minat())
-    #         y += y
-    #         x = []
+    def test_minat(self):
+        bloc_chain = BlockchainUniversity()
+        estudiant = Estudiant('Pau')
+        professor = Professor('Teo')
+        t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
+        bloc_chain.afegir_nova_transaccio(t1)
+        t2 = TransaccioExamen(professor, 'DocumentEncriptat', 'idDocument', 10)
+        bloc_chain.afegir_nova_transaccio(t2)
+
+        for x in bloc_chain.transaccio_noconfirmades:
+            y = 0
+            if x is not None:
+                print(bloc_chain.minat())
+            y += y
+            x = []
 
 
 class TestMysql(unittest.TestCase):
