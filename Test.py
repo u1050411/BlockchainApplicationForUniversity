@@ -6,7 +6,7 @@ from random import Random
 
 from Crypto.PublicKey import RSA
 
-from BlockchainUniversity import Universitat, Estudiant, Transaccio, Professor,  Bloc, Examen, Usuari, \
+from BlockchainUniversity import Universitat, Estudiant, Transaccio, Professor, Bloc, Examen, Usuari, \
     Factoria, RespostaExamen
 from CreateMysql import MySqlBloc
 from PyPDF2 import PdfFileMerger, PdfFileReader
@@ -29,6 +29,8 @@ class CreacioTaulaTest:
         self.crear_taules()
         self.crear_usuaris()
         self.crear_examens()
+        self.crear_respostes()
+        self.crear_transaccions()
 
     def crear_taules(self):
         sqls = ["CREATE TABLE if not exists `usuari` ("
@@ -46,6 +48,8 @@ class CreacioTaulaTest:
                 "CREATE TABLE if not exists `public_key` ("
                 "`id_usuari` INT NOT NULL,"
                 "`public_key` longtext NULL,"
+                "`data_creacio` DATETIME NOT NULL,"
+                "`actiu` longtext NULL,"
                 "PRIMARY KEY (`id_usuari`))",
 
                 "CREATE TABLE if not exists `transaccio` ("
@@ -96,31 +100,47 @@ class CreacioTaulaTest:
             self.my_db.guardar_usuari(id_usuari, nif, nom, cognom)
 
     def crear_examens(self):
-        examens = [[1, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
-                           f'/pdf/GEINF DOC1 full de TFG_V2.pdf', 2050404, '2022-10-01T13:00', '2022-10-01T14:00'],
+        examens = [[1, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
+                       f'Examen_2021_20_10_01_primer_parcial.pdf', 2050404, '2022-10-01T13:00', '2022-10-01T14:00'],
                    [2, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
-                           f'/pdf/GEINF DOC1 full de TFG_V2.pdf', 2000256, '2022-10-01T12:00', '2022-10-01T13:00'],
-                   [3, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
-                           f'/pdf/GEINF DOC1 full de TFG_V2.pdf', 2000256, '2022-10-01T12:00', '2022-10-01T13:00'],
-                   [4, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
-                           f'/pdf/GEINF DOC1 full de TFG_V2.pdf', 2050404, '2022-10-01T13:00', '2022-10-01T14:00']]
+                       f'/pdf/Examen_2020-21-_26-03_primer_parcial.pdf', 2000256, '2022-10-01T12:00'
+                       , '2022-10-01T13:00']]
 
         for id_document, nom_fitxer, id_professor, data_inicial, data_final in examens:
             pdf = self.my_db.recuperar_fitxer(nom_fitxer)
             professor = Factoria.build_usuari_from_db(self.my_db, id_professor, PROFESSOR)
             examen = Examen(id_document, professor, pdf, data_inicial, data_final)
+            estudiant = Factoria.build_usuari_from_db(self.my_db, '1050402',ESTUDIANT)
+            examen.afegir_estudiants(estudiant)
             self.my_db.guardar_examen(examen)
 
     def crear_respostes(self):
-        pass
+
+        respostes = [[1, 1, 1050402, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
+                      f'Examen_2021_20_10_01_primer_parcial-solucio.pdf'],
+                     [2, 2, 1050403, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
+                      f'Examen_2020-21-_26-03_primer_parcial.pdf']]
+
+        for id_resposta, id_examen, id_usuari,  nom_fitxer in respostes:
+            pdf = self.my_db.recuperar_fitxer(nom_fitxer)
+            estudiant = Factoria.build_usuari_from_db(self.my_db, id_usuari, ESTUDIANT)
+            resposta = RespostaExamen(id_resposta, id_examen, estudiant, pdf)
+            self.my_db.guardar_resposta_examen(resposta)
 
     def crear_transaccions(self):
         receptor = Factoria.build_usuari_from_db(self.my_db, 1050402, ESTUDIANT)
         emissor = Factoria.build_usuari_from_db(self.my_db, 2000256, PROFESSOR)
+        examen = Factoria.build_examen_from_db(self.my_db, 1)
+        transaccio = Transaccio(emissor, receptor, examen)
+        self.my_db.guardar_transaccio(transaccio)
+        emissor2 = receptor
+        receptor2 = emissor
         nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
-                     f'BlockchainApplicationForUniversity/pdf/Examen_2021_20_10_01_primer_parcial.pdf'
+                     f'BlockchainApplicationForUniversity/pdf/Examen_2021_20_10_01_primer_parcial-solucio.pdf'
         pdf = self.my_db.recuperar_fitxer(nom_fitxer)
-        transaccio = Transaccio(emissor, receptor, pdf)
+        resposta = RespostaExamen(1, 1, emissor2, pdf)
+        transaccio2 = Transaccio(emissor2, receptor2, resposta)
+        self.my_db.guardar_transaccio(transaccio2)
 
 
 class TestUsuaris(unittest.TestCase):
@@ -150,13 +170,13 @@ class TestTransaction(unittest.TestCase):
     def test_creation(self):
         receptor = Factoria.build_usuari_from_db(self.my_db, 1050402, ESTUDIANT)
         emissor = Factoria.build_usuari_from_db(self.my_db, 2000256, PROFESSOR)
-        nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
-                     f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
-        pdf = self.my_db.recuperar_fitxer(nom_fitxer)
-        transaccio = Transaccio(emissor, receptor, pdf)
+        nom_examen = f'C:/Users/u1050/PycharmProjects/' \
+                     f'BlockchainApplicationForUniversity/pdf/Examen_2021_20_10_01_primer_parcial.pdf'
+        fitxer_examen = self.my_db.recuperar_fitxer(nom_examen)
+        transaccio = Transaccio(emissor, receptor, fitxer_examen)
         self.assertEqual(transaccio.emissor, emissor)
         self.assertEqual(transaccio.receptor, receptor)
-        self.assertEqual(transaccio.document, pdf)
+        self.assertEqual(transaccio.document, fitxer_examen)
 
     # def test_posarNota(self):
     #     cua = []
@@ -196,7 +216,7 @@ class TestBloc(unittest.TestCase):
         self.assertEqual(bloc_prova.transaccio, t1)
         self.assertEqual(bloc_prova.hash_bloc_anterior, '0')
 
-    #Revisar dona un hash diferent cada cop
+    # Revisar dona un hash diferent cada cop
     # def test_calcular_Hash(self):
     #     estudiant = Estudiant('Albert')
     #     t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
@@ -259,10 +279,10 @@ class TestMysql(unittest.TestCase):
     def test_exportar_sql(self):
         self.test.crear_schema_dades()
         sql = "CREATE TABLE if not exists `TaulaProva` (" \
-              "`id` int NOT NULL,"\
+              "`id` int NOT NULL," \
               "`nif` varchar(9) NOT NULL," \
-              "`nom` varchar(45) DEFAULT NULL,"\
-              "`cognom` varchar(100) DEFAULT NULL,"\
+              "`nom` varchar(45) DEFAULT NULL," \
+              "`cognom` varchar(100) DEFAULT NULL," \
               "PRIMARY KEY (`id`, `nif`)) "
         self.my_db.exportar_sql(sql)
         self.assertEqual(self.my_db.existeix(self.schema, 'TaulaProva', None, None), True)
@@ -338,6 +358,8 @@ class TestMysql(unittest.TestCase):
         self.my_db.guardar_resposta_examen(resposta)
 
 
+
+
 class TestFactoria(unittest.TestCase):
 
     def setUp(self):
@@ -407,14 +429,6 @@ class TestRespostaExamen(unittest.TestCase):
         num_document = self.my_db.seguent_id_resposta()
         self.assertIsNotNone(num_document)
 
-
-
-
-
-
-
-
-
     # def test_llegir_pdf(self):
     #     nom_fitxer = f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
     #     pdf_file = open(nom_fitxer, "rb")
@@ -429,8 +443,6 @@ class TestRespostaExamen(unittest.TestCase):
     #     sql = f'INSERT INTO documents (`id_document`, `id_tipus`, `versio`, `id_usuari`, `pdf`) VALUES({id_document}, ' \
     #           f'{id_tipus}, {versio}, {id_usuari}, "{save_pdf}") '
     #     my_db.exportar_sql(sql)
-
-
 
     # def test_print_pdf(self, pdffile, printer_name):
     #     # acroread = r'C:\Program Files (x86)\Adobe\Reader 11.0\Reader\AcroRd32.exe'

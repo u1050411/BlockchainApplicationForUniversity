@@ -113,7 +113,7 @@ class Transaccio:
         return collections.OrderedDict({
             'Emissor': self.emissor.id,
             'Receptor': self.receptor.id,
-            'Document': self.document.numdoc(),
+            'Document': self.document.id_document(),
             'Data': self.time})
 
     def display_transaccio(self):
@@ -121,7 +121,7 @@ class Transaccio:
 -----
 receptor: {self.receptor.id}
 -----
-value: {self.document.numdoc()}
+value: {self.document.id_document()}
 -----
 time: {self.time}
 -----

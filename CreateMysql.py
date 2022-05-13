@@ -157,8 +157,8 @@ class MySqlBloc:
         if num_maxim is None:
             id_document = 0
         else:
-            id_document, tipus = self.dades_num(num_maxim)
-        return id_document + 1
+            id_document = num_maxim + 1
+        return id_document
 
     def clau_privada(self, id_usuari):
         sql = f'select `private_key` from `blockchainuniversity`.`private_key` where `id_usuari` = {id_usuari} LIMIT 1'
@@ -185,10 +185,11 @@ class MySqlBloc:
         key = RSA.generate(1024)
         private_key = key.exportKey('PEM').decode('ascii')
         public_key = key.publickey()
+        data_creacio_key = datetime.now().isoformat()
         string_key = public_key.exportKey('PEM').decode('ascii')
         sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{private_key}")'
         self.exportar_sql(sql)
-        sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{string_key}")'
+        sql = f'INSERT INTO public_key (`id_usuari`, `public_key`, `data_creacio`, `actiu` ) VALUES({id_usuari}, "{string_key}", "{data_creacio_key}", 1) '
         self.exportar_sql(sql)
 
     @staticmethod
