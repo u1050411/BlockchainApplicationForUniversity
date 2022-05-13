@@ -150,20 +150,23 @@ class MySqlBloc:
     def existeix_examen(self, id_document):
         return self.existeix('BlockchainUniversity', 'examen', 'id_document', id_document)
 
-    def seguent_id_examen(self):
-        sql = f"select Max(`id_document`) from `examen`"
-        num_maxim = self.importar_sql(sql)[0]
-        # id_document, tipus = self.dades_num(num_maxim)
-        return num_maxim + 1
-
-    def seguent_id_resposta(self):
-        sql = f"select Max(`id_resposta`) from `resposta_examen`"
+    def seguent_id(self, taula, columna):
+        sql = f"select Max(`{columna}`) from `{taula}`"
         num_maxim = self.importar_sql(sql)[0]
         if num_maxim is None:
             id_document = 0
         else:
             id_document = num_maxim + 1
         return id_document
+
+    def seguent_id_examen(self):
+        return self.seguent_id("examen", "id_document")
+
+    def seguent_id_resposta(self):
+        return self.seguent_id("resposta_examen", "id_resposta")
+
+    def seguent_id_bloc(self):
+        return self.seguent_id("bloc", "id_bloc")
 
     def clau_privada(self, id_usuari):
         sql = f'select `private_key` from `blockchainuniversity`.`private_key` where `id_usuari` = {id_usuari} LIMIT 1'

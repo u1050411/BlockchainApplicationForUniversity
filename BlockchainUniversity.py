@@ -152,13 +152,11 @@ time: {self.time}
 class Bloc:
     # Classe creació del bloc
 
-    def __init__(self, index=None, emissor=None, receptor=None, hash_bloc_anterior=None, transaccio=None):
+    def __init__(self, index=None,  transaccio=None, hash_bloc_anterior=None,):
         self._index = index
         self._timestamp = datetime.now().isoformat()
-        self.emissor = emissor
-        self.receptor = receptor
+        self.transaccio = transaccio
         self.hash_bloc_anterior = hash_bloc_anterior
-        self._transaccio = transaccio
         self.nonce = 0
 
     @property
