@@ -5,6 +5,7 @@ import unittest
 from random import Random
 
 from Crypto.PublicKey import RSA
+from pandas._libs import json
 
 import BlockchainUniversity
 from BlockchainUniversity import Universitat, Estudiant, Transaccio, Professor, Bloc, Examen, Usuari, \
@@ -35,11 +36,16 @@ class CreacioTaulaTest:
 
     def crear_taules(self):
         sqls = ["CREATE TABLE if not exists `usuari` ("
-                "`id` int NOT NULL AUTO_INCREMENT,"
+                "`id` int NOT NULL,"
                 "`nif` varchar(9) NOT NULL,"
                 "`nom` varchar(45) DEFAULT NULL,"
                 "`cognom` varchar(100) DEFAULT NULL,"
                 "PRIMARY KEY (`id`, `nif`)) ",
+
+                "CREATE TABLE if not exists `usuari_Json` ("
+                "`id` int NOT NULL AUTO_INCREMENT,"
+                "`usuari` LONGBLOB  NULL,"
+                "PRIMARY KEY (`id`)) ",
 
                 "CREATE TABLE if not exists `private_key` ("
                 "`id_usuari` INT NOT NULL,"
@@ -97,6 +103,11 @@ class CreacioTaulaTest:
                 "`transaccio` LONGBLOB  NULL,"
                 "`hash` LONGBLOB  NULL,"
                 "PRIMARY KEY (`id_bloc`))",
+
+                "CREATE TABLE if not exists `trans_prova` ("
+                "`id_trans` INT NOT NULL AUTO_INCREMENT,"
+                "`transaccio` LONGBLOB  NULL,"
+                "PRIMARY KEY (`id_trans`))",
                 ]
 
         for sql in sqls:
@@ -110,7 +121,7 @@ class CreacioTaulaTest:
                    [2000256, '40332508Y', 'Teodor Maria', 'Jove Lagunas']]
 
         for id_usuari, nif, nom, cognom in usuaris:
-            self.my_db.guardar_usuari(id_usuari, nif, nom, cognom)
+            self.my_db.guardar_usuari_test(id_usuari, nif, nom, cognom)
 
     def crear_examens(self):
         examens = [[1, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
@@ -158,14 +169,29 @@ class CreacioTaulaTest:
 
 class TestUsuaris(unittest.TestCase):
 
+    def setUp(self):
+        self.my_db = MySqlBloc('localhost', 'root', 'root')
+        self.schema = 'blockchainuniversity'
+        self.test = CreacioTaulaTest(self.my_db, self.schema)
+        self.test.crear_schema_dades()
+
     def test_creation(self):
         public_key = RSA.generate(1024).publickey()
         estudiant = Estudiant(1050406, '40332505G', 'Marta', "Rodriguez", public_key)
-        self.assertEqual(estudiant.id, 1050406)
-        self.assertEqual(estudiant.nif, '40332505G')
-        self.assertEqual(estudiant.nom, 'Marta')
-        self.assertEqual(estudiant.cognom, 'Rodriguez')
-        self.assertEqual(estudiant.public_key, public_key)
+        to_estudiant = estudiant.to_json()
+        print(to_estudiant)
+        self.my_db.guardar_usuari(to_estudiant)
+        usuari_json = self.my_db.importar_usuari2(1)
+        print(usuari_json)
+        usuari_prova = json.loads(usuari_json)
+        print(usuari_prova)
+        estudiant2 = Estudiant()
+        estudiant2.create_json(usuari_prova)
+        self.assertEqual(estudiant.public_key, estudiant2.public_key)
+        # self.assertEqual(estudiant.nif, '40332505G')
+        # self.assertEqual(estudiant.nom, 'Marta')
+        # self.assertEqual(estudiant.cognom, 'Rodriguez')
+        # self.assertEqual(estudiant.public_key, public_key)
 
 
 class TestUniversitat(unittest.TestCase):
@@ -191,6 +217,16 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(transaccio.receptor, receptor)
         self.assertEqual(transaccio.document, fitxer_examen)
 
+    def test_guardar(self):
+        pass
+        # receptor = Factoria.build_usuari_from_db(self.my_db, 1050402, ESTUDIANT)
+        # emissor = Factoria.build_usuari_from_db(self.my_db, 2000256, PROFESSOR)
+        # nom_examen = f'C:/Users/u1050/PycharmProjects/' \
+        #              f'BlockchainApplicationForUniversity/pdf/Examen_2021_20_10_01_primer_parcial.pdf'
+        # fitxer_examen = self.my_db.recuperar_fitxer(nom_examen)
+        # transaccio = Transaccio(emissor, receptor, fitxer_examen)
+        # self.my_db.guardar_trans(transaccio)
+
     # def test_posarNota(self):
     #     cua = []
     #     estudiant = Estudiant('Pau')
@@ -209,13 +245,13 @@ class TestTransaction(unittest.TestCase):
     #     t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
     #     t1.sign_transaction()
 
-    def test_to_Json(self):
-        estudiant = Estudiant('Pau')
-        t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
-        x = t1.to_json()
-        # jtrans = json.loads(t1.to_json())
-        # print(json.dumps(jtrans, indent=4))
-        print(x)
+    # def test_to_Json(self):
+    #     estudiant = Estudiant('Pau')
+    #     t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
+    #     x = t1.to_json()
+    #     # jtrans = json.loads(t1.to_json())
+    #     # print(json.dumps(jtrans, indent=4))
+    #     print(x)
 
 
 class TestBloc(unittest.TestCase):
@@ -342,7 +378,7 @@ class TestMysql(unittest.TestCase):
         nif = '40373944C'
         nom = 'Pablo'
         cognom = 'Gutierrez'
-        self.my_db.guardar_usuari(id_usuari, nif, nom, cognom)
+        self.my_db.guardar_usuari_test(id_usuari, nif, nom, cognom)
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'id', '1050411'), True)
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'nom', 'Pere'), True)
         self.assertEqual(self.my_db.existeix(self.schema, 'private_key', 'id_usuari', '1050411'), True)

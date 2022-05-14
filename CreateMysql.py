@@ -111,10 +111,25 @@ class MySqlBloc:
         sql = f'select * from usuari where id = {id_usuari} LIMIT 1'
         return self.importar_sql(sql)
 
+    def importar_usuari2(self, id_usuari):
+        sql = f'select `usuari`  from `usuari_json` where id = {id_usuari} LIMIT 1'
+        return self.importar_sql(sql)[0]
+
     def importar_examen(self, id_document):
         sql = f'select `id_document`, `id_professor`, `data_examen`, `data_inici`, `data_final`, `pdf` ' \
               f'from `examen` where `id_document` = {id_document} LIMIT 1'
         return self.importar_sql(sql)
+
+# Limitat a 100 transaccions
+    def importar_transaccions(self):
+        sql = f'select id_transaccio, id_emissor, id_receptor, id_document, data_creacio from `transaccio` ' \
+              f'order by id_transaccio LIMIT 100'
+        return self.importar_sql(sql)
+
+    # def importar_transaccio(self):
+    #     sql = f'select `id_document`, `id_professor`, `data_examen`, `data_inici`, `data_final`, `pdf` ' \
+    #           f'from `examen` where `id_document` = {id_document} LIMIT 1'
+    #     return self.importar_sql(sql)
 
     def esborrar_schema(self, schema):
         if self.existeix(schema, None, None, None):
@@ -187,7 +202,11 @@ class MySqlBloc:
         sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{public_key}")'
         self.exportar_sql(sql)
 
-    def guardar_usuari(self, id_usuari, nif, nom, cognom):
+    def guardar_usuari(self, usuari):
+        sql = f"INSERT INTO usuari_Json (`id`, `usuari`) values (1, '{usuari}')"
+        self.exportar_sql(sql)
+
+    def guardar_usuari_test(self, id_usuari, nif, nom, cognom):
         sql = f'INSERT INTO usuari (`id`, `nif`, `nom`, `cognom`) VALUES({id_usuari}, "{nif}", "{nom}", "{cognom}")'
         self.exportar_sql(sql)
         key = RSA.generate(1024)
@@ -249,6 +268,11 @@ class MySqlBloc:
         sql = f'INSERT INTO transaccio (`id_emissor`, `id_receptor`, `id_document`, `data_creacio`) ' \
               f'VALUES({transaccio.emissor.id}, {transaccio.receptor.id}, "{transaccio.document.id_document}", ' \
               f'"{transaccio.data_creacio}")'
+        self.exportar_sql(sql)
+
+    def guardar_trans(self, transaccio):
+        sql = f'INSERT INTO trans_prova (`transaccio`) ' \
+              f'VALUES({transaccio})'
         self.exportar_sql(sql)
 
 

@@ -5,6 +5,7 @@ import json
 from datetime import datetime
 
 from Crypto.Hash import SHA1
+from Crypto.PublicKey import RSA
 
 from CreateMysql import MySqlBloc
 
@@ -22,6 +23,20 @@ class Factoria:
 
     @staticmethod
     def build_usuari_from_db(my_db, id_usuari, tipus):
+        if my_db.existeix_usuari(id_usuari):
+            usuari_db = my_db.importar_usuari(id_usuari)
+            if usuari_db is not None:
+                id_us, nif, nom, cognom = usuari_db
+                public_key = my_db.clau_publica(id_usuari)
+                if tipus == ESTUDIANT:
+                    estudiant = Estudiant(id_usuari, nif, nom, cognom, public_key)
+                    return estudiant
+                elif tipus == PROFESSOR:
+                    professor = Professor(id_usuari, nif, nom, cognom, public_key)
+                    return professor
+        return None
+
+    def build_usuari2_from_db(my_db, id_usuari, tipus):
         if my_db.existeix_usuari(id_usuari):
             usuari_db = my_db.importar_usuari(id_usuari)
             if usuari_db is not None:
@@ -69,7 +84,35 @@ class Usuari:
         self.nif = nif
         self.nom = nom
         self.cognom = cognom
+        self.tipus = "Usuari"
         self.public_key = public_key
+
+    def create_json(self, usuari_json):
+        self.id = usuari_json['id']
+        self.nif = usuari_json['nif']
+        self.nom = usuari_json['nom']
+        self.cognom = usuari_json['cognom']
+        self.tipus = usuari_json['tipus']
+        self.public_key = RSA.importKey(usuari_json['public_key'])
+
+    def to_json(self):
+        rest = self.to_dict()
+        return json.dumps(rest, default=str)
+
+    def to_dict(self):
+        return collections.OrderedDict({
+            'id': self.id,
+            'nif': self.nif,
+            'nom': self.nom,
+            'cognom': self.cognom,
+            'tipus': self.tipus,
+            'public_key': self.public_key.exportKey('PEM').decode('ascii')})
+
+    # @property
+    # def tipus(self):
+    #     if self.tipus
+    #         return 'Estudiant'
+    #     elif  self.tipus == PROFESSOR
 
     # def sign(self, data):
     #     h = SHA1.new(data)
@@ -77,11 +120,15 @@ class Usuari:
 
 
 class Professor(Usuari):
-    pass
+    def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None):
+        super(Professor, self).__init__(id_usuari, nif, nom, cognom, public_key)
+        self.tipus = PROFESSOR
 
 
 class Estudiant(Usuari):
-    pass
+    def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None):
+        super(Estudiant, self).__init__(id_usuari, nif, nom, cognom, public_key)
+        self.tipus = ESTUDIANT
 
 
 class Universitat:
@@ -95,6 +142,7 @@ class Transaccio:
 
     # Classe on guardem les dades de les transaccions
     def __init__(self, emissor=None, receptor=None, document=None):
+        self.id = 0
         self.emissor = emissor
         self.receptor = receptor
         self.document = document
