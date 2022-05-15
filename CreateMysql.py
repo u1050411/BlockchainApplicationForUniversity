@@ -108,12 +108,12 @@ class MySqlBloc:
         return llista[0]
 
     def importar_usuari(self, id_usuari):
-        sql = f'select * from usuari where id = {id_usuari} LIMIT 1'
-        return self.importar_sql(sql)
-
-    def importar_usuari2(self, id_usuari):
-        sql = f'select `usuari`  from `usuari_json` where id = {id_usuari} LIMIT 1'
+        sql = f'select `usuari` from usuari where id = {id_usuari} LIMIT 1'
         return self.importar_sql(sql)[0]
+
+    # def importar_usuari2(self, id_usuari):
+    #     sql = f'select `usuari`  from `usuari_json` where id = {id_usuari} LIMIT 1'
+    #     return self.importar_sql(sql)[0]
 
     def importar_examen(self, id_document):
         sql = f'select `id_document`, `id_professor`, `data_examen`, `data_inici`, `data_final`, `pdf` ' \
@@ -202,22 +202,22 @@ class MySqlBloc:
         sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{public_key}")'
         self.exportar_sql(sql)
 
-    def guardar_usuari(self, usuari):
-        sql = f"INSERT INTO usuari_Json (`id`, `usuari`) values (1, '{usuari}')"
+    def guardar_usuari(self, id_usuari, usuari):
+        sql = f"INSERT INTO usuari  (`id`, `usuari`) values ({id_usuari}, '{usuari}')"
         self.exportar_sql(sql)
 
-    def guardar_usuari_test(self, id_usuari, nif, nom, cognom):
-        sql = f'INSERT INTO usuari (`id`, `nif`, `nom`, `cognom`) VALUES({id_usuari}, "{nif}", "{nom}", "{cognom}")'
-        self.exportar_sql(sql)
-        key = RSA.generate(1024)
-        private_key = key.exportKey('PEM').decode('ascii')
-        public_key = key.publickey()
-        data_creacio_key = datetime.now().isoformat()
-        string_key = public_key.exportKey('PEM').decode('ascii')
-        sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{private_key}")'
-        self.exportar_sql(sql)
-        sql = f'INSERT INTO public_key (`id_usuari`, `public_key`, `data_creacio`, `actiu` ) VALUES({id_usuari}, "{string_key}", "{data_creacio_key}", 1) '
-        self.exportar_sql(sql)
+    # def guardar_usuari_test(self, id_usuari, nif, nom, cognom):
+    #     sql = f'INSERT INTO usuari (`id`, `nif`, `nom`, `cognom`) VALUES({id_usuari}, "{nif}", "{nom}", "{cognom}")'
+    #     self.exportar_sql(sql)
+    #     key = RSA.generate(1024)
+    #     private_key = key.exportKey('PEM').decode('ascii')
+    #     public_key = key.publickey()
+    #     data_creacio_key = datetime.now().isoformat()
+    #     string_key = public_key.exportKey('PEM').decode('ascii')
+    #     sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{private_key}")'
+    #     self.exportar_sql(sql)
+    #     sql = f'INSERT INTO public_key (`id_usuari`, `public_key`, `data_creacio`, `actiu` ) VALUES({id_usuari}, "{string_key}", "{data_creacio_key}", 1) '
+    #     self.exportar_sql(sql)
 
     def guardar_bloc(self, id_bloc, time, id_emissor, id_receptor, id_document, transaccio, hash_block):
         sql = f'INSERT INTO usuari (`id_bloc`, `time`, `id_emissor`, `id_receptor`,`id_document`, `transaccio`, ' \

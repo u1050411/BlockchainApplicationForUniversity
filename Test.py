@@ -30,19 +30,12 @@ class CreacioTaulaTest:
         self.my_db.afegir_schema(self.schema)
         self.crear_taules()
         self.crear_usuaris()
-        self.crear_examens()
-        self.crear_respostes()
-        self.crear_transaccions()
+        # self.crear_examens()
+        # self.crear_respostes()
+        # self.crear_transaccions()
 
     def crear_taules(self):
         sqls = ["CREATE TABLE if not exists `usuari` ("
-                "`id` int NOT NULL,"
-                "`nif` varchar(9) NOT NULL,"
-                "`nom` varchar(45) DEFAULT NULL,"
-                "`cognom` varchar(100) DEFAULT NULL,"
-                "PRIMARY KEY (`id`, `nif`)) ",
-
-                "CREATE TABLE if not exists `usuari_Json` ("
                 "`id` int NOT NULL AUTO_INCREMENT,"
                 "`usuari` LONGBLOB  NULL,"
                 "PRIMARY KEY (`id`)) ",
@@ -78,6 +71,11 @@ class CreacioTaulaTest:
                 "`data_inici` DATETIME NULL,"
                 "`data_final` DATETIME NULL,"
                 "`pdf` LONGBLOB  NULL,"
+                "PRIMARY KEY (`id_document`))",
+
+                "CREATE TABLE if not exists `examen2` ("
+                "`id_document` INT NOT NULL AUTO_INCREMENT,"
+                "`examen` LONGBLOB  NULL,"
                 "PRIMARY KEY (`id_document`))",
 
                 "CREATE TABLE if not exists `estudiant_examen` ("
@@ -121,7 +119,13 @@ class CreacioTaulaTest:
                    [2000256, '40332508Y', 'Teodor Maria', 'Jove Lagunas']]
 
         for id_usuari, nif, nom, cognom in usuaris:
-            self.my_db.guardar_usuari_test(id_usuari, nif, nom, cognom)
+            key = RSA.generate(1024)
+            private_key = key.exportKey('PEM').decode('ascii')
+            sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{private_key}")'
+            self.my_db.exportar_sql(sql)
+            public_key = key.publickey()#.exportKey('PEM').decode('ascii')
+            usuari = Usuari(id_usuari, nif, nom, cognom, public_key)
+            self.my_db.guardar_usuari(id_usuari, usuari.to_json())
 
     def crear_examens(self):
         examens = [[1, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
@@ -177,21 +181,20 @@ class TestUsuaris(unittest.TestCase):
 
     def test_creation(self):
         public_key = RSA.generate(1024).publickey()
-        estudiant = Estudiant(1050406, '40332505G', 'Marta', "Rodriguez", public_key)
+        estudiant = Estudiant(1050415, '40332505G', 'Marta', "Rodriguez", public_key)
         to_estudiant = estudiant.to_json()
-        print(to_estudiant)
-        self.my_db.guardar_usuari(to_estudiant)
-        usuari_json = self.my_db.importar_usuari2(1)
-        print(usuari_json)
+        self.my_db.guardar_usuari(1050415, to_estudiant)
+        usuari_json = self.my_db.importar_usuari(1050415)
         usuari_prova = json.loads(usuari_json)
-        print(usuari_prova)
-        estudiant2 = Estudiant()
-        estudiant2.create_json(usuari_prova)
+        estudiant2 = Estudiant.create_json(usuari_prova)
+        self.assertEqual(estudiant.id, estudiant2.id)
+        self.assertEqual(estudiant.nom, estudiant2.nom)
+        self.assertEqual(estudiant.cognom, estudiant2.cognom)
+        self.assertEqual(estudiant.tipus, estudiant2.tipus)
         self.assertEqual(estudiant.public_key, estudiant2.public_key)
-        # self.assertEqual(estudiant.nif, '40332505G')
-        # self.assertEqual(estudiant.nom, 'Marta')
-        # self.assertEqual(estudiant.cognom, 'Rodriguez')
-        # self.assertEqual(estudiant.public_key, public_key)
+        print(to_estudiant)
+        print(usuari_json)
+        print(usuari_prova)
 
 
 class TestUniversitat(unittest.TestCase):
@@ -387,7 +390,7 @@ class TestMysql(unittest.TestCase):
     def test_clau(self):
         self.test.crear_schema_dades()
         id_usuari = 1050402
-        privat_key = self.my_db.clau_privada(id_usuari)
+        privat_key = self.my_db.clau_pguardar_clau_privadarivada(id_usuari)
         public_key = self.my_db.clau_publica(id_usuari)
         self.assertTrue(privat_key.public_key(), public_key)
 
@@ -407,8 +410,6 @@ class TestMysql(unittest.TestCase):
         self.my_db.guardar_resposta_examen(resposta)
 
 
-
-
 class TestFactoria(unittest.TestCase):
 
     def setUp(self):
@@ -417,10 +418,10 @@ class TestFactoria(unittest.TestCase):
         self.test.crear_schema_dades()
 
     def test_usuari(self):
-        estudiant = Factoria.build_usuari_from_db(self.my_db, 1050402, ESTUDIANT)
+        estudiant = Factoria.build_usuari_from_db(self.my_db, 1050402)
         self.assertEqual(estudiant.id, 1050402)
         self.assertEqual(estudiant.nom, 'Pere')
-        professor = Factoria.build_usuari_from_db(self.my_db, 2000256, PROFESSOR)
+        professor = Factoria.build_usuari_from_db(self.my_db, 2000256)
         self.assertEqual(professor.id, 2000256)
         self.assertEqual(professor.nom, 'Teodor Maria')
 

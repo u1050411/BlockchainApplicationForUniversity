@@ -22,32 +22,13 @@ class Factoria:
         pass
 
     @staticmethod
-    def build_usuari_from_db(my_db, id_usuari, tipus):
+    def build_usuari_from_db(my_db, id_usuari):
         if my_db.existeix_usuari(id_usuari):
             usuari_db = my_db.importar_usuari(id_usuari)
             if usuari_db is not None:
-                id_us, nif, nom, cognom = usuari_db
-                public_key = my_db.clau_publica(id_usuari)
-                if tipus == ESTUDIANT:
-                    estudiant = Estudiant(id_usuari, nif, nom, cognom, public_key)
-                    return estudiant
-                elif tipus == PROFESSOR:
-                    professor = Professor(id_usuari, nif, nom, cognom, public_key)
-                    return professor
-        return None
-
-    def build_usuari2_from_db(my_db, id_usuari, tipus):
-        if my_db.existeix_usuari(id_usuari):
-            usuari_db = my_db.importar_usuari(id_usuari)
-            if usuari_db is not None:
-                id_us, nif, nom, cognom = usuari_db
-                public_key = my_db.clau_publica(id_usuari)
-                if tipus == ESTUDIANT:
-                    estudiant = Estudiant(id_usuari, nif, nom, cognom, public_key)
-                    return estudiant
-                elif tipus == PROFESSOR:
-                    professor = Professor(id_usuari, nif, nom, cognom, public_key)
-                    return professor
+                usuari_json = json.loads(usuari_db)
+                usuari = Usuari.create_json(usuari_json)
+            return usuari
         return None
 
     @staticmethod
@@ -87,18 +68,6 @@ class Usuari:
         self.tipus = "Usuari"
         self.public_key = public_key
 
-    def create_json(self, usuari_json):
-        self.id = usuari_json['id']
-        self.nif = usuari_json['nif']
-        self.nom = usuari_json['nom']
-        self.cognom = usuari_json['cognom']
-        self.tipus = usuari_json['tipus']
-        self.public_key = RSA.importKey(usuari_json['public_key'])
-
-    def to_json(self):
-        rest = self.to_dict()
-        return json.dumps(rest, default=str)
-
     def to_dict(self):
         return collections.OrderedDict({
             'id': self.id,
@@ -107,6 +76,24 @@ class Usuari:
             'cognom': self.cognom,
             'tipus': self.tipus,
             'public_key': self.public_key.exportKey('PEM').decode('ascii')})
+
+    @staticmethod
+    def create_json(usuari_json):
+        id_usuari = usuari_json['id']
+        nif = usuari_json['nif']
+        nom = usuari_json['nom']
+        cognom = usuari_json['cognom']
+        tipus = usuari_json['tipus']
+        public_key = RSA.importKey(usuari_json['public_key'])
+        if tipus == ESTUDIANT:
+            usuari = Estudiant(id_usuari, nif, nom, cognom, public_key)
+        if tipus == PROFESSOR:
+            usuari = Professor(id_usuari, nif, nom, cognom, public_key)
+        return usuari
+
+    def to_json(self):
+        rest = self.to_dict()
+        return json.dumps(rest, default=str)
 
     # @property
     # def tipus(self):
@@ -130,6 +117,45 @@ class Estudiant(Usuari):
         super(Estudiant, self).__init__(id_usuari, nif, nom, cognom, public_key)
         self.tipus = ESTUDIANT
 
+class Document:
+    def __init__(self, id_document=None, id_tipus=None, usuari=None, pdf=None):
+        self.id_document = id_document
+        self.data_creacio = datetime.now().isoformat()
+        self.id_tipus = id_tipus
+        self.usuari = usuari
+        self.pdf = pdf
+
+    @property
+    def id_document_blockchain(self):
+        pass
+
+
+class Examen(Document):
+
+    def __init__(self, id_document=None, professor=None, pdf=None, data_inicial=None, data_final=None):
+        super(Examen, self).__init__(id_document, 1, professor, pdf, )
+        self.data_inicial = data_inicial
+        self.data_final = data_final
+        self.estudiants = []
+        self.respostes = []
+
+    def afegir_estudiants(self, estudiant):
+        self.estudiants.append(estudiant)
+
+    @property
+    def id_document_blockchain(self):
+        return str(self.id_document)+"0001"
+
+
+class RespostaExamen(Document):
+
+    def __init__(self, id_resposta, id_examen=None, usuari=None, pdf=None):
+        super(RespostaExamen, self).__init__(id_resposta, 2, usuari, pdf, )
+        self.id_examen = id_examen
+
+    @property
+    def id_document_blockchain(self):
+        return str(self.id_resposta)+"0002"
 
 class Universitat:
     def __init__(self, nom, private_key, public_key):
@@ -188,7 +214,7 @@ time: {self.time}
         return self.emissor.sign(block_json.encode(UTF_8))
 
     def to_json(self):
-        return json.dumps(self.__dict__, sort_keys=True, default=str)
+        return json.dumps(self.to_dict, sort_keys=True, default=str)
 
 
 # class TransaccioExamen(Transaccio):
@@ -328,45 +354,7 @@ class BlockchainUniversity:
         return new_bloc.index
 
 
-class Document:
-    def __init__(self, id_document=None, id_tipus=None, usuari=None, pdf=None):
-        self.id_document = id_document
-        self.data_creacio = datetime.now().isoformat()
-        self.id_tipus = id_tipus
-        self.usuari = usuari
-        self.pdf = pdf
 
-    @property
-    def id_document_blockchain(self):
-        pass
-
-
-class Examen(Document):
-
-    def __init__(self, id_document=None, professor=None, pdf=None, data_inicial=None, data_final=None):
-        super().__init__(id_document, 1, professor, pdf, )
-        self.data_inicial = data_inicial
-        self.data_final = data_final
-        self.estudiants = []
-        self.respostes = []
-
-    def afegir_estudiants(self, estudiant):
-        self.estudiants.append(estudiant)
-
-    @property
-    def id_document_blockchain(self):
-        return str(self.id_document)+"0001"
-
-
-class RespostaExamen(Document):
-
-    def __init__(self, id_resposta, id_examen=None, usuari=None, pdf=None):
-        super().__init__(id_resposta, 2, usuari, pdf, )
-        self.id_examen = id_examen
-
-    @property
-    def id_document_blockchain(self):
-        return str(self.id_resposta)+"0002"
 
 # class FitxersPdf:
 #     OUTPUT_DIR = Path('data')
