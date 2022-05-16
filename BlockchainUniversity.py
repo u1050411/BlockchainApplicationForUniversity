@@ -26,26 +26,31 @@ class Factoria:
         if my_db.existeix_usuari(id_usuari):
             usuari_db = my_db.importar_usuari(id_usuari)
             if usuari_db is not None:
-                usuari_json = json.loads(usuari_db)
-                usuari = Usuari.create_json(usuari_json)
-            return usuari
+                id_us, tipus, nif, nom, cognom, public_key_str = usuari_db
+                public_key = RSA.importKey(public_key_str)
+                if tipus == ESTUDIANT:
+                    estudiant = Estudiant(id_usuari, nif, nom, cognom, public_key)
+                    return estudiant
+                elif tipus == PROFESSOR:
+                    professor = Professor(id_usuari, nif, nom, cognom, public_key)
+                    return professor
         return None
 
     @staticmethod
     def build_examen_from_db(my_db, id_document):
         if my_db.existeix_examen(id_document):
             id_document, id_professor, data_examen, data_inicial, data_final, pdf = my_db.importar_examen(id_document)
-            professor = Factoria.build_usuari_from_db(my_db, id_professor, PROFESSOR)
+            professor = Factoria.build_usuari_from_db(my_db, id_professor)
             examen = Examen(id_document, professor, pdf, data_inicial, data_final)
             estudiants = my_db.importar_estudiants_examen(id_document)
             if estudiants is not None:
                 for id_estudiant in estudiants:
-                    estudiant = Factoria.build_usuari_from_db(my_db, id_estudiant, ESTUDIANT)
+                    estudiant = Factoria.build_usuari_from_db(my_db, id_estudiant[0])
                     examen.estudiants.append(estudiant)
                 respostes = my_db.importar_respostes(id_document)
                 for sql_resposta in respostes:
                     id_resposta, data_creacio, id_usuari, pdf = sql_resposta
-                    usuari = Factoria.build_usuari_from_db(my_db, id_estudiant, ESTUDIANT)
+                    usuari = Factoria.build_usuari_from_db(my_db, id_estudiant)
                     resposta = RespostaExamen(id_resposta, id_document, usuari, pdf)
                     resposta.data_creacio = data_creacio
                     examen.respostes.append(resposta)
@@ -75,7 +80,7 @@ class Usuari:
             'nom': self.nom,
             'cognom': self.cognom,
             'tipus': self.tipus,
-            'public_key': self.public_key.exportKey('PEM').decode('ascii')})
+            'public_key': self.str_publickey()})
 
     @staticmethod
     def create_json(usuari_json):
@@ -94,6 +99,9 @@ class Usuari:
     def to_json(self):
         rest = self.to_dict()
         return json.dumps(rest, default=str)
+
+    def str_publickey(self):
+        return self.public_key.exportKey('PEM').decode('ascii')
 
     # @property
     # def tipus(self):
@@ -117,6 +125,7 @@ class Estudiant(Usuari):
         super(Estudiant, self).__init__(id_usuari, nif, nom, cognom, public_key)
         self.tipus = ESTUDIANT
 
+
 class Document:
     def __init__(self, id_document=None, id_tipus=None, usuari=None, pdf=None):
         self.id_document = id_document
@@ -128,6 +137,14 @@ class Document:
     @property
     def id_document_blockchain(self):
         pass
+
+    def to_dict(self):
+        return collections.OrderedDict({
+            'id_document': self.id_document,
+            'data_creacio': self.data_creacio,
+            'id_tipus': self.id_tipus,
+            'usuari': self.usuari.to_json(),
+            'pdf': self.pdf})
 
 
 class Examen(Document):
@@ -146,6 +163,24 @@ class Examen(Document):
     def id_document_blockchain(self):
         return str(self.id_document)+"0001"
 
+    def to_dict(self):
+        llista_json = []
+        for x in self.estudiants:
+            estudiant_json = x.to_json()
+            llista_json.append(estudiant_json)
+        return collections.OrderedDict({
+            'id_document': self.id_document,
+            'data_creacio': self.data_creacio,
+            'id_tipus': self.id_tipus,
+            'usuari': self.usuari.to_json(),
+            'pdf': self.pdf,
+            'estudiants': [llista_json]
+        })
+
+    def to_json(self):
+        rest = self.to_dict()
+        return json.dumps(rest, default=str)
+
 
 class RespostaExamen(Document):
 
@@ -156,6 +191,21 @@ class RespostaExamen(Document):
     @property
     def id_document_blockchain(self):
         return str(self.id_resposta)+"0002"
+
+    def to_dict(self):
+        llista_json = []
+        for x in self.estudiants:
+            estudiant_json = x.to_json()
+            llista_json.append(estudiant_json)
+        return collections.OrderedDict({
+            'id_resposta': self.id_document,
+            'id_examen': self.id_examen,
+            'data_creacio': self.data_creacio,
+            'id_tipus': self.id_tipus,
+            'usuari': self.usuari.to_json(),
+            'pdf': self.pdf
+        })
+
 
 class Universitat:
     def __init__(self, nom, private_key, public_key):
@@ -190,8 +240,8 @@ class Transaccio:
 
     def to_dict(self):
         return collections.OrderedDict({
-            'Emissor': self.emissor.id,
-            'Receptor': self.receptor.id,
+            'Emissor': self.emissor.to_json(),
+            'Receptor': self.receptor.to_json(),
             'Document': self.document.id_document(),
             'Data': self.time})
 
@@ -226,10 +276,10 @@ time: {self.time}
 class Bloc:
     # Classe creació del bloc
 
-    def __init__(self, index=None, transaccio_bloc=None, hash_bloc_anterior=None, ):
+    def __init__(self, index=None, trans=None, hash_bloc_anterior=None, ):
         self._index = index
         self._timestamp = datetime.now().isoformat()
-        self.transaccio = transaccio_bloc
+        self.transaccions = trans
         self.hash_bloc_anterior = hash_bloc_anterior
         self.nonce = 0
 

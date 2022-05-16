@@ -108,8 +108,8 @@ class MySqlBloc:
         return llista[0]
 
     def importar_usuari(self, id_usuari):
-        sql = f'select `usuari` from usuari where id = {id_usuari} LIMIT 1'
-        return self.importar_sql(sql)[0]
+        sql = f'select * from usuari where id = {id_usuari} LIMIT 1'
+        return self.importar_sql(sql)
 
     # def importar_usuari2(self, id_usuari):
     #     sql = f'select `usuari`  from `usuari_json` where id = {id_usuari} LIMIT 1'
@@ -188,36 +188,25 @@ class MySqlBloc:
         clau_string = self.importar_sql(sql)
         return RSA.importKey(clau_string[0])
 
-    def clau_publica(self, id_usuari):
-        sql = f'select `public_key` from `blockchainuniversity`.`public_key` where `id_usuari` = {id_usuari} LIMIT 1'
-        clau_string = self.importar_sql(sql)
-        return RSA.importKey(clau_string[0])
+    # def clau_publica(self, id_usuari):
+    #     sql = f'select `public_key` from `blockchainuniversity`.`public_key` where `id_usuari` = {id_usuari} LIMIT 1'
+    #     clau_string = self.importar_sql(sql)
+    #     return RSA.importKey(clau_string[0])
 
     # Aquest Metode es per fer mes facils els test - No anira codi final
     def guardar_clau_privada(self, id_usuari, private_key):
-        sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{private_key}")'
+        private = private_key.exportKey('PEM').decode('ascii')
+        sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{private}")'
         self.exportar_sql(sql)
 
-    def guardar_clau_publica(self, id_usuari, public_key):
-        sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{public_key}")'
-        self.exportar_sql(sql)
+    # def guardar_clau_publica(self, id_usuari, public_key):
+    #     sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{public_key}")'
+    #     self.exportar_sql(sql)
 
-    def guardar_usuari(self, id_usuari, usuari):
-        sql = f"INSERT INTO usuari  (`id`, `usuari`) values ({id_usuari}, '{usuari}')"
+    def guardar_usuari(self, usuari):
+        sql = f'INSERT INTO usuari (`id`, `tipus`, `nif`, `nom`, `cognom`, `public_key`) VALUES({usuari.id}, ' \
+              f'"{usuari.tipus}", "{usuari.nif}", "{usuari.nom}", "{usuari.cognom}", "{usuari.str_publickey()}")'
         self.exportar_sql(sql)
-
-    # def guardar_usuari_test(self, id_usuari, nif, nom, cognom):
-    #     sql = f'INSERT INTO usuari (`id`, `nif`, `nom`, `cognom`) VALUES({id_usuari}, "{nif}", "{nom}", "{cognom}")'
-    #     self.exportar_sql(sql)
-    #     key = RSA.generate(1024)
-    #     private_key = key.exportKey('PEM').decode('ascii')
-    #     public_key = key.publickey()
-    #     data_creacio_key = datetime.now().isoformat()
-    #     string_key = public_key.exportKey('PEM').decode('ascii')
-    #     sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{private_key}")'
-    #     self.exportar_sql(sql)
-    #     sql = f'INSERT INTO public_key (`id_usuari`, `public_key`, `data_creacio`, `actiu` ) VALUES({id_usuari}, "{string_key}", "{data_creacio_key}", 1) '
-    #     self.exportar_sql(sql)
 
     def guardar_bloc(self, id_bloc, time, id_emissor, id_receptor, id_document, transaccio, hash_block):
         sql = f'INSERT INTO usuari (`id_bloc`, `time`, `id_emissor`, `id_receptor`,`id_document`, `transaccio`, ' \
