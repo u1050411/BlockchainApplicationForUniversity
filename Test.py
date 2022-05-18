@@ -495,6 +495,13 @@ class TestRespostaExamen(unittest.TestCase):
         num_document = self.my_db.seguent_id_resposta()
         self.assertIsNotNone(num_document)
 
+    def test_to_json(self):
+        resposta = Factoria.build_resposta_examen_from_db(self.my_db, 1,  1)
+        resposta_print = resposta.to_dict()
+        print(resposta_print)
+        examen_json = resposta.to_json()
+        print(examen_json)
+
     # def test_llegir_pdf(self):
     #     nom_fitxer = f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
     #     pdf_file = open(nom_fitxer, "rb")

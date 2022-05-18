@@ -59,7 +59,10 @@ class Factoria:
 
     @staticmethod
     def build_resposta_examen_from_db(my_db, id_document, id_resposta):
-        resposta = my_db.importar_resposta(id_document, id_resposta)
+        resposta_importar = my_db.importar_resposta(id_document, id_resposta)
+        (id_resposta, time, id_usuari, pdf) = resposta_importar[0]
+        usuari = Factoria.build_usuari_from_db(my_db, id_usuari)
+        resposta = RespostaExamen(id_resposta, id_document, usuari, pdf)
         return resposta
 
 
@@ -103,12 +106,6 @@ class Usuari:
     def str_publickey(self):
         return self.public_key.exportKey('PEM').decode('ascii')
 
-    # @property
-    # def tipus(self):
-    #     if self.tipus
-    #         return 'Estudiant'
-    #     elif  self.tipus == PROFESSOR
-
     # def sign(self, data):
     #     h = SHA1.new(data)
     #     return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
@@ -140,11 +137,15 @@ class Document:
 
     def to_dict(self):
         return collections.OrderedDict({
-            'id_document': self.id_document,
+            'id_document': "Usuari",  # self.id_document,
             'data_creacio': self.data_creacio,
             'id_tipus': self.id_tipus,
             'usuari': self.usuari.to_json(),
             'pdf': self.pdf})
+
+    def to_json(self):
+        rest = self.to_dict()
+        return json.dumps(rest, default=str)
 
 
 class Examen(Document):
@@ -161,7 +162,7 @@ class Examen(Document):
 
     @property
     def id_document_blockchain(self):
-        return str(self.id_document)+"0001"
+        return str(self.id_document) + "0001"
 
     def to_dict(self):
         llista_json = []
@@ -177,10 +178,6 @@ class Examen(Document):
             'estudiants': [llista_json]
         })
 
-    def to_json(self):
-        rest = self.to_dict()
-        return json.dumps(rest, default=str)
-
 
 class RespostaExamen(Document):
 
@@ -190,13 +187,9 @@ class RespostaExamen(Document):
 
     @property
     def id_document_blockchain(self):
-        return str(self.id_resposta)+"0002"
+        return str(self.id_resposta) + "0002"
 
     def to_dict(self):
-        llista_json = []
-        for x in self.estudiants:
-            estudiant_json = x.to_json()
-            llista_json.append(estudiant_json)
         return collections.OrderedDict({
             'id_resposta': self.id_document,
             'id_examen': self.id_examen,
@@ -402,9 +395,6 @@ class BlockchainUniversity:
         self.afegir_bloc(new_bloc, hash_actual)
         self.transaccio_noconfirmades = []
         return new_bloc.index
-
-
-
 
 # class FitxersPdf:
 #     OUTPUT_DIR = Path('data')
