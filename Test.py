@@ -9,7 +9,7 @@ from pandas._libs import json
 
 import BlockchainUniversity
 from BlockchainUniversity import Universitat, Estudiant, Transaccio, Professor, Bloc, Examen, Usuari, \
-    Factoria, RespostaExamen
+    Factoria, RespostaExamen, EvaluacioExamen
 from CreateMysql import MySqlBloc
 from PyPDF2 import PdfFileMerger, PdfFileReader
 
@@ -433,6 +433,9 @@ class TestFactoria(unittest.TestCase):
         self.assertEqual(examen.usuari.id, 2050404)
 
 
+
+
+
 class TestExamen(unittest.TestCase):
 
     def setUp(self):
@@ -501,6 +504,25 @@ class TestRespostaExamen(unittest.TestCase):
         print(resposta_print)
         examen_json = resposta.to_json()
         print(examen_json)
+
+    class TestEvaluacioExamen(unittest.TestCase):
+
+        def setUp(self):
+            self.my_db = MySqlBloc('localhost', 'root', 'root')
+            self.test = CreacioTaulaTest(self.my_db, 'blockchainuniversity')
+            self.test.crear_schema_dades()
+
+        def test_creacio_resposta_examen(self):
+            nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
+                         f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
+            pdf = MySqlBloc.recuperar_fitxer(nom_fitxer)
+            estudiant = Factoria.build_usuari_from_db(self.my_db, 1050411)
+            resposta = EvaluacioExamen(1, 1, estudiant, pdf)
+            self.assertEqual(resposta.id_document, 1)
+            self.assertEqual(resposta.id_examen, 1)
+            self.assertEqual(resposta.usuari, estudiant)
+            self.assertEqual(resposta.pdf, pdf)
+
 
     # def test_llegir_pdf(self):
     #     nom_fitxer = f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'

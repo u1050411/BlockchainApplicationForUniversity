@@ -14,6 +14,7 @@ from CreateMysql import MySqlBloc
 UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
 PROFESSOR = 'professor'
+USUARI = 'usuari'
 
 
 class Factoria:
@@ -65,6 +66,20 @@ class Factoria:
         resposta = RespostaExamen(id_resposta, id_document, usuari, pdf)
         return resposta
 
+    @staticmethod
+    def build_resposta_alumne_from_db(my_db, id_document, id_resposta):
+        resposta = Factoria.build_resposta_examen_from_db(my_db, id_document, id_resposta)
+        if resposta.usuari.tipus != ESTUDIANT:
+            raise ValueError('Amb aquest id no hi ha una resposta')
+        return resposta
+
+    @staticmethod
+    def build_evaluacio_examen1_from_db(my_db, id_document, id_resposta):
+        resposta = Factoria.build_resposta_examen_from_db(my_db, id_document, id_resposta)
+        if resposta.usuari.tipus != PROFESSOR:
+            raise ValueError('Amb aquest id no hi ha una evaluacio')
+        return resposta
+
 
 class Usuari:
 
@@ -73,7 +88,7 @@ class Usuari:
         self.nif = nif
         self.nom = nom
         self.cognom = cognom
-        self.tipus = "Usuari"
+        self.tipus = USUARI
         self.public_key = public_key
 
     def to_dict(self):
@@ -154,6 +169,7 @@ class Examen(Document):
         super(Examen, self).__init__(id_document, 1, professor, pdf, )
         self.data_inicial = data_inicial
         self.data_final = data_final
+        self.evaluacioExamen = None
         self.estudiants = []
         self.respostes = []
 
@@ -182,7 +198,7 @@ class Examen(Document):
 class RespostaExamen(Document):
 
     def __init__(self, id_resposta, id_examen=None, usuari=None, pdf=None):
-        super(RespostaExamen, self).__init__(id_resposta, 2, usuari, pdf, )
+        super(RespostaExamen, self).__init__(id_resposta, 2, usuari, pdf)
         self.id_examen = id_examen
 
     @property
@@ -198,6 +214,17 @@ class RespostaExamen(Document):
             'usuari': self.usuari.to_json(),
             'pdf': self.pdf
         })
+
+
+class EvaluacioExamen(RespostaExamen):
+
+    def __init__(self, id_resposta, id_examen=None, usuari=None, pdf=None):
+        try:
+            if usuari.tipus != PROFESSOR:
+                raise ValueError('Solament els professors poden crear evaluacion')
+        except ValueError:
+            print(ValueError)
+        super(EvaluacioExamen, self).__init__(id_resposta, 2, usuari, pdf)
 
 
 class Universitat:
