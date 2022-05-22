@@ -32,7 +32,8 @@ class CreacioTaulaTest:
         self.crear_usuaris()
         self.crear_examens()
         self.crear_respostes()
-        self.crear_transaccions()
+        self.crear_evaluacio()
+        # self.crear_transaccions()
 
     def crear_taules(self):
         sqls = ["CREATE TABLE if not exists `usuari` ("
@@ -144,6 +145,19 @@ class CreacioTaulaTest:
             pdf = self.my_db.recuperar_fitxer(nom_fitxer)
             estudiant = Factoria.build_usuari_from_db(self.my_db, id_usuari)
             resposta = RespostaExamen(id_resposta, id_examen, estudiant, pdf)
+            self.my_db.guardar_resposta_examen(resposta)
+
+    def crear_evaluacio(self):
+
+        respostes = [[3, 1, 2000256, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
+                      f'Examen_2021_20_10_01_primer_parcial-solucio.pdf'],
+                     [4, 2, 2050404, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
+                      f'Examen_2020-21-_26-03_primer_parcial.pdf']]
+
+        for id_resposta, id_examen, id_usuari,  nom_fitxer in respostes:
+            pdf = self.my_db.recuperar_fitxer(nom_fitxer)
+            estudiant = Factoria.build_usuari_from_db(self.my_db, id_usuari)
+            resposta = EvaluacioExamen(id_resposta, id_examen, estudiant, pdf)
             self.my_db.guardar_resposta_examen(resposta)
 
     def crear_transaccions(self):
@@ -432,8 +446,19 @@ class TestFactoria(unittest.TestCase):
         self.assertEqual(examen.id_document, 1)
         self.assertEqual(examen.usuari.id, 2050404)
 
+    def test_resposta(self):
+        resposta = Factoria.build_resposta_alumne_from_db(self.my_db, 1, 1)
+        self.assertEqual(resposta.id_document, 1)
+        self.assertEqual(resposta.id_examen, 1)
+        self.assertEqual(resposta.usuari.id, 1050402)
+        self.assertEqual(resposta.usuari.tipus, ESTUDIANT)
 
-
+    def test_evaluacio(self):
+        resposta = Factoria.build_evaluacio_examen_from_db(self.my_db, 1, 3)
+        self.assertEqual(resposta.id_document, 3)
+        self.assertEqual(resposta.id_examen, 1)
+        self.assertEqual(resposta.usuari.id, 2000256)
+        self.assertEqual(resposta.usuari.tipus, PROFESSOR)
 
 
 class TestExamen(unittest.TestCase):
@@ -522,6 +547,13 @@ class TestRespostaExamen(unittest.TestCase):
             self.assertEqual(resposta.id_examen, 1)
             self.assertEqual(resposta.usuari, estudiant)
             self.assertEqual(resposta.pdf, pdf)
+
+        def test_to_json(self):
+            evaluacio = Factoria.build_evaluacio_examen_from_db(self.my_db, 1, 1)
+            evaluacio_print = evaluacio.to_dict()
+            print(evaluacio_print)
+            evaluacio_json = evaluacio.to_json()
+            print(evaluacio_json)
 
 
     # def test_llegir_pdf(self):

@@ -51,10 +51,14 @@ class Factoria:
                 respostes = my_db.importar_respostes(id_document)
                 for sql_resposta in respostes:
                     id_resposta, data_creacio, id_usuari, pdf = sql_resposta
-                    usuari = Factoria.build_usuari_from_db(my_db, id_estudiant)
-                    resposta = RespostaExamen(id_resposta, id_document, usuari, pdf)
-                    resposta.data_creacio = data_creacio
-                    examen.respostes.append(resposta)
+                    usuari = Factoria.build_usuari_from_db(my_db, id_usuari)
+                    if usuari.tipus == PROFESSOR:
+                        examen.evaluacioExamen = EvaluacioExamen(id_resposta, id_document, usuari, pdf)
+                        examen.evaluacioExamen.data_creacio = data_creacio
+                    elif usuari.tipus == ESTUDIANT:
+                        resposta = RespostaExamen(id_resposta, id_document, usuari, pdf)
+                        resposta.data_creacio = data_creacio
+                        examen.respostes.append(resposta)
             return examen
         return None
 
@@ -63,7 +67,10 @@ class Factoria:
         resposta_importar = my_db.importar_resposta(id_document, id_resposta)
         (id_resposta, time, id_usuari, pdf) = resposta_importar[0]
         usuari = Factoria.build_usuari_from_db(my_db, id_usuari)
-        resposta = RespostaExamen(id_resposta, id_document, usuari, pdf)
+        if usuari.tipus == ESTUDIANT:
+            resposta = RespostaExamen(id_resposta, id_document, usuari, pdf)
+        if usuari.tipus == PROFESSOR:
+            resposta = EvaluacioExamen(id_resposta, id_document, usuari, pdf)
         return resposta
 
     @staticmethod
@@ -74,8 +81,8 @@ class Factoria:
         return resposta
 
     @staticmethod
-    def build_evaluacio_examen1_from_db(my_db, id_document, id_resposta):
-        resposta = Factoria.build_resposta_examen_from_db(my_db, id_document, id_resposta)
+    def build_evaluacio_examen_from_db(my_db, id_examen, id_resposta):
+        resposta = Factoria.build_resposta_examen_from_db(my_db, id_examen, id_resposta)
         if resposta.usuari.tipus != PROFESSOR:
             raise ValueError('Amb aquest id no hi ha una evaluacio')
         return resposta
@@ -197,8 +204,10 @@ class Examen(Document):
 
 class RespostaExamen(Document):
 
-    def __init__(self, id_resposta, id_examen=None, usuari=None, pdf=None):
-        super(RespostaExamen, self).__init__(id_resposta, 2, usuari, pdf)
+    def __init__(self, id_resposta, id_examen=None, estudiant=None, pdf=None):
+        if estudiant.tipus != ESTUDIANT:
+            raise ValueError('Solament els estudiants poden crear respostes')
+        super(RespostaExamen, self).__init__(id_resposta, 2, estudiant, pdf)
         self.id_examen = id_examen
 
     @property
@@ -211,20 +220,31 @@ class RespostaExamen(Document):
             'id_examen': self.id_examen,
             'data_creacio': self.data_creacio,
             'id_tipus': self.id_tipus,
-            'usuari': self.usuari.to_json(),
+            'estudiant': self.usuari.to_json(),
             'pdf': self.pdf
         })
 
 
-class EvaluacioExamen(RespostaExamen):
+class EvaluacioExamen(Document):
 
-    def __init__(self, id_resposta, id_examen=None, usuari=None, pdf=None):
+    def __init__(self, id_resposta, id_examen=None, professor=None, pdf=None):
         try:
-            if usuari.tipus != PROFESSOR:
+            if professor.tipus != PROFESSOR:
                 raise ValueError('Solament els professors poden crear evaluacion')
         except ValueError:
             print(ValueError)
-        super(EvaluacioExamen, self).__init__(id_resposta, 2, usuari, pdf)
+        super(EvaluacioExamen, self).__init__(id_resposta, 3, professor, pdf)
+        self.id_examen = id_examen
+
+    def to_dict(self):
+        return collections.OrderedDict({
+            'id_resposta': self.id_document,
+            'id_examen': self.id_examen,
+            'data_creacio': self.data_creacio,
+            'id_tipus': self.id_tipus,
+            'professor98': self.usuari.to_json(),
+            'pdf': self.pdf
+        })
 
 
 class Universitat:
