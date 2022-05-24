@@ -500,6 +500,17 @@ class TestExamen(unittest.TestCase):
         examen_json = examen.to_json()
         print(examen_json)
 
+    def test_encript(self):
+        privat_key = RSA.generate(1024)
+        public_key = privat_key.publickey()
+        examen = Factoria.build_examen_from_db(self.my_db, 1)
+        exament_print = examen.to_dict()
+        examen_encript = examen.encriptar(public_key)
+        clau_examen = examen_encript['clau']
+        examen_encriptat = examen_encript['document']
+        print(clau_examen)
+        print(examen_encriptat)
+
 
 class TestRespostaExamen(unittest.TestCase):
 

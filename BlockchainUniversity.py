@@ -1,15 +1,15 @@
+import base64
 import binascii
 import collections
 import hashlib
 import json
 from datetime import datetime
 
+from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA1
 from Crypto.PublicKey import RSA
+from cryptography.fernet import Fernet
 
-from CreateMysql import MySqlBloc
-
-# from pandas.io import json
 
 UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
@@ -146,28 +146,38 @@ class Estudiant(Usuari):
 
 
 class Document:
-    def __init__(self, id_document=None, id_tipus=None, usuari=None, pdf=None):
+    def __init__(self, id_document=None, tipus=None, usuari=None, pdf=None):
         self.id_document = id_document
         self.data_creacio = datetime.now().isoformat()
-        self.id_tipus = id_tipus
+        self.tipus = tipus
         self.usuari = usuari
         self.pdf = pdf
-
-    @property
-    def id_document_blockchain(self):
-        pass
 
     def to_dict(self):
         return collections.OrderedDict({
             'id_document': "Usuari",  # self.id_document,
             'data_creacio': self.data_creacio,
-            'id_tipus': self.id_tipus,
+            'id_tipus': self.tipus,
             'usuari': self.usuari.to_json(),
             'pdf': self.pdf})
 
     def to_json(self):
         rest = self.to_dict()
         return json.dumps(rest, default=str)
+
+    def encriptar(self, public_key):
+        key_simetric = Fernet.generate_key()
+        encriptar_clau = PKCS1_OAEP.new(public_key)
+        clau_simetrica = encriptar_clau.encrypt(key_simetric)
+        examen_byte = self.to_json().encode("utf-8")
+        encriptador = Fernet(key_simetric)
+        document = encriptador.encrypt(examen_byte)
+        retorn = {'clau': clau_simetrica, 'document': document}
+        # retorn['document'] = Fernet(key_simetric).encrypt(self.to_json())
+        return retorn
+
+    # def desencriptar(self, key):
+    #     return key.decrypt()
 
 
 class Examen(Document):
@@ -195,7 +205,7 @@ class Examen(Document):
         return collections.OrderedDict({
             'id_document': self.id_document,
             'data_creacio': self.data_creacio,
-            'id_tipus': self.id_tipus,
+            'id_tipus': self.tipus,
             'usuari': self.usuari.to_json(),
             'pdf': self.pdf,
             'estudiants': [llista_json]
@@ -219,7 +229,7 @@ class RespostaExamen(Document):
             'id_resposta': self.id_document,
             'id_examen': self.id_examen,
             'data_creacio': self.data_creacio,
-            'id_tipus': self.id_tipus,
+            'id_tipus': self.tipus,
             'estudiant': self.usuari.to_json(),
             'pdf': self.pdf
         })
@@ -241,8 +251,8 @@ class EvaluacioExamen(Document):
             'id_resposta': self.id_document,
             'id_examen': self.id_examen,
             'data_creacio': self.data_creacio,
-            'id_tipus': self.id_tipus,
-            'professor98': self.usuari.to_json(),
+            'id_tipus': self.tipus,
+            'professor': self.usuari.to_json(),
             'pdf': self.pdf
         })
 
@@ -282,7 +292,7 @@ class Transaccio:
         return collections.OrderedDict({
             'Emissor': self.emissor.to_json(),
             'Receptor': self.receptor.to_json(),
-            'Document': self.document.id_document(),
+            'Document': self.document.to_json(),
             'Data': self.time})
 
     def display_transaccio(self):
