@@ -54,7 +54,7 @@ class CreacioTaulaTest:
                 "`id_transaccio` INT NOT NULL AUTO_INCREMENT,"
                 "`id_emissor` INT NOT NULL,"
                 "`id_receptor` INT NOT NULL,"
-                "`id_document` INT NOT NULL,"
+                "`id_document` LONGBLOB NOT NULL,"
                 "`data_creacio` DATETIME NOT NULL,"
                 "PRIMARY KEY(`id_transaccio`))",
 
@@ -235,14 +235,14 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(transaccio.document, fitxer_examen)
 
     def test_guardar(self):
-        pass
-        # receptor = Factoria.build_usuari_from_db(self.my_db, 1050402, ESTUDIANT)
-        # emissor = Factoria.build_usuari_from_db(self.my_db, 2000256, PROFESSOR)
-        # nom_examen = f'C:/Users/u1050/PycharmProjects/' \
-        #              f'BlockchainApplicationForUniversity/pdf/Examen_2021_20_10_01_primer_parcial.pdf'
-        # fitxer_examen = self.my_db.recuperar_fitxer(nom_examen)
-        # transaccio = Transaccio(emissor, receptor, fitxer_examen)
-        # self.my_db.guardar_trans(transaccio)
+        key = RSA.generate(1024)
+        public_key = key.publickey()
+        receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
+        emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
+        examen = Factoria.build_examen_from_db(self.my_db, 1)
+        examen_encriptar = examen.encriptar(public_key)
+        transaccio = Transaccio(emissor, receptor, examen_encriptar)
+        self.my_db.guardar_transaccio(transaccio)
 
     # def test_posarNota(self):
     #     cua = []
@@ -504,12 +504,9 @@ class TestExamen(unittest.TestCase):
         privat_key = RSA.generate(1024)
         public_key = privat_key.publickey()
         examen = Factoria.build_examen_from_db(self.my_db, 1)
-        exament_print = examen.to_dict()
         examen_encript = examen.encriptar(public_key)
-        clau_examen = examen_encript['clau']
-        examen_encriptat = examen_encript['document']
-        print(clau_examen)
-        print(examen_encriptat)
+        examen_j_son = examen.desencriptar(examen_encript, privat_key)
+        self.assertEqual(examen.to_json(), examen_j_son)
 
 
 class TestRespostaExamen(unittest.TestCase):

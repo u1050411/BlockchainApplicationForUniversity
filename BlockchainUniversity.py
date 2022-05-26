@@ -173,11 +173,17 @@ class Document:
         encriptador = Fernet(key_simetric)
         document = encriptador.encrypt(examen_byte)
         retorn = {'clau': clau_simetrica, 'document': document}
-        # retorn['document'] = Fernet(key_simetric).encrypt(self.to_json())
         return retorn
 
-    # def desencriptar(self, key):
-    #     return key.decrypt()
+    @staticmethod
+    def desencriptar(examen_encript, public_key):
+        clau_examen = examen_encript['clau']
+        examen_encriptat = examen_encript['document']
+        desencriptador = PKCS1_OAEP.new(public_key)
+        clau_simetrica = desencriptador.decrypt(clau_examen)
+        key_simetric = Fernet(clau_simetrica)
+        examen = key_simetric.decrypt(examen_encriptat).decode()
+        return examen
 
 
 class Examen(Document):

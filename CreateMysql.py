@@ -255,14 +255,14 @@ class MySqlBloc:
 
     def guardar_transaccio(self, transaccio):
         sql = f'INSERT INTO transaccio (`id_emissor`, `id_receptor`, `id_document`, `data_creacio`) ' \
-              f'VALUES({transaccio.emissor.id}, {transaccio.receptor.id}, "{transaccio.document.id_document}", ' \
+              f'VALUES({transaccio.emissor.id}, {transaccio.receptor.id}, "{transaccio.document}", ' \
               f'"{transaccio.data_creacio}")'
         self.exportar_sql(sql)
 
-    def guardar_trans(self, transaccio):
-        sql = f'INSERT INTO trans_prova (`transaccio`) ' \
-              f'VALUES({transaccio})'
-        self.exportar_sql(sql)
+    # def guardar_trans(self, transaccio):
+    #     sql = f'INSERT INTO trans_prova (`transaccio`) ' \
+    #           f'VALUES({transaccio})'
+    #     self.exportar_sql(sql)
 
 
 
