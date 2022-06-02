@@ -54,7 +54,8 @@ class CreacioTaulaTest:
                 "`id_transaccio` INT NOT NULL AUTO_INCREMENT,"
                 "`id_emissor` INT NOT NULL,"
                 "`id_receptor` INT NOT NULL,"
-                "`id_document` LONGBLOB NOT NULL,"
+                "`clau` LONGBLOB NOT NULL,"
+                "`document` LONGBLOB NOT NULL,"
                 "`data_creacio` DATETIME NOT NULL,"
                 "PRIMARY KEY(`id_transaccio`))",
 
@@ -67,7 +68,7 @@ class CreacioTaulaTest:
                 "`pdf` LONGBLOB  NULL,"
                 "PRIMARY KEY (`id_document`))",
 
-                 "CREATE TABLE if not exists `estudiant_examen` ("
+                "CREATE TABLE if not exists `estudiant_examen` ("
                 "`id_document` INT NOT NULL,"
                 "`id_estudiant` INT NOT NULL,"
                 "`nota` INT NULL,"
@@ -223,26 +224,27 @@ class TestTransaction(unittest.TestCase):
         self.test = CreacioTaulaTest(self.my_db, self.schema)
         self.test.crear_schema_dades()
 
-    def test_creation(self):
-        receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
-        emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
-        nom_examen = f'C:/Users/u1050/PycharmProjects/' \
-                     f'BlockchainApplicationForUniversity/pdf/Examen_2021_20_10_01_primer_parcial.pdf'
-        fitxer_examen = self.my_db.recuperar_fitxer(nom_examen)
-        transaccio = Transaccio(emissor, receptor, fitxer_examen)
-        self.assertEqual(transaccio.emissor, emissor)
-        self.assertEqual(transaccio.receptor, receptor)
-        self.assertEqual(transaccio.document, fitxer_examen)
+    # def test_creation(self):
+    #     receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
+    #     emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
+    #     nom_examen = f'C:/Users/u1050/PycharmProjects/' \
+    #                  f'BlockchainApplicationForUniversity/pdf/Examen_2021_20_10_01_primer_parcial.pdf'
+    #     fitxer_examen = self.my_db.recuperar_fitxer(nom_examen)
+    #     transaccio = Transaccio(emissor, receptor, fitxer_examen)
+    #     self.assertEqual(transaccio.emissor, emissor)
+    #     self.assertEqual(transaccio.receptor, receptor)
+    #     self.assertEqual(transaccio.tupla, fitxer_examen)
 
     def test_guardar(self):
         key = RSA.generate(1024)
         public_key = key.publickey()
         receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
         emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
-        examen = Factoria.build_examen_from_db(self.my_db, 1)
+        examen = Factoria.build_examen_from_db(self.my_db, 1, "Albert")
         examen_encriptar = examen.encriptar(public_key)
-        transaccio = Transaccio(emissor, receptor, examen_encriptar)
+        transaccio = Transaccio(emissor, receptor, examen_encriptar['clau'], examen_encriptar['document'])
         self.my_db.guardar_transaccio(transaccio)
+
 
     # def test_posarNota(self):
     #     cua = []
@@ -272,21 +274,32 @@ class TestTransaction(unittest.TestCase):
 
 
 class TestBloc(unittest.TestCase):
+    pass
 
-    def test_blocInicial(self):
-        estudiant = Estudiant('Pau')
-        t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
-        bloc_prova = Bloc(0, '0', t1)
+    # def test_blocInicial(self):
+    #     key = RSA.generate(1024)
+    #     public_key = key.publickey()
+    #     receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
+    #     emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
+    #     examen = Factoria.build_examen_from_db(self.my_db, 1)
+    #     examen_encriptar = examen.encriptar(public_key)
+    #     transaccio = Transaccio(emissor, receptor, examen_encriptar)
+    #     bloc_prova = Bloc(0, '0', transaccio)
 
         # self.assertEqual(bloc_prova.index, 0)
         # self.assertEqual(bloc_prova.transaccio, t1)
         # self.assertEqual(bloc_prova.hash_bloc_anterior, '0')
 
-    # Revisar dona un hash diferent cada cop
+    #Revisar dona un hash diferent cada cop
     # def test_calcular_Hash(self):
-    #     estudiant = Estudiant('Albert')
-    #     t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
-    #     bloc_prova = Bloc(0, '0', t1)
+    #     key = RSA.generate(1024)
+    #     public_key = key.publickey()
+    #     receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
+    #     emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
+    #     examen = Factoria.build_examen_from_db(self.my_db, 1)
+    #     examen_encriptar = examen.encriptar(public_key)
+    #     transaccio = Transaccio(emissor, receptor, examen_encriptar)
+    #     bloc_prova = Bloc(0, '0', transaccio)
     #     hash_anterior = bloc_prova.calcular_hash()
     #     print(hash_anterior)
     #     # self.assertEqual(hash_anterior, '62a1420789f37ee5ddfb6524170c3cf0f5a7083f007e85bcd119bf814befef5a')
@@ -459,6 +472,18 @@ class TestFactoria(unittest.TestCase):
         self.assertEqual(resposta.id_examen, 1)
         self.assertEqual(resposta.usuari.id, 2000256)
         self.assertEqual(resposta.usuari.tipus, PROFESSOR)
+
+    def test_transaccio(self):
+        key = RSA.generate(1024)
+        public_key = key.publickey()
+        receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
+        emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
+        examen = Factoria.build_examen_from_db(self.my_db, 1, "Albert")
+        examen_encriptar = examen.encriptar(public_key)
+        transaccio = Transaccio(emissor, receptor, examen_encriptar['clau'], examen_encriptar['document'])
+        self.my_db.guardar_transaccio(transaccio)
+        transaccio = Factoria.build_transaccio_from_db(self.my_db)
+
 
 
 class TestExamen(unittest.TestCase):

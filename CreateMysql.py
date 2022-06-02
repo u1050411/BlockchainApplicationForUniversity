@@ -120,10 +120,9 @@ class MySqlBloc:
               f'from `examen` where `id_document` = {id_document} LIMIT 1'
         return self.importar_sql(sql)
 
-# Limitat a 100 transaccions
     def importar_transaccions(self):
-        sql = f'select id_transaccio, id_emissor, id_receptor, id_document, data_creacio from `transaccio` ' \
-              f'order by id_transaccio LIMIT 100'
+        sql = f'select MIN(id_transaccio), id_emissor, id_receptor, clau, document, data_creacio from `transaccio` ' \
+              f'LIMIT 1'
         return self.importar_sql(sql)
 
     # def importar_transaccio(self):
@@ -254,15 +253,17 @@ class MySqlBloc:
         self.exportar_sql(sql)
 
     def guardar_transaccio(self, transaccio):
-        sql = f'INSERT INTO transaccio (`id_emissor`, `id_receptor`, `id_document`, `data_creacio`) ' \
-              f'VALUES({transaccio.emissor.id}, {transaccio.receptor.id}, "{transaccio.document}", ' \
-              f'"{transaccio.data_creacio}")'
+        sql = f'INSERT INTO transaccio (`id_emissor`, `id_receptor`, `clau`, `document`, `data_creacio`) ' \
+              f'VALUES({transaccio.emissor.id}, {transaccio.receptor.id},"{transaccio.clau}", ' \
+              f'"{transaccio.document}", "{transaccio.data_creacio}")'
         self.exportar_sql(sql)
 
     # def guardar_trans(self, transaccio):
     #     sql = f'INSERT INTO trans_prova (`transaccio`) ' \
     #           f'VALUES({transaccio})'
     #     self.exportar_sql(sql)
+
+    # f'VALUES({transaccio.emissor.id}, {transaccio.receptor.id},"{transaccio.clau}", "", ' \
 
 
 

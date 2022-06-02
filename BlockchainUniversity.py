@@ -38,29 +38,40 @@ class Factoria:
         return None
 
     @staticmethod
-    def build_examen_from_db(my_db, id_document):
+    def build_examen_from_db(my_db, id_document, per_estudiant=None):
         if my_db.existeix_examen(id_document):
             id_document, id_professor, data_examen, data_inicial, data_final, pdf = my_db.importar_examen(id_document)
             professor = Factoria.build_usuari_from_db(my_db, id_professor)
             examen = Examen(id_document, professor, pdf, data_inicial, data_final)
-            estudiants = my_db.importar_estudiants_examen(id_document)
-            if estudiants is not None:
-                for id_estudiant in estudiants:
-                    estudiant = Factoria.build_usuari_from_db(my_db, id_estudiant[0])
-                    examen.estudiants.append(estudiant)
-                respostes = my_db.importar_respostes(id_document)
-                for sql_resposta in respostes:
-                    id_resposta, data_creacio, id_usuari, pdf = sql_resposta
-                    usuari = Factoria.build_usuari_from_db(my_db, id_usuari)
-                    if usuari.tipus == PROFESSOR:
-                        examen.evaluacioExamen = EvaluacioExamen(id_resposta, id_document, usuari, pdf)
-                        examen.evaluacioExamen.data_creacio = data_creacio
-                    elif usuari.tipus == ESTUDIANT:
-                        resposta = RespostaExamen(id_resposta, id_document, usuari, pdf)
-                        resposta.data_creacio = data_creacio
-                        examen.respostes.append(resposta)
+            if per_estudiant == None:
+                estudiants = my_db.importar_estudiants_examen(id_document)
+                if estudiants is not None:
+                    for id_estudiant in estudiants:
+                        estudiant = Factoria.build_usuari_from_db(my_db, id_estudiant[0])
+                        examen.estudiants.append(estudiant)
+                    respostes = my_db.importar_respostes(id_document)
+                    for sql_resposta in respostes:
+                        id_resposta, data_creacio, id_usuari, pdf = sql_resposta
+                        usuari = Factoria.build_usuari_from_db(my_db, id_usuari)
+                        if usuari.tipus == PROFESSOR:
+                            examen.evaluacioExamen = EvaluacioExamen(id_resposta, id_document, usuari, pdf)
+                            examen.evaluacioExamen.data_creacio = data_creacio
+                        elif usuari.tipus == ESTUDIANT:
+                            resposta = RespostaExamen(id_resposta, id_document, usuari, pdf)
+                            resposta.data_creacio = data_creacio
+                            examen.respostes.append(resposta)
             return examen
         return None
+
+    @staticmethod
+    def build_transaccio_from_db(my_db):
+        trans_db = my_db.importar_transaccions()
+        (id_trans, emissor, receptor, clau, document, data_creacio) = trans_db[0]
+        emissor = Factoria.build_usuari_from_db(emissor)
+        receptor = Factoria.build_usuari_from_db(receptor)
+        transaccio = Transaccio(emissor, receptor, clau, document, data_creacio)
+        return transaccio
+
 
     @staticmethod
     def build_resposta_examen_from_db(my_db, id_document, id_resposta):
@@ -273,10 +284,11 @@ class Universitat:
 class Transaccio:
 
     # Classe on guardem les dades de les transaccions
-    def __init__(self, emissor=None, receptor=None, document=None):
+    def __init__(self, emissor=None, receptor=None, clau=None, document=None):
         self.id = 0
         self.emissor = emissor
         self.receptor = receptor
+        self.clau = clau
         self.document = document
         self._data_creacio = datetime.now().isoformat()
 
@@ -299,7 +311,11 @@ class Transaccio:
             'Emissor': self.emissor.to_json(),
             'Receptor': self.receptor.to_json(),
             'Document': self.document.to_json(),
+            'clau': self.clau,
             'Data': self.time})
+
+    def to_json(self):
+        return json.dumps(self.to_dict, sort_keys=True, default=str)
 
     def display_transaccio(self):
         print(f"""sender: {self.emissor.id} 
