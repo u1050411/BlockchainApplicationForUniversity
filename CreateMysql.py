@@ -111,10 +111,6 @@ class MySqlBloc:
         sql = f'select * from usuari where id = {id_usuari} LIMIT 1'
         return self.importar_sql(sql)
 
-    # def importar_usuari2(self, id_usuari):
-    #     sql = f'select `usuari`  from `usuari_json` where id = {id_usuari} LIMIT 1'
-    #     return self.importar_sql(sql)[0]
-
     def importar_examen(self, id_document):
         sql = f'select `id_document`, `id_professor`, `data_examen`, `data_inici`, `data_final`, `pdf` ' \
               f'from `examen` where `id_document` = {id_document} LIMIT 1'
@@ -124,11 +120,6 @@ class MySqlBloc:
         sql = f'select MIN(id_transaccio), id_emissor, id_receptor, clau, document, data_creacio from `transaccio` ' \
               f'LIMIT 1'
         return self.importar_sql(sql)
-
-    # def importar_transaccio(self):
-    #     sql = f'select `id_document`, `id_professor`, `data_examen`, `data_inici`, `data_final`, `pdf` ' \
-    #           f'from `examen` where `id_document` = {id_document} LIMIT 1'
-    #     return self.importar_sql(sql)
 
     def esborrar_schema(self, schema):
         if self.existeix(schema, None, None, None):
@@ -187,20 +178,10 @@ class MySqlBloc:
         clau_string = self.importar_sql(sql)
         return RSA.importKey(clau_string[0])
 
-    # def clau_publica(self, id_usuari):
-    #     sql = f'select `public_key` from `blockchainuniversity`.`public_key` where `id_usuari` = {id_usuari} LIMIT 1'
-    #     clau_string = self.importar_sql(sql)
-    #     return RSA.importKey(clau_string[0])
-
-    # Aquest Metode es per fer mes facils els test - No anira codi final
     def guardar_clau_privada(self, id_usuari, private_key):
         private = private_key.exportKey('PEM').decode('ascii')
         sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{private}")'
         self.exportar_sql(sql)
-
-    # def guardar_clau_publica(self, id_usuari, public_key):
-    #     sql = f'INSERT INTO public_key (`id_usuari`, `public_key`) VALUES({id_usuari}, "{public_key}")'
-    #     self.exportar_sql(sql)
 
     def guardar_usuari(self, usuari):
         sql = f'INSERT INTO usuari (`id`, `tipus`, `nif`, `nom`, `cognom`, `public_key`) VALUES({usuari.id}, ' \
@@ -256,39 +237,4 @@ class MySqlBloc:
         sql = "INSERT INTO transaccio(id_emissor, id_receptor, clau, document, data_creacio) VALUES (%s, %s, %s, %s, %s)"
         trans = (transaccio.emissor.id, transaccio.receptor.id, transaccio.clau, transaccio.document,
                  transaccio.data_creacio)
-        # self._cursor.execute(sql, trans)
-        # self._conexio.commit()
         self.exportar_sql(sql, trans)
-
-    # def guardar_trans(self, transaccio):
-    #     sql = f'INSERT INTO trans_prova (`transaccio`) ' \
-    #           f'VALUES({transaccio})'
-    #     self.exportar_sql(sql)
-
-    # def guardar_transaccio(self, transaccio):
-    #     try:
-    #         sql = """ INSERT INTO transaccio
-    #                                               (id_emissor, transaccio, clau, document, data_creacio) VALUES (%s,%s,%s,%s,%s)"""
-    #         trans = (transaccio.emissor.id, transaccio.receptor.id, transaccio.clau, transaccio.document,
-    #                  transaccio.data_creacio)
-    #         self._cursor.execute(sql, trans)
-    #         self._conexio.commit()
-    #     except mysql.connector.Error as err:
-    #         print("Error Mysql : {}".format(err))
-    #         exit(1)
-    #     finally:
-    #         if self._conexio.is_connected():
-    #             self._cursor.close()
-    #             self._conexio.close()
-    #             print("MySQL connection is closed")
-    #
-    # def guardar_transaccio2(self, transaccio):
-    #     clau_trans = format({transaccio.clau}, "b")
-    #     document = format({transaccio.document}, "b")
-    #     sql = f'INSERT INTO transaccio (`id_emissor`, `id_receptor`, `clau`, `document`, `data_creacio`) ' \
-    #           f'VALUES({transaccio.emissor.id}, {transaccio.receptor.id}, 'clau_trans', ' \
-    #           f'"{transaccio.document}", "{transaccio.data_creacio}")'
-    #     self.exportar_sql(sql)
-
-
-

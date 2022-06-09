@@ -1,17 +1,9 @@
-import base64
-import datetime
-import subprocess
 import unittest
-from random import Random
 
 from Crypto.PublicKey import RSA
-from pandas._libs import json
 
-import BlockchainUniversity
-from BlockchainUniversity import Universitat, Estudiant, Transaccio, Professor, Bloc, Examen, Usuari, \
-    Factoria, RespostaExamen, EvaluacioExamen
+from BlockchainUniversity import Estudiant, Transaccio, Professor, Examen, Factoria, RespostaExamen, EvaluacioExamen
 from CreateMysql import MySqlBloc
-from PyPDF2 import PdfFileMerger, PdfFileReader
 
 UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
@@ -224,16 +216,16 @@ class TestTransaction(unittest.TestCase):
         self.test = CreacioTaulaTest(self.my_db, self.schema)
         self.test.crear_schema_dades()
 
-    # def test_creation(self):
-    #     receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
-    #     emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
-    #     nom_examen = f'C:/Users/u1050/PycharmProjects/' \
-    #                  f'BlockchainApplicationForUniversity/pdf/Examen_2021_20_10_01_primer_parcial.pdf'
-    #     fitxer_examen = self.my_db.recuperar_fitxer(nom_examen)
-    #     transaccio = Transaccio(emissor, receptor, fitxer_examen)
-    #     self.assertEqual(transaccio.emissor, emissor)
-    #     self.assertEqual(transaccio.receptor, receptor)
-    #     self.assertEqual(transaccio.tupla, fitxer_examen)
+    def test_creation(self):
+        receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
+        emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
+        nom_examen = f'C:/Users/u1050/PycharmProjects/' \
+                     f'BlockchainApplicationForUniversity/pdf/Examen_2021_20_10_01_primer_parcial.pdf'
+        fitxer_examen = self.my_db.recuperar_fitxer(nom_examen)
+        transaccio = Transaccio(emissor, receptor, fitxer_examen)
+        self.assertEqual(transaccio.emissor, emissor)
+        self.assertEqual(transaccio.receptor, receptor)
+
 
     def test_guardar(self):
         key = RSA.generate(1024)
@@ -618,22 +610,3 @@ class TestRespostaExamen(unittest.TestCase):
     #     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     #     stdout, stderr = proc.communicate()
     #     exit_code = proc.wait()
-
-
-# Codi descartat
-
-# "CREATE TABLE if not exists `public_key` ("
-# "`id_usuari` INT NOT NULL,"
-# "`public_key` longtext NULL,"
-# "`data_creacio` DATETIME NOT NULL,"
-# "`actiu` longtext NULL,"
-# "PRIMARY KEY (`id_usuari`))",
-
-# "CREATE TABLE if not exists `usuari_Json` ("
-# "`id` int NOT NULL AUTO_INCREMENT,"
-# "`usuari` LONGBLOB  NULL,"
-# "PRIMARY KEY (`id`)) ",
-
-# "CREATE TABLE if not exists `document` ("
-# "`id_document` INT NOT NULL,"
-# "PRIMARY KEY (`id_document`))",
