@@ -54,9 +54,9 @@ class CreacioTaulaTest:
                 "`id_transaccio` INT NOT NULL AUTO_INCREMENT,"
                 "`id_emissor` INT NOT NULL,"
                 "`id_receptor` INT NOT NULL,"
-                "`clau` LONGBLOB NOT NULL,"
-                "`document` LONGBLOB NOT NULL,"
-                "`data_creacio` DATETIME NOT NULL,"
+                "`clau` LONGBLOB NOT NULL ,"
+                "`document` LONGBLOB NOT NULL ,"
+                "`data_creacio` DATETIME NOT NULL ,"
                 "PRIMARY KEY(`id_transaccio`))",
 
                 "CREATE TABLE if not exists `examen` ("
@@ -122,7 +122,7 @@ class CreacioTaulaTest:
 
     def crear_examens(self):
         examens = [[1, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
-                       f'Examen_2021_20_10_01_primer_parcial.pdf', 2050404, '2022-10-01T13:00', '2022-10-01T14:00'],
+                       f'pdf_minimo.pdf', 2050404, '2022-10-01T13:00', '2022-10-01T14:00'],
                    [2, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
                        f'/pdf/Examen_2020-21-_26-03_primer_parcial.pdf', 2000256, '2022-10-01T12:00'
                        , '2022-10-01T13:00']]
@@ -240,7 +240,7 @@ class TestTransaction(unittest.TestCase):
         public_key = key.publickey()
         receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
         emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
-        examen = Factoria.build_examen_from_db(self.my_db, 1, "Albert")
+        examen = Factoria.build_examen_from_db(self.my_db, 2, "Albert")
         examen_encriptar = examen.encriptar(public_key)
         transaccio = Transaccio(emissor, receptor, examen_encriptar['clau'], examen_encriptar['document'])
         self.my_db.guardar_transaccio(transaccio)
@@ -481,6 +481,7 @@ class TestFactoria(unittest.TestCase):
         examen = Factoria.build_examen_from_db(self.my_db, 1, "Albert")
         examen_encriptar = examen.encriptar(public_key)
         transaccio = Transaccio(emissor, receptor, examen_encriptar['clau'], examen_encriptar['document'])
+        # trans_binari = examen_encriptar['clau'].format(10)
         self.my_db.guardar_transaccio(transaccio)
         transaccio = Factoria.build_transaccio_from_db(self.my_db)
 

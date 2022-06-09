@@ -66,10 +66,10 @@ class Factoria:
     @staticmethod
     def build_transaccio_from_db(my_db):
         trans_db = my_db.importar_transaccions()
-        (id_trans, emissor, receptor, clau, document, data_creacio) = trans_db[0]
-        emissor = Factoria.build_usuari_from_db(emissor)
-        receptor = Factoria.build_usuari_from_db(receptor)
-        transaccio = Transaccio(emissor, receptor, clau, document, data_creacio)
+        (id_trans, emissor, receptor, clau, document, data_creacio) = trans_db
+        emissor = Factoria.build_usuari_from_db(my_db, emissor)
+        receptor = Factoria.build_usuari_from_db(my_db, receptor)
+        transaccio = Transaccio(emissor, receptor, clau, document)
         return transaccio
 
 

@@ -3,7 +3,7 @@ from datetime import datetime
 
 import mysql.connector
 from Crypto.PublicKey import RSA
-from mysql.connector import errorcode
+from mysql.connector import errorcode, cursor
 
 # from BlockchainUniversity import Usuari
 
@@ -73,9 +73,9 @@ class MySqlBloc:
             print("Error Mysql : {}".format(err))
             exit(1)
 
-    def exportar_sql(self, sql):
+    def exportar_sql(self, sql, values=None):
         try:
-            self._cursor.execute(sql)
+            self._cursor.execute(sql, values)
             self._conexio.commit()
         except mysql.connector.Error as err:
             print("Error Mysql : {}".format(err))
@@ -253,17 +253,42 @@ class MySqlBloc:
         self.exportar_sql(sql)
 
     def guardar_transaccio(self, transaccio):
-        sql = f'INSERT INTO transaccio (`id_emissor`, `id_receptor`, `clau`, `document`, `data_creacio`) ' \
-              f'VALUES({transaccio.emissor.id}, {transaccio.receptor.id},"{transaccio.clau}", ' \
-              f'"{transaccio.document}", "{transaccio.data_creacio}")'
-        self.exportar_sql(sql)
+        sql = "INSERT INTO transaccio(id_emissor, id_receptor, clau, document, data_creacio) VALUES (%s, %s, %s, %s, %s)"
+        trans = (transaccio.emissor.id, transaccio.receptor.id, transaccio.clau, transaccio.document,
+                 transaccio.data_creacio)
+        # self._cursor.execute(sql, trans)
+        # self._conexio.commit()
+        self.exportar_sql(sql, trans)
 
     # def guardar_trans(self, transaccio):
     #     sql = f'INSERT INTO trans_prova (`transaccio`) ' \
     #           f'VALUES({transaccio})'
     #     self.exportar_sql(sql)
 
-    # f'VALUES({transaccio.emissor.id}, {transaccio.receptor.id},"{transaccio.clau}", "", ' \
+    # def guardar_transaccio(self, transaccio):
+    #     try:
+    #         sql = """ INSERT INTO transaccio
+    #                                               (id_emissor, transaccio, clau, document, data_creacio) VALUES (%s,%s,%s,%s,%s)"""
+    #         trans = (transaccio.emissor.id, transaccio.receptor.id, transaccio.clau, transaccio.document,
+    #                  transaccio.data_creacio)
+    #         self._cursor.execute(sql, trans)
+    #         self._conexio.commit()
+    #     except mysql.connector.Error as err:
+    #         print("Error Mysql : {}".format(err))
+    #         exit(1)
+    #     finally:
+    #         if self._conexio.is_connected():
+    #             self._cursor.close()
+    #             self._conexio.close()
+    #             print("MySQL connection is closed")
+    #
+    # def guardar_transaccio2(self, transaccio):
+    #     clau_trans = format({transaccio.clau}, "b")
+    #     document = format({transaccio.document}, "b")
+    #     sql = f'INSERT INTO transaccio (`id_emissor`, `id_receptor`, `clau`, `document`, `data_creacio`) ' \
+    #           f'VALUES({transaccio.emissor.id}, {transaccio.receptor.id}, 'clau_trans', ' \
+    #           f'"{transaccio.document}", "{transaccio.data_creacio}")'
+    #     self.exportar_sql(sql)
 
 
 
