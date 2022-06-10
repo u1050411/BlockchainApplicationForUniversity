@@ -20,78 +20,12 @@ class CreacioTaulaTest:
         self.my_db.esborrar_schema(self.schema)
         self.my_db.crear_schema(self.schema)
         self.my_db.afegir_schema(self.schema)
-        self.crear_taules()
+        self.my_db.crear_taules_inicials()
         self.crear_usuaris()
         self.crear_examens()
         self.crear_respostes()
         self.crear_evaluacio()
-        # self.crear_transaccions()
-
-    def crear_taules(self):
-        sqls = ["CREATE TABLE if not exists `usuari` ("
-                "`id` int NOT NULL,"
-                "`tipus` varchar(9) NOT NULL,"
-                "`nif` varchar(9) NOT NULL,"
-                "`nom` varchar(45) DEFAULT NULL,"
-                "`cognom` varchar(100) DEFAULT NULL,"
-                "`public_key` longtext NULL,"
-                "PRIMARY KEY (`id`)) ",
-
-                "CREATE TABLE if not exists `private_key` ("
-                "`id_usuari` INT NOT NULL,"
-                "`private_key` longtext NULL,"
-                "PRIMARY KEY (`id_usuari`))",
-
-                "CREATE TABLE if not exists `transaccio` ("
-                "`id_transaccio` INT NOT NULL AUTO_INCREMENT,"
-                "`id_emissor` INT NOT NULL,"
-                "`id_receptor` INT NOT NULL,"
-                "`clau` LONGBLOB NOT NULL ,"
-                "`document` LONGBLOB NOT NULL ,"
-                "`data_creacio` DATETIME NOT NULL ,"
-                "PRIMARY KEY(`id_transaccio`))",
-
-                "CREATE TABLE if not exists `examen` ("
-                "`id_document` INT NOT NULL AUTO_INCREMENT,"
-                "`id_professor` INT NOT NULL,"
-                "`data_examen` DATETIME NOT NULL,"
-                "`data_inici` DATETIME NULL,"
-                "`data_final` DATETIME NULL,"
-                "`pdf` LONGBLOB  NULL,"
-                "PRIMARY KEY (`id_document`))",
-
-                "CREATE TABLE if not exists `estudiant_examen` ("
-                "`id_document` INT NOT NULL,"
-                "`id_estudiant` INT NOT NULL,"
-                "`nota` INT NULL,"
-                "PRIMARY KEY (`id_document`, `id_estudiant`))",
-
-                "CREATE TABLE if not exists `resposta_examen` ("
-                "`id_resposta` INT NOT NULL AUTO_INCREMENT,"
-                "`id_examen` INT NOT NULL,"
-                "`data_creacio` DATETIME NOT NULL,"
-                "`id_usuari` INT NOT NULL,"
-                "`pdf` LONGBLOB  NULL,"
-                "PRIMARY KEY (`id_resposta`))",
-
-                "CREATE TABLE if not exists `bloc` ("
-                "`id_bloc` INT NOT NULL AUTO_INCREMENT,"
-                "`time` DATETIME NOT NULL,"
-                "`id_emissor` INT NOT NULL,"
-                "`id_receptor` INT NOT NULL,"
-                "`id_document` INT NOT NULL,"
-                "`transaccio` LONGBLOB  NULL,"
-                "`hash` LONGBLOB  NULL,"
-                "PRIMARY KEY (`id_bloc`))",
-
-                "CREATE TABLE if not exists `trans_prova` ("
-                "`id_trans` INT NOT NULL AUTO_INCREMENT,"
-                "`transaccio` LONGBLOB  NULL,"
-                "PRIMARY KEY (`id_trans`))",
-                ]
-
-        for sql in sqls:
-            self.my_db.exportar_sql(sql)
+        #self.crear_transaccions()
 
     def crear_usuaris(self):
         usuaris = [[1050411, '40373747T', ESTUDIANT, 'Pau', 'de Jesus Bras'],
@@ -149,8 +83,8 @@ class CreacioTaulaTest:
 
         for id_resposta, id_examen, id_usuari,  nom_fitxer in respostes:
             pdf = self.my_db.recuperar_fitxer(nom_fitxer)
-            estudiant = Factoria.build_usuari_from_db(self.my_db, id_usuari)
-            resposta = EvaluacioExamen(id_resposta, id_examen, estudiant, pdf)
+            professor = Factoria.build_usuari_from_db(self.my_db, id_usuari)
+            resposta = EvaluacioExamen(id_resposta, id_examen, professor, pdf)
             self.my_db.guardar_resposta_examen(resposta)
 
     def crear_transaccions(self):
@@ -362,7 +296,7 @@ class TestMysql(unittest.TestCase):
         schema = self.schema
         self.my_db.esborrar_schema(schema)
         self.my_db.crear_schema(schema)
-        self.test.crear_taules()
+        self.my_db.crear_taules_inicials()
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', None, None), True)
 
     def test_retorn_schema(self):
@@ -371,7 +305,9 @@ class TestMysql(unittest.TestCase):
         self.assertEqual(self.schema, schema)
 
     def test_crear_usuaris(self):
-        self.test_crear_taules()
+        self.my_db.esborrar_schema(self.schema)
+        self.my_db.crear_schema(self.schema)
+        self.my_db.crear_taules_inicials()
         self.test.crear_usuaris()
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'id', '1050403'), True)
 

@@ -46,6 +46,73 @@ class MySqlBloc:
     def cursor(self, cursor):
         self._cursor = cursor
 
+    def crear_taules_inicials(self):
+        sqls = ["CREATE TABLE if not exists `usuari` ("
+                "`id` int NOT NULL,"
+                "`tipus` varchar(9) NOT NULL,"
+                "`nif` varchar(9) NOT NULL,"
+                "`nom` varchar(45) DEFAULT NULL,"
+                "`cognom` varchar(100) DEFAULT NULL,"
+                "`public_key` longtext NULL,"
+                "PRIMARY KEY (`id`)) ",
+
+                "CREATE TABLE if not exists `private_key` ("
+                "`id_usuari` INT NOT NULL,"
+                "`private_key` longtext NULL,"
+                "PRIMARY KEY (`id_usuari`))",
+
+                "CREATE TABLE if not exists `transaccio` ("
+                "`id_transaccio` INT NOT NULL AUTO_INCREMENT,"
+                "`id_emissor` INT NOT NULL,"
+                "`id_receptor` INT NOT NULL,"
+                "`clau` LONGBLOB NOT NULL ,"
+                "`document` LONGBLOB NOT NULL ,"
+                "`data_creacio` DATETIME NOT NULL ,"
+                "PRIMARY KEY(`id_transaccio`))",
+
+                "CREATE TABLE if not exists `examen` ("
+                "`id_document` INT NOT NULL AUTO_INCREMENT,"
+                "`id_professor` INT NOT NULL,"
+                "`data_examen` DATETIME NOT NULL,"
+                "`data_inici` DATETIME NULL,"
+                "`data_final` DATETIME NULL,"
+                "`pdf` LONGBLOB  NULL,"
+                "PRIMARY KEY (`id_document`))",
+
+                "CREATE TABLE if not exists `estudiant_examen` ("
+                "`id_document` INT NOT NULL,"
+                "`id_estudiant` INT NOT NULL,"
+                "`nota` INT NULL,"
+                "PRIMARY KEY (`id_document`, `id_estudiant`))",
+
+                "CREATE TABLE if not exists `resposta_examen` ("
+                "`id_resposta` INT NOT NULL AUTO_INCREMENT,"
+                "`id_examen` INT NOT NULL,"
+                "`data_creacio` DATETIME NOT NULL,"
+                "`id_usuari` INT NOT NULL,"
+                "`pdf` LONGBLOB  NULL,"
+                "PRIMARY KEY (`id_resposta`))",
+
+                "CREATE TABLE if not exists `bloc` ("
+                "`id_bloc` INT NOT NULL AUTO_INCREMENT,"
+                "`time` DATETIME NOT NULL,"
+                "`id_emissor` INT NOT NULL,"
+                "`id_receptor` INT NOT NULL,"
+                "`id_document` INT NOT NULL,"
+                "`transaccio` LONGBLOB  NULL,"
+                "`hash` LONGBLOB  NULL,"
+                "PRIMARY KEY (`id_bloc`))",
+
+                "CREATE TABLE if not exists `trans_prova` ("
+                "`id_trans` INT NOT NULL AUTO_INCREMENT,"
+                "`transaccio` LONGBLOB  NULL,"
+                "PRIMARY KEY (`id_trans`))",
+                ]
+
+        for sql in sqls:
+            self.exportar_sql(sql)
+
+
     def afegir_schema(self, schema):
         try:
             self.conexio.database = schema
@@ -95,7 +162,7 @@ class MySqlBloc:
 
     def importar_respostes(self, id_document):
         sql = f'select id_resposta, data_creacio, id_usuari, pdf  ' \
-               f'from `resposta_examen` where `id_examen` = {id_document}'
+              f'from `resposta_examen` where `id_examen` = {id_document}'
         return self.importar_llista_sql(sql)
 
     def importar_resposta(self, id_document, id_resposta):
@@ -180,19 +247,20 @@ class MySqlBloc:
 
     def guardar_clau_privada(self, id_usuari, private_key):
         private = private_key.exportKey('PEM').decode('ascii')
-        sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{private}")'
-        self.exportar_sql(sql)
+        sql = "INSERT INTO private_key(id_usuari, private_key) VALUES (%s, %s)"
+        dades = (id_usuari, private)
+        self.exportar_sql(sql, dades)
 
     def guardar_usuari(self, usuari):
-        sql = f'INSERT INTO usuari (`id`, `tipus`, `nif`, `nom`, `cognom`, `public_key`) VALUES({usuari.id}, ' \
-              f'"{usuari.tipus}", "{usuari.nif}", "{usuari.nom}", "{usuari.cognom}", "{usuari.str_publickey()}")'
-        self.exportar_sql(sql)
+        sql = "INSERT INTO usuari(id, tipus, nif, nom, cognom, public_key) VALUES (%s, %s, %s, %s, %s, %s)"
+        dades = (usuari.id, usuari.tipus, usuari.nif, usuari.nom, usuari.cognom, usuari.str_publickey())
+        self.exportar_sql(sql, dades)
 
-    def guardar_bloc(self, id_bloc, time, id_emissor, id_receptor, id_document, transaccio, hash_block):
-        sql = f'INSERT INTO usuari (`id_bloc`, `time`, `id_emissor`, `id_receptor`,`id_document`, `transaccio`, ' \
-              f'`hash`) VALUES({id_bloc}, "{time}", "{id_emissor}", "{id_receptor}",{id_document}, "{transaccio}", ' \
-              f'"{hash_block}")'
-        self.exportar_sql(sql)
+    # def guardar_bloc(self, id_bloc, time, id_emissor, id_receptor, id_document, transaccio, hash_block):
+    #     sql = f'INSERT INTO usuari (`id_bloc`, `time`, `id_emissor`, `id_receptor`,`id_document`, `transaccio`, ' \
+    #           f'`hash`) VALUES({id_bloc}, "{time}", "{id_emissor}", "{id_receptor}",{id_document}, "{transaccio}", ' \
+    #           f'"{hash_block}")'
+    #     self.exportar_sql(sql)
 
     @staticmethod
     def dades_num(num_document):
@@ -217,24 +285,25 @@ class MySqlBloc:
         save_pdf = examen.pdf
         estudiants = examen.estudiants
 
-        sql = f'INSERT INTO examen (`id_document`, `id_professor`, `data_examen`, `data_inici`, `data_final`, ' \
-              f'`pdf`) VALUES({id_document}, {id_usuari}, "{data_examen}", "{data_inici}", "{data_final}", ' \
-              f'"{save_pdf}")'
-        self.exportar_sql(sql)
+        sql = "INSERT INTO examen(id_document, id_professor, data_examen, data_inici, data_final, pdf) " \
+              "VALUES (%s, %s, %s, %s, %s, %s)"
+        dades = (id_document, id_usuari, data_examen, data_inici, data_final, save_pdf)
+        self.exportar_sql(sql, dades)
 
         for estudiant in estudiants:
-            sql = f'INSERT INTO estudiant_examen (`id_document`, `id_estudiant`) ' \
-                  f'VALUES({id_document}, "{estudiant.id}")'
-            self.exportar_sql(sql)
+            sql = "INSERT INTO estudiant_examen(id_document, id_estudiant) VALUES (%s, %s)"
+            dades = (id_document, estudiant.id)
+            self.exportar_sql(sql, dades)
 
     def guardar_resposta_examen(self, resposta):
-        sql = f'INSERT INTO resposta_examen (`id_examen`, `id_resposta`, `data_creacio`, `id_usuari`, `pdf`) ' \
-              f'VALUES({resposta.id_examen}, {resposta.id_document}, "{resposta.data_creacio}", ' \
-              f'"{resposta.usuari.id}","{resposta.pdf}")'
-        self.exportar_sql(sql)
+        sql = "INSERT INTO resposta_examen(id_examen, id_resposta, data_creacio, id_usuari, pdf) " \
+              "VALUES (%s, %s, %s, %s, %s)"
+        dades = (resposta.id_examen, resposta.id_document, resposta.data_creacio, resposta.usuari.id, resposta.pdf)
+        self.exportar_sql(sql, dades)
 
     def guardar_transaccio(self, transaccio):
-        sql = "INSERT INTO transaccio(id_emissor, id_receptor, clau, document, data_creacio) VALUES (%s, %s, %s, %s, %s)"
-        trans = (transaccio.emissor.id, transaccio.receptor.id, transaccio.clau, transaccio.document,
+        sql = "INSERT INTO transaccio(id_emissor, id_receptor, clau, document, data_creacio) " \
+              "VALUES (%s, %s, %s, %s, %s)"
+        dades = (transaccio.emissor.id, transaccio.receptor.id, transaccio.clau, transaccio.document,
                  transaccio.data_creacio)
-        self.exportar_sql(sql, trans)
+        self.exportar_sql(sql, dades)
