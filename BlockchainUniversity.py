@@ -10,7 +10,6 @@ from Crypto.Hash import SHA1
 from Crypto.PublicKey import RSA
 from cryptography.fernet import Fernet
 
-
 UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
 PROFESSOR = 'professor'
@@ -71,7 +70,6 @@ class Factoria:
         receptor = Factoria.build_usuari_from_db(my_db, receptor)
         transaccio = Transaccio(emissor, receptor, clau, document)
         return transaccio
-
 
     @staticmethod
     def build_resposta_examen_from_db(my_db, id_document, id_resposta):
@@ -290,7 +288,7 @@ class Transaccio:
         self.receptor = receptor
         self.clau = clau
         self.document = document
-        self._data_creacio = datetime.now().isoformat()
+        self.data_creacio = datetime.now().isoformat()
 
     def sign(self, data):
         h = SHA1.new(data)
@@ -351,6 +349,9 @@ class Bloc:
     def __init__(self, index=None, trans=None, hash_bloc_anterior=None, ):
         self._index = index
         self._timestamp = datetime.now().isoformat()
+        self.id_emissor = trans.emissor.id
+        self.id_receptor = trans.receptor.id
+        self.id_document = trans.document.id
         self.transaccions = trans
         self.hash_bloc_anterior = hash_bloc_anterior
         self.nonce = 0
@@ -370,6 +371,16 @@ class Bloc:
     @property
     def transaccio(self):
         return self._transaccio
+
+    def to_dict(self):
+        return collections.OrderedDict({
+            'index': self._index,
+            'timestamp': self.timestamp,
+            'id_emissor': self.emissor.id,
+            'id_receptor': self.receptor.id,
+            'id_document': self.document.id,
+            'transaccions': self.transaccions,
+            'hash_bloc_anterior': self.hash_bloc_anterior})
 
     def calcular_hash(self):
         # Converteix el bloc en una cadena json i retorna el hash
