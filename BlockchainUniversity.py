@@ -288,7 +288,8 @@ class Transaccio:
         self.receptor = receptor
         self.clau = clau
         self.document = document
-        self.data_creacio = datetime.now().isoformat()
+        self._data_creacio = datetime.now().isoformat()
+        print(self.data_creacio)
 
     def sign(self, data):
         h = SHA1.new(data)
