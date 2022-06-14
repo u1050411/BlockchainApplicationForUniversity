@@ -69,6 +69,7 @@ class Factoria:
         emissor = Factoria.build_usuari_from_db(my_db, emissor)
         receptor = Factoria.build_usuari_from_db(my_db, receptor)
         transaccio = Transaccio(emissor, receptor, clau, document)
+        transaccio.id = id_trans
         return transaccio
 
     @staticmethod
@@ -237,7 +238,7 @@ class RespostaExamen(Document):
 
     @property
     def id_document_blockchain(self):
-        return str(self.id_resposta) + "0002"
+        return str(self.id_document) + "0002"
 
     def to_dict(self):
         return collections.OrderedDict({
@@ -282,11 +283,12 @@ class Universitat:
 class Transaccio:
 
     # Classe on guardem les dades de les transaccions
-    def __init__(self, emissor=None, receptor=None, clau=None, document=None):
+    def __init__(self, emissor=None, receptor=None, clau=None, document=None, id_document=None):
         self.id = 0
         self.emissor = emissor
         self.receptor = receptor
         self.clau = clau
+        self.id_document = id_document
         self.document = document
         self._data_creacio = datetime.now().isoformat()
         print(self.data_creacio)
@@ -352,7 +354,7 @@ class Bloc:
         self._timestamp = datetime.now().isoformat()
         self.id_emissor = trans.emissor.id
         self.id_receptor = trans.receptor.id
-        self.id_document = trans.document.id
+        self.id_document = trans.id_document
         self.transaccions = trans
         self.hash_bloc_anterior = hash_bloc_anterior
         self.nonce = 0

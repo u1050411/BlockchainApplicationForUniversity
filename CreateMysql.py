@@ -67,6 +67,7 @@ class MySqlBloc:
                 "`id_receptor` INT NOT NULL,"
                 "`clau` LONGBLOB NOT NULL ,"
                 "`document` LONGBLOB NOT NULL ,"
+                "`id_document` INT NOT NULL ,"
                 "`data_creacio` DATETIME NOT NULL ,"
                 "PRIMARY KEY(`id_transaccio`))",
 
@@ -112,6 +113,9 @@ class MySqlBloc:
         for sql in sqls:
             self.exportar_sql(sql)
 
+    def borrar_dades_taula(self, schema, taula):
+        sql = f'TRUNCATE TABLE {schema}.{taula}'
+        self.select_sql(sql)
 
     def afegir_schema(self, schema):
         try:
@@ -184,7 +188,7 @@ class MySqlBloc:
         return self.importar_sql(sql)
 
     def importar_transaccions(self):
-        sql = f'select MIN(id_transaccio), id_emissor, id_receptor, clau, document, data_creacio from `transaccio` ' \
+        sql = f'select id_transaccio, id_emissor, id_receptor, clau, document, data_creacio from `transaccio` ' \
               f'LIMIT 1'
         return self.importar_sql(sql)
 
@@ -302,8 +306,8 @@ class MySqlBloc:
         self.exportar_sql(sql, dades)
 
     def guardar_transaccio(self, transaccio):
-        sql = "INSERT INTO transaccio(id_emissor, id_receptor, clau, document, data_creacio) " \
-              "VALUES (%s, %s, %s, %s, %s)"
+        sql = "INSERT INTO transaccio(id_emissor, id_receptor, clau, document, id_document, data_creacio) " \
+              "VALUES (%s, %s, %s, %s, %s, %s)"
         dades = (transaccio.emissor.id, transaccio.receptor.id, transaccio.clau, transaccio.document,
-                 transaccio.data_creacio)
+                 transaccio.id_document, transaccio.data_creacio, )
         self.exportar_sql(sql, dades)
