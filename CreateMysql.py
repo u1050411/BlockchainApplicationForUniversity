@@ -104,10 +104,12 @@ class MySqlBloc:
                 "`hash` LONGBLOB  NULL,"
                 "PRIMARY KEY (`id_bloc`))",
 
-                "CREATE TABLE if not exists `trans_prova` ("
-                "`id_trans` INT NOT NULL AUTO_INCREMENT,"
-                "`transaccio` LONGBLOB  NULL,"
-                "PRIMARY KEY (`id_trans`))",
+                "CREATE TABLE if not exists `Universitat` ("
+                "`id` INT NOT NULL AUTO_INCREMENT,"
+                "`nom` TEXT NOT NULL,"
+                "`private_key` longtext NULL,"
+                "`public_key` longtext NULL,"
+                "PRIMARY KEY (`id`))",
                 ]
 
         for sql in sqls:
@@ -255,16 +257,24 @@ class MySqlBloc:
         dades = (id_usuari, private)
         self.exportar_sql(sql, dades)
 
+    def guardar_universitat(self, universitat):
+        private = universitat.private_key.exportKey('PEM').decode('ascii')
+        public = universitat.public_key.exportKey('PEM').decode('ascii')
+        nom = universitat.nom
+        sql = "INSERT INTO universitat(nom, public_key, private_key) VALUES (%s, %s, %s)"
+        dades = (nom, public, private)
+        self.exportar_sql(sql, dades)
+
     def guardar_usuari(self, usuari):
         sql = "INSERT INTO usuari(id, tipus, nif, nom, cognom, public_key) VALUES (%s, %s, %s, %s, %s, %s)"
         dades = (usuari.id, usuari.tipus, usuari.nif, usuari.nom, usuari.cognom, usuari.str_publickey())
         self.exportar_sql(sql, dades)
 
-    # def guardar_bloc(self, id_bloc, time, id_emissor, id_receptor, id_document, transaccio, hash_block):
-    #     sql = f'INSERT INTO usuari (`id_bloc`, `time`, `id_emissor`, `id_receptor`,`id_document`, `transaccio`, ' \
-    #           f'`hash`) VALUES({id_bloc}, "{time}", "{id_emissor}", "{id_receptor}",{id_document}, "{transaccio}", ' \
-    #           f'"{hash_block}")'
-    #     self.exportar_sql(sql)
+    def guardar_bloc(self, bloc):
+        sql = "INSERT INTO usuari (time, id_emissor, id_receptor, id_document, transaccio, hash) " \
+              "VALUES (%s, %s, %s, %s, %s, %s)"
+        dades = (bloc.data_transaccio, bloc.id_emissor, bloc.id_receptor, bloc.id_document, bloc.transaccions, '')
+        self.exportar_sql(sql, dades)
 
     @staticmethod
     def dades_num(num_document):

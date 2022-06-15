@@ -3,7 +3,7 @@ import unittest
 from Crypto.PublicKey import RSA
 
 from BlockchainUniversity import Estudiant, Transaccio, Professor, Examen, Factoria, RespostaExamen, EvaluacioExamen, \
-    Bloc
+    Bloc, Universitat
 from CreateMysql import MySqlBloc
 
 UTF_8 = 'utf8'
@@ -22,11 +22,18 @@ class CreacioTaulaTest:
         self.my_db.crear_schema(self.schema)
         self.my_db.afegir_schema(self.schema)
         self.my_db.crear_taules_inicials()
+        self.crear_universitat()
         self.crear_usuaris()
         self.crear_examens()
         self.crear_respostes()
         self.crear_evaluacio()
         self.crear_transaccions()
+
+    def crear_universitat(self):
+        private_key = RSA.generate(1024)
+        public_key = private_key.publickey()
+        uni = Universitat("Universitat de Girona", private_key, public_key)
+        self.my_db.guardar_universitat(uni)
 
     def crear_usuaris(self):
         usuaris = [[1050411, '40373747T', ESTUDIANT, 'Pau', 'de Jesus Bras'],
@@ -124,23 +131,6 @@ class TestUsuaris(unittest.TestCase):
         self.assertEqual(estudiant.nom, 'Marta')
         self.assertEqual(estudiant.cognom, 'Rodriguez')
         self.assertEqual(estudiant.public_key, public_key)
-
-    # def test_creation_Json(self):
-    #     public_key = RSA.generate(1024).publickey()
-    #     estudiant = Estudiant(1050415, '40332505G', 'Marta', "Rodriguez", public_key)
-    #     to_estudiant = estudiant.to_json()
-    #     self.my_db.guardar_usuari(1050415, to_estudiant)
-    #     usuari_json = self.my_db.importar_usuari(1050415)
-    #     usuari_prova = json.loads(usuari_json)
-    #     estudiant2 = Estudiant.create_json(usuari_prova)
-    #     self.assertEqual(estudiant.id, estudiant2.id)
-    #     self.assertEqual(estudiant.nom, estudiant2.nom)
-    #     self.assertEqual(estudiant.cognom, estudiant2.cognom)
-    #     self.assertEqual(estudiant.tipus, estudiant2.tipus)
-    #     self.assertEqual(estudiant.public_key, estudiant2.public_key)
-    #     print(to_estudiant)
-    #     print(usuari_json)
-    #     print(usuari_prova)
 
 
 class TestUniversitat(unittest.TestCase):
@@ -454,32 +444,17 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(transaccio.receptor.id, receptor.id)
         self.assertEqual(transaccio.document, transaccio_inicial.document)
 
-
-    # def test_posarNota(self):
-    #     cua = []
-    #     estudiant = Estudiant('Pau')
-    #     professor = Professor('Teo')
-    #     t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
-    #     cua.append(t1)
-    #     t2 = TransaccioExamen(professor, 'DocumentEncriptat', 'Hash', 10)
-    #     cua.append(t2)
-    #     for x in cua:
-    #         x.display_transaccio()
-    #         print('--------------')
-    #
-    # @staticmethod
-    # def test_sign_transaction():
-    #     estudiant = Estudiant('Pau')
-    #     t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
-    #     t1.sign_transaction()
-
-    # def test_to_Json(self):
-    #     estudiant = Estudiant('Pau')
-    #     t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
-    #     x = t1.to_json()
-    #     # jtrans = json.loads(t1.to_json())
-    #     # print(json.dumps(jtrans, indent=4))
-    #     print(x)
+    def test_to_json(self):
+        key = RSA.generate(1024)
+        public_key = key.publickey()
+        receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
+        emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
+        examen = Factoria.build_examen_from_db(self.my_db, 2, "Albert")
+        examen_encriptar = examen.encriptar(key)
+        transaccio = Transaccio(emissor, receptor, examen_encriptar['clau'], examen_encriptar['document'],
+                                        examen.id_document_blockchain)
+        trans_json = transaccio.to_json()
+        print(trans_json)
 
 
 class TestBloc(unittest.TestCase):
@@ -491,9 +466,10 @@ class TestBloc(unittest.TestCase):
         self.test.crear_schema_dades()
 
     def test_crear(self):
-        transaccio = Factoria.build_transaccio_from_db(self.my_db)
-        bloc = Bloc(1, transaccio, "")
-        print(bloc)
+        pass
+        # transaccio = Factoria.build_transaccio_from_db(self.my_db)
+        # bloc = Bloc(1, transaccio, "")
+        # self.my_db.guardar_bloc(bloc)
 
 
     # self.assertEqual(bloc_prova.index, 0)

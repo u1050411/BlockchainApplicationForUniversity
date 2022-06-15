@@ -279,6 +279,13 @@ class Universitat:
         self._private_key = private_key  # Creació de la clau privada
         self._public_key = public_key  # Creació de la clau pública que és part de la clau privada
 
+    @property
+    def private_key(self):
+        return self._private_key
+
+    @property
+    def public_key(self):
+        return self._public_key
 
 class Transaccio:
 
@@ -291,7 +298,6 @@ class Transaccio:
         self.id_document = id_document
         self.document = document
         self._data_creacio = datetime.now().isoformat()
-        print(self.data_creacio)
 
     def sign(self, data):
         h = SHA1.new(data)
@@ -311,23 +317,15 @@ class Transaccio:
         return collections.OrderedDict({
             'Emissor': self.emissor.to_json(),
             'Receptor': self.receptor.to_json(),
-            'Document': self.document.to_json(),
-            'clau': self.clau,
-            'Data': self.time})
+            'Clau': self.clau,
+            'Id_Document': self.id_document,
+            'Document': self.document,
+            'Clau': self.clau,
+            'Data_Creacio': self.data_creacio})
 
     def to_json(self):
-        return json.dumps(self.to_dict, sort_keys=True, default=str)
-
-    def display_transaccio(self):
-        print(f"""sender: {self.emissor.id} 
------
-receptor: {self.receptor.id}
------
-value: {self.document.id_document()}
------
-time: {self.time}
------
-""")
+        rest = self.to_dict()
+        return json.dumps(rest, default=str)
 
     # Mètode que el emissor signa la transaccio
 
@@ -336,8 +334,25 @@ time: {self.time}
         block_json = self.to_json()
         return self.emissor.sign(block_json.encode(UTF_8))
 
-    def to_json(self):
-        return json.dumps(self.to_dict, sort_keys=True, default=str)
+    # def encriptar(self, public_key):
+    #     key_simetric = Fernet.generate_key()
+    #     encriptar_clau = PKCS1_OAEP.new(public_key)
+    #     clau_simetrica = encriptar_clau.encrypt(key_simetric)
+    #     examen_byte = self.to_json().encode("utf-8")
+    #     encriptador = Fernet(key_simetric)
+    #     document = encriptador.encrypt(examen_byte)
+    #     retorn = {'clau': clau_simetrica, 'document': document}
+    #     return retorn
+    #
+    # @staticmethod
+    # def desencriptar(examen_encript, public_key):
+    #     clau_examen = examen_encript['clau']
+    #     examen_encriptat = examen_encript['document']
+    #     desencriptador = PKCS1_OAEP.new(public_key)
+    #     clau_simetrica = desencriptador.decrypt(clau_examen)
+    #     key_simetric = Fernet(clau_simetrica)
+    #     examen = key_simetric.decrypt(examen_encriptat).decode()
+    #     return examen
 
 
 # class TransaccioExamen(Transaccio):
@@ -351,7 +366,7 @@ class Bloc:
 
     def __init__(self, index=None, trans=None, hash_bloc_anterior=None, ):
         self._index = index
-        self._timestamp = datetime.now().isoformat()
+        self.data_transaccio = trans.data_creacio
         self.id_emissor = trans.emissor.id
         self.id_receptor = trans.receptor.id
         self.id_document = trans.id_document
