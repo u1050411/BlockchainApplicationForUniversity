@@ -65,8 +65,8 @@ class MySqlBloc:
                 "`id_transaccio` INT NOT NULL AUTO_INCREMENT,"
                 "`id_emissor` INT NOT NULL,"
                 "`id_receptor` INT NOT NULL,"
-                "`clau` LONGBLOB NOT NULL ,"
-                "`document` LONGBLOB NOT NULL ,"
+                # "`clau` LONGBLOB NOT NULL ,"
+                "`document` JSON NOT NULL ,"
                 "`id_document` INT NOT NULL ,"
                 "`data_creacio` DATETIME NOT NULL ,"
                 "PRIMARY KEY(`id_transaccio`))",
@@ -190,7 +190,7 @@ class MySqlBloc:
         return self.importar_sql(sql)
 
     def importar_transaccions(self):
-        sql = f'select id_transaccio, id_emissor, id_receptor, clau, document, data_creacio from `transaccio` ' \
+        sql = f'select id_transaccio, id_emissor, id_receptor, document, id_document, data_creacio from `transaccio` ' \
               f'LIMIT 1'
         return self.importar_sql(sql)
 
@@ -316,8 +316,9 @@ class MySqlBloc:
         self.exportar_sql(sql, dades)
 
     def guardar_transaccio(self, transaccio):
-        sql = "INSERT INTO transaccio(id_emissor, id_receptor, clau, document, id_document, data_creacio) " \
-              "VALUES (%s, %s, %s, %s, %s, %s)"
-        dades = (transaccio.emissor.id, transaccio.receptor.id, transaccio.clau, transaccio.document,
+        encrip_to_json = transaccio.document.to_json()
+        sql = "INSERT INTO transaccio(id_emissor, id_receptor, document, id_document, data_creacio) " \
+              "VALUES (%s, %s, %s, %s, %s)"
+        dades = (transaccio.emissor.id, transaccio.receptor.id, encrip_to_json,
                  transaccio.id_document, transaccio.data_creacio, )
         self.exportar_sql(sql, dades)

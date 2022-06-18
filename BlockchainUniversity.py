@@ -1,3 +1,4 @@
+import ast
 import base64
 import binascii
 import collections
@@ -9,6 +10,7 @@ from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA1
 from Crypto.PublicKey import RSA
 from cryptography.fernet import Fernet
+from matplotlib.font_manager import _json_decode
 
 UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
@@ -65,10 +67,11 @@ class Factoria:
     @staticmethod
     def build_transaccio_from_db(my_db):
         trans_db = my_db.importar_transaccions()
-        (id_trans, emissor, receptor, clau, document, data_creacio) = trans_db
+        (id_trans, emissor, receptor, dada, id_document, data_creacio) = trans_db
         emissor = Factoria.build_usuari_from_db(my_db, emissor)
         receptor = Factoria.build_usuari_from_db(my_db, receptor)
-        transaccio = Transaccio(emissor, receptor, clau, document)
+        encript = Encriptador.crear_json(dada)
+        transaccio = Transaccio(emissor, receptor, encript, id_document, data_creacio)
         transaccio.id = id_trans
         return transaccio
 
@@ -98,6 +101,56 @@ class Factoria:
         return resposta
 
 
+class Encriptador:
+
+    def __init__(self, dada=None, public_key=None):
+        if dada is None:
+            self.clau = None
+            self.dada = None
+        else:
+            key_simetric = Fernet.generate_key()
+            encriptar_clau = PKCS1_OAEP.new(public_key)
+            self.clau = encriptar_clau.encrypt(key_simetric)
+            dada_byte = dada.to_json().encode("utf-8")
+            encriptador = Fernet(key_simetric)
+            self.dada = encriptador.encrypt(dada_byte)
+
+    def get_dada(self, private_key):
+        desencriptador = PKCS1_OAEP.new(private_key)
+        clau_simetrica = desencriptador.decrypt(self.clau)
+        key_simetric = Fernet(clau_simetrica)
+        dada_desencriptada = key_simetric.decrypt(self.dada).decode()
+        return dada_desencriptada
+
+    def to_dict(self):
+        return collections.OrderedDict({
+            'clau': self.clau,
+            'dada': self.dada
+        })
+
+    def to_json(self):
+        rest = self.to_dict()
+        return json.dumps(rest, default=str)
+
+
+    @staticmethod
+    def crear_json(j_son):
+        nou = Encriptador()
+        nou.clau = ast.literal_eval(json.loads(j_son)['clau'])
+        nou.dada = ast.literal_eval(json.loads(j_son)['dada'])
+        return nou
+
+    @staticmethod
+    def desencriptar(origen_encript, public_key):
+        clau_dada = origen_encript['clau']
+        retorn_encriptat = origen_encript['dada']
+        desencriptador = PKCS1_OAEP.new(public_key)
+        clau_simetrica = desencriptador.decrypt(clau_dada)
+        key_simetric = Fernet(clau_simetrica)
+        dada_desencriptada = key_simetric.decrypt(retorn_encriptat).decode()
+        return dada_desencriptada
+
+
 class Usuari:
 
     def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None):
@@ -118,18 +171,34 @@ class Usuari:
             'public_key': self.str_publickey()})
 
     @staticmethod
-    def create_json(usuari_json):
-        id_usuari = usuari_json['id']
-        nif = usuari_json['nif']
-        nom = usuari_json['nom']
-        cognom = usuari_json['cognom']
-        tipus = usuari_json['tipus']
-        public_key = RSA.importKey(usuari_json['public_key'])
+    def crear_json(usuari_json):
+        usuari = json.loads(usuari_json)
+        id_usuari = usuari['id']
+        nif = usuari['nif']
+        nom = usuari['nom']
+        cognom = usuari['cognom']
+        tipus = usuari['tipus']
+        public_key = RSA.importKey(usuari['public_key'])
         if tipus == ESTUDIANT:
             usuari = Estudiant(id_usuari, nif, nom, cognom, public_key)
         if tipus == PROFESSOR:
             usuari = Professor(id_usuari, nif, nom, cognom, public_key)
         return usuari
+
+    # @staticmethod
+    # def create_json(usuari_json):
+    #     usuari = json.loads(usuari_json)
+    #     id_usuari = usuari_json['id']
+    #     nif = usuari_json['nif']
+    #     nom = usuari_json['nom']
+    #     cognom = usuari_json['cognom']
+    #     tipus = usuari_json['tipus']
+    #     public_key = RSA.importKey(usuari_json['public_key'])
+    #     if tipus == ESTUDIANT:
+    #         usuari = Estudiant(id_usuari, nif, nom, cognom, public_key)
+    #     if tipus == PROFESSOR:
+    #         usuari = Professor(id_usuari, nif, nom, cognom, public_key)
+    #     return usuari
 
     def to_json(self):
         rest = self.to_dict()
@@ -156,9 +225,11 @@ class Estudiant(Usuari):
 
 
 class Document:
-    def __init__(self, id_document=None, tipus=None, usuari=None, pdf=None):
+    def __init__(self, id_document=None, tipus=None, usuari=None, pdf=None, data_creacio=None):
         self.id_document = id_document
         self.data_creacio = datetime.now().isoformat()
+        if data_creacio is not None:
+            self.data_creacio = data_creacio
         self.tipus = tipus
         self.usuari = usuari
         self.pdf = pdf
@@ -173,38 +244,29 @@ class Document:
 
     def to_json(self):
         rest = self.to_dict()
-        return json.dumps(rest, default=str)
-
-    def encriptar(self, public_key):
-        key_simetric = Fernet.generate_key()
-        encriptar_clau = PKCS1_OAEP.new(public_key)
-        clau_simetrica = encriptar_clau.encrypt(key_simetric)
-        examen_byte = self.to_json().encode("utf-8")
-        encriptador = Fernet(key_simetric)
-        document = encriptador.encrypt(examen_byte)
-        retorn = {'clau': clau_simetrica, 'document': document}
-        return retorn
-
-    @staticmethod
-    def desencriptar(examen_encript, public_key):
-        clau_examen = examen_encript['clau']
-        examen_encriptat = examen_encript['document']
-        desencriptador = PKCS1_OAEP.new(public_key)
-        clau_simetrica = desencriptador.decrypt(clau_examen)
-        key_simetric = Fernet(clau_simetrica)
-        examen = key_simetric.decrypt(examen_encriptat).decode()
-        return examen
+        return json.dumps(rest, indent=4, sort_keys=True, default=str)
 
 
 class Examen(Document):
 
-    def __init__(self, id_document=None, professor=None, pdf=None, data_inicial=None, data_final=None):
-        super(Examen, self).__init__(id_document, 1, professor, pdf, )
+    def __init__(self, id_document=None, professor=None, pdf=None, data_inicial=None, data_final=None, data_creacio=None):
+        super(Examen, self).__init__(id_document, 1, professor, pdf, data_creacio)
         self.data_inicial = data_inicial
         self.data_final = data_final
         self.evaluacioExamen = None
         self.estudiants = []
         self.respostes = []
+
+    @classmethod
+    def create_json(cls, dades_json=None):
+        dades = json.loads(dades_json)
+        id_examen = dades['id_document']
+        data_creacio = dades['data_creacio']
+        data_inicial = dades['data_inicial']
+        data_final = dades['data_final']
+        professor = Usuari.crear_json(dades['professor'])
+        pdf = ast.literal_eval(dades['pdf'])
+        return cls(id_examen, professor, pdf, data_inicial, data_final, data_creacio)
 
     def afegir_estudiants(self, estudiant):
         self.estudiants.append(estudiant)
@@ -221,8 +283,10 @@ class Examen(Document):
         return collections.OrderedDict({
             'id_document': self.id_document,
             'data_creacio': self.data_creacio,
+            'data_inicial': self.data_inicial,
+            'data_final': self.data_final,
             'id_tipus': self.tipus,
-            'usuari': self.usuari.to_json(),
+            'professor': self.usuari.to_json(),
             'pdf': self.pdf,
             'estudiants': [llista_json]
         })
@@ -287,17 +351,20 @@ class Universitat:
     def public_key(self):
         return self._public_key
 
+
 class Transaccio:
 
     # Classe on guardem les dades de les transaccions
-    def __init__(self, emissor=None, receptor=None, clau=None, document=None, id_document=None):
+    def __init__(self, emissor=None, receptor=None, document=None, id_document=None, data_creacio=None):
         self.id = 0
         self.emissor = emissor
         self.receptor = receptor
-        self.clau = clau
         self.id_document = id_document
         self.document = document
         self._data_creacio = datetime.now().isoformat()
+        if data_creacio is not None:
+            self._data_creacio = data_creacio
+
 
     def sign(self, data):
         h = SHA1.new(data)
@@ -317,15 +384,33 @@ class Transaccio:
         return collections.OrderedDict({
             'Emissor': self.emissor.to_json(),
             'Receptor': self.receptor.to_json(),
-            'Clau': self.clau,
             'Id_Document': self.id_document,
-            'Document': self.document,
-            'Clau': self.clau,
+            'Document': self.document.to_json(),
             'Data_Creacio': self.data_creacio})
 
     def to_json(self):
         rest = self.to_dict()
         return json.dumps(rest, default=str)
+
+    # def encriptar(self, public_key):
+    #     key_simetric = Fernet.generate_key()
+    #     encriptar_clau = PKCS1_OAEP.new(public_key)
+    #     clau_simetrica = encriptar_clau.encrypt(key_simetric)
+    #     trans_byte = self.to_json().encode("utf-8")
+    #     encriptador = Fernet(key_simetric)
+    #     document = encriptador.encrypt(trans_byte)
+    #     retorn = {'clau': clau_simetrica, 'document': document}
+    #     return retorn
+    #
+    # @staticmethod
+    # def desencriptar(document_encript, privat_key):
+    #     clau_examen = document_encript['clau']
+    #     examen_encriptat = document_encript['document']
+    #     desencriptador = PKCS1_OAEP.new(privat_key)
+    #     clau_simetrica = desencriptador.decrypt(clau_examen)
+    #     key_simetric = Fernet(clau_simetrica)
+    #     document = key_simetric.decrypt(examen_encriptat).decode()
+    #     return document
 
     # Mètode que el emissor signa la transaccio
 

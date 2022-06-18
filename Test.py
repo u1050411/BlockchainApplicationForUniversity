@@ -3,7 +3,7 @@ import unittest
 from Crypto.PublicKey import RSA
 
 from BlockchainUniversity import Estudiant, Transaccio, Professor, Examen, Factoria, RespostaExamen, EvaluacioExamen, \
-    Bloc, Universitat
+    Bloc, Universitat, Encriptador, Document
 from CreateMysql import MySqlBloc
 
 UTF_8 = 'utf8'
@@ -99,9 +99,9 @@ class CreacioTaulaTest:
         receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
         emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
         examen = Factoria.build_examen_from_db(self.my_db, 1)
-        clau_privada_emissor = self.my_db.clau_privada(emissor.id)
-        examen_encriptar = examen.encriptar(clau_privada_emissor)
-        transaccio_inicial = Transaccio(emissor, receptor, examen_encriptar['clau'], examen_encriptar['document'], examen.id_document_blockchain)
+        examen_encriptat = Encriptador(examen, emissor.public_key)
+        transaccio_inicial = Transaccio(emissor, receptor, examen_encriptat, examen.id_document_blockchain)
+        tr = transaccio_inicial.document.to_json
         self.my_db.guardar_transaccio(transaccio_inicial)
         emissor2 = receptor
         receptor2 = emissor
@@ -109,9 +109,8 @@ class CreacioTaulaTest:
                      f'/Examen_2021_20_10_01_primer_parcial-solucio.pdf'
         pdf = self.my_db.recuperar_fitxer(nom_fitxer)
         resposta = RespostaExamen(1, 1, emissor2, pdf)
-        clau_privada_receptor = self.my_db.clau_privada(receptor.id)
-        resposta_encriptat = resposta.encriptar(clau_privada_receptor)
-        transaccio2 = Transaccio(emissor2, receptor2, resposta_encriptat['clau'], resposta_encriptat['document'], resposta.id_document_blockchain)
+        resposta_encriptat = Encriptador(resposta, receptor.public_key)
+        transaccio2 = Transaccio(emissor2, receptor2, resposta_encriptat, resposta.id_document_blockchain)
         self.my_db.guardar_transaccio(transaccio2)
 
 
@@ -250,6 +249,7 @@ class TestFactoria(unittest.TestCase):
 
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
+        self.my_db.esborrar_schema('blockchainuniversity')
         self.test = CreacioTaulaTest(self.my_db, 'blockchainuniversity')
         self.test.crear_schema_dades()
 
@@ -281,28 +281,26 @@ class TestFactoria(unittest.TestCase):
         self.assertEqual(resposta.usuari.tipus, PROFESSOR)
 
     def test_transaccio(self):
-        key = RSA.generate(1024)
-        public_key = key.publickey()
         receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
         emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
-        examen = Factoria.build_examen_from_db(self.my_db, 1, "Albert")
-        examen_encriptar = examen.encriptar(public_key)
-        transaccio_inicial = Transaccio(emissor, receptor, examen_encriptar['clau'], examen_encriptar['document'],
-                                        examen.id_document_blockchain)
+        examen = Factoria.build_examen_from_db(self.my_db, 1)
+        # clau_privada_emissor = self.my_db.clau_privada(emissor.id)
+        examen_encriptat = Encriptador(examen, emissor.public_key)
+        # examen_encriptar = examen.encriptar(emissor.)
+        transaccio_inicial = Transaccio(emissor, receptor, examen_encriptat, examen.id_document_blockchain)
+        self.my_db.guardar_transaccio(transaccio_inicial)
         self.my_db.borrar_dades_taula(self.my_db.schema, "transaccio")
         self.my_db.guardar_transaccio(transaccio_inicial)
         transaccio_guardat = Factoria.build_transaccio_from_db(self.my_db)
         self.assertEqual(transaccio_inicial.emissor.id, transaccio_guardat.emissor.id)
         self.assertEqual(transaccio_inicial.receptor.id, transaccio_guardat.receptor.id)
-        self.assertEqual(transaccio_inicial.clau, transaccio_guardat.clau)
-        self.assertEqual(transaccio_inicial.document, transaccio_guardat.document)
-
 
 
 class TestExamen(unittest.TestCase):
 
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
+        self.my_db.esborrar_schema('blockchainuniversity')
         self.test = CreacioTaulaTest(self.my_db, 'blockchainuniversity')
         self.test.crear_schema_dades()
 
@@ -338,13 +336,13 @@ class TestExamen(unittest.TestCase):
         examen_json = examen.to_json()
         print(examen_json)
 
-    def test_encript(self):
-        privat_key = RSA.generate(1024)
-        public_key = privat_key.publickey()
-        examen = Factoria.build_examen_from_db(self.my_db, 1)
-        examen_encript = examen.encriptar(public_key)
-        examen_j_son = examen.desencriptar(examen_encript, privat_key)
-        self.assertEqual(examen.to_json(), examen_j_son)
+    # def test_encript(self):
+    #     privat_key = RSA.generate(1024)
+    #     public_key = privat_key.publickey()
+    #     examen = Factoria.build_examen_from_db(self.my_db, 1)
+    #     examen_encript = examen.encriptar(public_key)
+    #     examen_j_son = examen.desencriptar(examen_encript, privat_key)
+    #     self.assertEqual(examen.to_json(), examen_j_son)
 
 
 class TestRespostaExamen(unittest.TestCase):
@@ -381,6 +379,7 @@ class TestEvaluacioExamen(unittest.TestCase):
 
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
+        self.my_db.esborrar_schema('blockchainuniversity')
         self.test = CreacioTaulaTest(self.my_db, 'blockchainuniversity')
         self.test.crear_schema_dades()
 
@@ -403,6 +402,25 @@ class TestEvaluacioExamen(unittest.TestCase):
         print(evaluacio_json)
 
 
+class TestEncriptador(unittest.TestCase):
+    def setUp(self):
+        self.my_db = MySqlBloc('localhost', 'root', 'root')
+        self.my_db.esborrar_schema('blockchainuniversity')
+        self.test = CreacioTaulaTest(self.my_db, 'blockchainuniversity')
+        self.test.crear_schema_dades()
+
+    def test_encriptar_desencriptar(self):
+        emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
+        examen = Factoria.build_examen_from_db(self.my_db, 1)
+        examen_encriptar = Encriptador(examen, emissor.public_key)
+        examen_resultat = examen_encriptar.get_dada(self.my_db.clau_privada(emissor.id))
+        examen_final = Examen.create_json(examen_resultat)
+        self.assertEqual(examen.id_document, examen_final.id_document)
+        self.assertEqual(examen.usuari.id, examen_final.usuari.id)
+        self.assertEqual(examen.pdf, examen_final.pdf)
+        self.assertEqual(examen.data_creacio, examen_final.data_creacio)
+
+
 class TestTransaction(unittest.TestCase):
 
     def setUp(self):
@@ -418,41 +436,31 @@ class TestTransaction(unittest.TestCase):
         self.test.crear_respostes()
         self.test.crear_evaluacio()
 
-    def test_creation(self):
+    @property
+    def crear_transaccio(self):
         receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
         emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
         examen = Factoria.build_examen_from_db(self.my_db, 1)
-        clau_privada_emissor = self.my_db.clau_privada(emissor.id)
-        examen_encriptar = examen.encriptar(clau_privada_emissor)
-        transaccio = Transaccio(emissor, receptor, examen_encriptar['clau'], examen_encriptar['document'],
-                                examen.id_document_blockchain)
+        examen_encriptar = Encriptador(examen, emissor.public_key)
+        transaccio = Transaccio(emissor, receptor, examen_encriptar, examen.id_document_blockchain)
+        return receptor, emissor, examen, transaccio
+
+    def test_creation(self):
+        (receptor, emissor, examen, transaccio) = self.crear_transaccio
         self.assertEqual(transaccio.emissor, emissor)
         self.assertEqual(transaccio.receptor, receptor)
 
     def test_guardar(self):
-        key = RSA.generate(1024)
-        public_key = key.publickey()
-        receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
-        emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
-        examen = Factoria.build_examen_from_db(self.my_db, 2, "Albert")
-        examen_encriptar = examen.encriptar(key)
-        transaccio_inicial = Transaccio(emissor, receptor, examen_encriptar['clau'], examen_encriptar['document'],
-                                        examen.id_document_blockchain)
+        (receptor, emissor, examen, transaccio_inicial) = self.crear_transaccio
         self.my_db.guardar_transaccio(transaccio_inicial)
         transaccio = Factoria.build_transaccio_from_db(self.my_db)
         self.assertEqual(transaccio.emissor.id, emissor.id)
         self.assertEqual(transaccio.receptor.id, receptor.id)
-        self.assertEqual(transaccio.document, transaccio_inicial.document)
+        self.assertEqual(transaccio.document.dada, transaccio_inicial.document.dada)
+        self.assertEqual(transaccio.document.clau, transaccio_inicial.document.clau)
 
     def test_to_json(self):
-        key = RSA.generate(1024)
-        public_key = key.publickey()
-        receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
-        emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
-        examen = Factoria.build_examen_from_db(self.my_db, 2, "Albert")
-        examen_encriptar = examen.encriptar(key)
-        transaccio = Transaccio(emissor, receptor, examen_encriptar['clau'], examen_encriptar['document'],
-                                        examen.id_document_blockchain)
+        (receptor, emissor, examen, transaccio) = self.crear_transaccio
         trans_json = transaccio.to_json()
         print(trans_json)
 
