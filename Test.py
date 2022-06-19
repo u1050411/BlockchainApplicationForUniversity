@@ -28,6 +28,7 @@ class CreacioTaulaTest:
         self.crear_respostes()
         self.crear_evaluacio()
         self.crear_transaccions()
+        self.crear_universitat()
 
     def crear_universitat(self):
         private_key = RSA.generate(1024)
@@ -426,6 +427,7 @@ class TestTransaction(unittest.TestCase):
         self.my_db.crear_schema(self.schema)
         self.my_db.afegir_schema(self.schema)
         self.my_db.crear_taules_inicials()
+        self.test.crear_universitat()
         self.test.crear_usuaris()
         self.test.crear_examens()
         self.test.crear_respostes()
@@ -455,8 +457,16 @@ class TestTransaction(unittest.TestCase):
 
     def test_to_json(self):
         (receptor, emissor, examen, transaccio) = self.crear_transaccio
+        uni = Factoria.build_universitat_from_db(self.my_db)
+        Encriptador(transaccio, emissor.public_key)
         trans_json = transaccio.to_json()
-        print(trans_json)
+        dada_byte = trans_json.encode("utf-8")
+        self.my_db.borrar_dades_taula(self.my_db.schema, "transaccio")
+        self.my_db.guardar_transaccio(transaccio)
+        transaccio_guardats = Factoria.build_transaccio_from_db(self.my_db)
+        trans_json2 = transaccio_guardats.to_json()
+        dada_byte2 = trans_json2.encode("utf-8")
+        print(dada_byte2)
 
     def test_encriptar(self):
         pass
@@ -482,9 +492,10 @@ class TestBloc(unittest.TestCase):
 
     def test_crear(self):
         pass
-        # transaccio = Factoria.build_transaccio_from_db(self.my_db)
-        # bloc = Bloc(1, transaccio, "")
-        # self.my_db.guardar_bloc(bloc)
+        transaccio = Factoria.build_transaccio_from_db(self.my_db)
+        uni = Factoria.build_universitat_from_db(self.my_db)
+        bloc = Bloc(1, transaccio, "", uni.public_key)
+        self.my_db.guardar_bloc(bloc)
 
 
     # self.assertEqual(bloc_prova.index, 0)

@@ -27,7 +27,7 @@ class Factoria:
     def build_universitat_from_db(my_db):
         universiat_db = my_db.importar_universitat()
         if universiat_db is not None:
-            nom, public_key_str, private_key_str = universiat_db
+            id_universitat, nom, public_key_str, private_key_str = universiat_db
             public_key = RSA.importKey(public_key_str)
             private_key = RSA.importKey(private_key_str)
             return Universitat(nom, private_key, public_key)
@@ -77,11 +77,11 @@ class Factoria:
     @staticmethod
     def build_transaccio_from_db(my_db):
         trans_db = my_db.importar_transaccions()
-        (id_trans, emissor, receptor, dada, id_document, data_creacio) = trans_db
+        (id_trans, emissor, receptor, dada_json, id_document, data_creacio) = trans_db
         emissor = Factoria.build_usuari_from_db(my_db, emissor)
         receptor = Factoria.build_usuari_from_db(my_db, receptor)
-        encript = Encriptador.crear_json(dada)
-        transaccio = Transaccio.crear_mysql(id_trans, emissor, receptor, encript, id_document, data_creacio)
+        dada = Encriptador.crear_json(dada_json)
+        transaccio = Transaccio.crear_mysql(id_trans, emissor, receptor, dada, id_document, data_creacio)
         return transaccio
 
     @staticmethod
@@ -120,9 +120,20 @@ class Encriptador:
             key_simetric = Fernet.generate_key()
             encriptar_clau = PKCS1_OAEP.new(public_key)
             self.clau = encriptar_clau.encrypt(key_simetric)
-            dada_byte = dada.to_json().encode("utf-8")
+            data_json = dada.to_json()
+            dada_byte = data_json.encode("utf-8")
             encriptador = Fernet(key_simetric)
             self.dada = encriptador.encrypt(dada_byte)
+
+    @staticmethod
+    def crear_json(dada_json):
+        encript_json = json.loads(dada_json)
+        clau = encript_json['clau']
+        dada = encript_json['dada']
+        dada_encriptat = Encriptador()
+        dada_encriptat.dada = dada
+        dada_encriptat.clau = clau
+        return dada_encriptat
 
     def get_dada(self, private_key):
         desencriptador = PKCS1_OAEP.new(private_key)
@@ -140,7 +151,6 @@ class Encriptador:
     def to_json(self):
         rest = self.to_dict()
         return json.dumps(rest, default=str)
-
 
     @staticmethod
     def crear_json(j_son):
@@ -258,7 +268,8 @@ class Document:
 
 class Examen(Document):
 
-    def __init__(self, id_document=None, professor=None, pdf=None, data_inicial=None, data_final=None, data_creacio=None):
+    def __init__(self, id_document=None, professor=None, pdf=None, data_inicial=None, data_final=None,
+                 data_creacio=None):
         super(Examen, self).__init__(id_document, 1, professor, pdf, data_creacio)
         self.data_inicial = data_inicial
         self.data_final = data_final
@@ -364,37 +375,32 @@ class Universitat:
 class Transaccio:
 
     # Classe on guardem les dades de les transaccions
-    def __init__(self, emissor=None, receptor=None, document=None, data_creacio=None):
+    def __init__(self, emissor=None, receptor=None, document=None):
         self.id = 0
         self.emissor = emissor
         self.receptor = receptor
-        self.id_document = document.id_document_blockchain
-        self.document = Encriptador(document, emissor.public_key)
-        self._data_creacio = datetime.now().isoformat()
+        self.id_document = 0
+        self.data_creacio = datetime.now().isoformat()
+        if document is not None:
+            self.document = Encriptador(document, emissor.public_key)
+            self.id_document = document.id_document_blockchain
+        else:
+            self.document = None
+            self.id_document = 0
+
 
     @classmethod
-    def crear_mysql(cls, id_trans=None, emissor=None, receptor=None, encript=None, id_document=None, data_creacio=None):
-        cls.id = id_trans
-        cls.emissor = emissor
-        cls.receptor = receptor
-        cls.id_document = id_document
-        cls.document = encript
-        cls._data_creacio = data_creacio
-        return cls
+    def crear_mysql(cls, id_trans=None, emissor=None, receptor=None, dada=None, id_document=None, data_creacio=None):
+        trans = cls(emissor, receptor, None)
+        trans.id = id_trans
+        trans.id_document = id_document
+        trans.document = dada
+        trans.data_creacio = data_creacio
+        return trans
 
     def sign(self, data):
         h = SHA1.new(data)
         return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
-
-    @property
-    def data_creacio(self):
-        return self._data_creacio
-
-    @data_creacio.setter
-    def data(self, data_creacio):
-        self._data_creacio = data_creacio
-
-    # canviar a estructura json
 
     def to_dict(self):
         return collections.OrderedDict({
@@ -443,13 +449,13 @@ class Transaccio:
 class Bloc:
     # Classe creació del bloc
 
-    def __init__(self, index=None, trans=None, hash_bloc_anterior=None, ):
+    def __init__(self, index=None, trans=None, hash_bloc_anterior=None, universitat_public_key=None):
         self._index = index
         self.data_transaccio = trans.data_creacio
         self.id_emissor = trans.emissor.id
         self.id_receptor = trans.receptor.id
         self.id_document = trans.id_document
-        self.transaccions = trans
+        self.transaccions = Encriptador(trans, universitat_public_key)
         self.hash_bloc_anterior = hash_bloc_anterior
         self.nonce = 0
 
