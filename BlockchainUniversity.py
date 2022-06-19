@@ -24,6 +24,16 @@ class Factoria:
         pass
 
     @staticmethod
+    def build_universitat_from_db(my_db):
+        universiat_db = my_db.importar_universitat()
+        if universiat_db is not None:
+            nom, public_key_str, private_key_str = universiat_db
+            public_key = RSA.importKey(public_key_str)
+            private_key = RSA.importKey(private_key_str)
+            return Universitat(nom, private_key, public_key)
+        return None
+
+    @staticmethod
     def build_usuari_from_db(my_db, id_usuari):
         if my_db.existeix_usuari(id_usuari):
             usuari_db = my_db.importar_usuari(id_usuari)
@@ -71,8 +81,7 @@ class Factoria:
         emissor = Factoria.build_usuari_from_db(my_db, emissor)
         receptor = Factoria.build_usuari_from_db(my_db, receptor)
         encript = Encriptador.crear_json(dada)
-        transaccio = Transaccio(emissor, receptor, encript, id_document, data_creacio)
-        transaccio.id = id_trans
+        transaccio = Transaccio.crear_mysql(id_trans, emissor, receptor, encript, id_document, data_creacio)
         return transaccio
 
     @staticmethod
@@ -355,16 +364,23 @@ class Universitat:
 class Transaccio:
 
     # Classe on guardem les dades de les transaccions
-    def __init__(self, emissor=None, receptor=None, document=None, id_document=None, data_creacio=None):
+    def __init__(self, emissor=None, receptor=None, document=None, data_creacio=None):
         self.id = 0
         self.emissor = emissor
         self.receptor = receptor
-        self.id_document = id_document
-        self.document = document
+        self.id_document = document.id_document_blockchain
+        self.document = Encriptador(document, emissor.public_key)
         self._data_creacio = datetime.now().isoformat()
-        if data_creacio is not None:
-            self._data_creacio = data_creacio
 
+    @classmethod
+    def crear_mysql(cls, id_trans=None, emissor=None, receptor=None, encript=None, id_document=None, data_creacio=None):
+        cls.id = id_trans
+        cls.emissor = emissor
+        cls.receptor = receptor
+        cls.id_document = id_document
+        cls.document = encript
+        cls._data_creacio = data_creacio
+        return cls
 
     def sign(self, data):
         h = SHA1.new(data)
@@ -391,28 +407,6 @@ class Transaccio:
     def to_json(self):
         rest = self.to_dict()
         return json.dumps(rest, default=str)
-
-    # def encriptar(self, public_key):
-    #     key_simetric = Fernet.generate_key()
-    #     encriptar_clau = PKCS1_OAEP.new(public_key)
-    #     clau_simetrica = encriptar_clau.encrypt(key_simetric)
-    #     trans_byte = self.to_json().encode("utf-8")
-    #     encriptador = Fernet(key_simetric)
-    #     document = encriptador.encrypt(trans_byte)
-    #     retorn = {'clau': clau_simetrica, 'document': document}
-    #     return retorn
-    #
-    # @staticmethod
-    # def desencriptar(document_encript, privat_key):
-    #     clau_examen = document_encript['clau']
-    #     examen_encriptat = document_encript['document']
-    #     desencriptador = PKCS1_OAEP.new(privat_key)
-    #     clau_simetrica = desencriptador.decrypt(clau_examen)
-    #     key_simetric = Fernet(clau_simetrica)
-    #     document = key_simetric.decrypt(examen_encriptat).decode()
-    #     return document
-
-    # Mètode que el emissor signa la transaccio
 
     def sign_transaction(self):
         # return self.emissor.sign(str(self.to_dict()).encode('utf8'))

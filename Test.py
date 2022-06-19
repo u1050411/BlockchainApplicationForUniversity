@@ -99,8 +99,7 @@ class CreacioTaulaTest:
         receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
         emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
         examen = Factoria.build_examen_from_db(self.my_db, 1)
-        examen_encriptat = Encriptador(examen, emissor.public_key)
-        transaccio_inicial = Transaccio(emissor, receptor, examen_encriptat, examen.id_document_blockchain)
+        transaccio_inicial = Transaccio(emissor, receptor, examen)
         tr = transaccio_inicial.document.to_json
         self.my_db.guardar_transaccio(transaccio_inicial)
         emissor2 = receptor
@@ -109,8 +108,7 @@ class CreacioTaulaTest:
                      f'/Examen_2021_20_10_01_primer_parcial-solucio.pdf'
         pdf = self.my_db.recuperar_fitxer(nom_fitxer)
         resposta = RespostaExamen(1, 1, emissor2, pdf)
-        resposta_encriptat = Encriptador(resposta, receptor.public_key)
-        transaccio2 = Transaccio(emissor2, receptor2, resposta_encriptat, resposta.id_document_blockchain)
+        transaccio2 = Transaccio(emissor2, receptor2, resposta)
         self.my_db.guardar_transaccio(transaccio2)
 
 
@@ -284,10 +282,7 @@ class TestFactoria(unittest.TestCase):
         receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
         emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
         examen = Factoria.build_examen_from_db(self.my_db, 1)
-        # clau_privada_emissor = self.my_db.clau_privada(emissor.id)
-        examen_encriptat = Encriptador(examen, emissor.public_key)
-        # examen_encriptar = examen.encriptar(emissor.)
-        transaccio_inicial = Transaccio(emissor, receptor, examen_encriptat, examen.id_document_blockchain)
+        transaccio_inicial = Transaccio(emissor, receptor, examen)
         self.my_db.guardar_transaccio(transaccio_inicial)
         self.my_db.borrar_dades_taula(self.my_db.schema, "transaccio")
         self.my_db.guardar_transaccio(transaccio_inicial)
@@ -441,8 +436,7 @@ class TestTransaction(unittest.TestCase):
         receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
         emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
         examen = Factoria.build_examen_from_db(self.my_db, 1)
-        examen_encriptar = Encriptador(examen, emissor.public_key)
-        transaccio = Transaccio(emissor, receptor, examen_encriptar, examen.id_document_blockchain)
+        transaccio = Transaccio(emissor, receptor, examen)
         return receptor, emissor, examen, transaccio
 
     def test_creation(self):
@@ -463,6 +457,19 @@ class TestTransaction(unittest.TestCase):
         (receptor, emissor, examen, transaccio) = self.crear_transaccio
         trans_json = transaccio.to_json()
         print(trans_json)
+
+    def test_encriptar(self):
+        pass
+        # (receptor, emissor, examen, transaccio) = self.crear_transaccio
+        # uni = Factoria.build_universitat_from_db(self.my_db)
+        # encriptat = Encriptador(transaccio, uni.public_key)
+        # transaccio_resultat = encriptat.get_dada(uni.private_key)
+        # examen_final = Transaccio..create_json(examen_resultat)
+        # self.assertEqual(examen.id_document, examen_final.id_document)
+        # self.assertEqual(examen.usuari.id, examen_final.usuari.id)
+        # self.assertEqual(examen.pdf, examen_final.pdf)
+        # self.assertEqual(examen.data_creacio, examen_final.data_creacio)
+
 
 
 class TestBloc(unittest.TestCase):

@@ -194,6 +194,10 @@ class MySqlBloc:
               f'LIMIT 1'
         return self.importar_sql(sql)
 
+    def importar_universitat(self):
+        sql = f'select * from universitat LIMIT 1'
+        return self.importar_sql(sql)
+
     def esborrar_schema(self, schema):
         if self.existeix(schema, None, None, None):
             sql = f"DROP DATABASE `{schema}`"
