@@ -458,28 +458,19 @@ class TestTransaction(unittest.TestCase):
     def test_to_json(self):
         (receptor, emissor, examen, transaccio) = self.crear_transaccio
         uni = Factoria.build_universitat_from_db(self.my_db)
-        Encriptador(transaccio, emissor.public_key)
         trans_json = transaccio.to_json()
-        dada_byte = trans_json.encode("utf-8")
-        self.my_db.borrar_dades_taula(self.my_db.schema, "transaccio")
-        self.my_db.guardar_transaccio(transaccio)
-        transaccio_guardats = Factoria.build_transaccio_from_db(self.my_db)
-        trans_json2 = transaccio_guardats.to_json()
-        dada_byte2 = trans_json2.encode("utf-8")
-        print(dada_byte2)
+        print(trans_json)
 
-    def test_encriptar(self):
-        pass
-        # (receptor, emissor, examen, transaccio) = self.crear_transaccio
-        # uni = Factoria.build_universitat_from_db(self.my_db)
-        # encriptat = Encriptador(transaccio, uni.public_key)
-        # transaccio_resultat = encriptat.get_dada(uni.private_key)
-        # examen_final = Transaccio..create_json(examen_resultat)
-        # self.assertEqual(examen.id_document, examen_final.id_document)
-        # self.assertEqual(examen.usuari.id, examen_final.usuari.id)
-        # self.assertEqual(examen.pdf, examen_final.pdf)
-        # self.assertEqual(examen.data_creacio, examen_final.data_creacio)
-
+    def test_encriptar_desencriptar(self):
+        (receptor, emissor, examen, transaccio_inicial) = self.crear_transaccio
+        uni = Factoria.build_universitat_from_db(self.my_db)
+        transaccio_encriptat = Encriptador(transaccio_inicial, uni.public_key)
+        transaccio_json = Encriptador.get_dada(transaccio_encriptat, uni.private_key)
+        transaccio_final = Transaccio.crear_json(transaccio_json)
+        self.assertEqual(transaccio_inicial.emissor.id, transaccio_final.emissor.id)
+        self.assertEqual(transaccio_inicial.id_document, transaccio_final.id_document)
+        self.assertEqual(transaccio_inicial.document.dada, transaccio_final.document.dada)
+        self.assertEqual(transaccio_inicial.document.clau, transaccio_final.document.clau)
 
 
 class TestBloc(unittest.TestCase):

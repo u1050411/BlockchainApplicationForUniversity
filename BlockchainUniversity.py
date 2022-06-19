@@ -27,7 +27,7 @@ class Factoria:
     def build_universitat_from_db(my_db):
         universiat_db = my_db.importar_universitat()
         if universiat_db is not None:
-            id_universitat, nom, public_key_str, private_key_str = universiat_db
+            id_universitat, nom, private_key_str, public_key_str = universiat_db
             public_key = RSA.importKey(public_key_str)
             private_key = RSA.importKey(private_key_str)
             return Universitat(nom, private_key, public_key)
@@ -376,7 +376,7 @@ class Transaccio:
 
     # Classe on guardem les dades de les transaccions
     def __init__(self, emissor=None, receptor=None, document=None):
-        self.id = 0
+        self.id_transaccio = 0
         self.emissor = emissor
         self.receptor = receptor
         self.id_document = 0
@@ -388,11 +388,21 @@ class Transaccio:
             self.document = None
             self.id_document = 0
 
+    @classmethod
+    def crear_json(cls, dada):
+        trans_json = json.loads(dada)
+        id_transaccio = trans_json['id_transaccio']
+        emissor = Usuari.crear_json(trans_json['emissor'])
+        receptor = Usuari.crear_json(trans_json['receptor'])
+        id_document = trans_json['id_document']
+        data_creacio = trans_json['data_creacio']
+        dada = Encriptador.crear_json(trans_json['document'])
+        return cls.crear_mysql(id_transaccio, emissor, receptor, dada, id_document, data_creacio)
 
     @classmethod
     def crear_mysql(cls, id_trans=None, emissor=None, receptor=None, dada=None, id_document=None, data_creacio=None):
         trans = cls(emissor, receptor, None)
-        trans.id = id_trans
+        trans.id_transaccio = id_trans
         trans.id_document = id_document
         trans.document = dada
         trans.data_creacio = data_creacio
@@ -404,11 +414,12 @@ class Transaccio:
 
     def to_dict(self):
         return collections.OrderedDict({
-            'Emissor': self.emissor.to_json(),
-            'Receptor': self.receptor.to_json(),
-            'Id_Document': self.id_document,
-            'Document': self.document.to_json(),
-            'Data_Creacio': self.data_creacio})
+            'id_transaccio': self.id_transaccio,
+            'emissor': self.emissor.to_json(),
+            'receptor': self.receptor.to_json(),
+            'id_document': self.id_document,
+            'document': self.document.to_json(),
+            'data_creacio': self.data_creacio})
 
     def to_json(self):
         rest = self.to_dict()
