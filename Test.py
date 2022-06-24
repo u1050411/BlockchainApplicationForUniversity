@@ -487,6 +487,12 @@ class TestBloc(unittest.TestCase):
         bloc = self.test_crear()
         self.assertEqual(bloc.calcular_hash(), bloc.calcular_hash())
 
+    def test_importar_ultim_bloc(self):
+        self.test_guardar()
+        num_bloc = self.my_db.id_ultim_bloc()
+        bloc = Factoria.build_bloc_from_db(self.my_db, num_bloc)
+        self.assertEqual(bloc.calcular_hash(), bloc.calcular_hash())
+
 
 class TestBlockchainUniversity(unittest.TestCase):
     pass
