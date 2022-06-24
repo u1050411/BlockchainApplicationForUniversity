@@ -10,7 +10,6 @@ from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA1
 from Crypto.PublicKey import RSA
 from cryptography.fernet import Fernet
-from matplotlib.font_manager import _json_decode
 
 UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
@@ -22,6 +21,11 @@ class Factoria:
 
     def __init__(self):
         pass
+
+    @staticmethod
+    def to_json(dada):
+        rest = dada.to_dict()
+        return json.dumps(rest, indent=4, sort_keys=True, default=str)
 
     @staticmethod
     def build_universitat_from_db(my_db):
@@ -75,6 +79,18 @@ class Factoria:
         return None
 
     @staticmethod
+    def build_bloc_from_db(my_db, id_bloc):
+        bloc_db = my_db.importar_bloc(id_bloc)
+        (id_bloc, data_transaccio, id_emissor, id_receptor, id_document, transaccio_encriptat, hash_bloc) = bloc_db
+        uni = Factoria.build_universitat_from_db(my_db)
+        transaccio_json = Encriptador.crear_json(transaccio_encriptat)
+        transaccio = Transaccio.crear_json(transaccio_json.desencriptar(uni.private_key))
+        bloc = Bloc(transaccio, "asfassdfsadfsa", uni.public_key)
+        bloc.id_bloc = id_bloc
+        return bloc
+
+
+    @staticmethod
     def build_transaccio_from_db(my_db):
         trans_db = my_db.importar_transaccions()
         (id_trans, emissor, receptor, dada_json, id_document, data_creacio) = trans_db
@@ -120,7 +136,7 @@ class Encriptador:
             key_simetric = Fernet.generate_key()
             encriptar_clau = PKCS1_OAEP.new(public_key)
             self.clau = encriptar_clau.encrypt(key_simetric)
-            data_json = dada.to_json()
+            data_json = Factoria.to_json(dada)
             dada_byte = data_json.encode("utf-8")
             encriptador = Fernet(key_simetric)
             self.dada = encriptador.encrypt(dada_byte)
@@ -135,12 +151,12 @@ class Encriptador:
         dada_encriptat.clau = clau
         return dada_encriptat
 
-    def get_dada(self, private_key):
-        desencriptador = PKCS1_OAEP.new(private_key)
-        clau_simetrica = desencriptador.decrypt(self.clau)
-        key_simetric = Fernet(clau_simetrica)
-        dada_desencriptada = key_simetric.decrypt(self.dada).decode()
-        return dada_desencriptada
+    # def get_dada(self, private_key):
+    #     desencriptador = PKCS1_OAEP.new(private_key)
+    #     clau_simetrica = desencriptador.decrypt(self.clau)
+    #     key_simetric = Fernet(clau_simetrica)
+    #     dada_desencriptada = key_simetric.decrypt(self.dada).decode()
+    #     return dada_desencriptada
 
     def to_dict(self):
         return collections.OrderedDict({
@@ -148,9 +164,6 @@ class Encriptador:
             'dada': self.dada
         })
 
-    def to_json(self):
-        rest = self.to_dict()
-        return json.dumps(rest, default=str)
 
     @staticmethod
     def crear_json(j_son):
@@ -159,14 +172,11 @@ class Encriptador:
         nou.dada = ast.literal_eval(json.loads(j_son)['dada'])
         return nou
 
-    @staticmethod
-    def desencriptar(origen_encript, public_key):
-        clau_dada = origen_encript['clau']
-        retorn_encriptat = origen_encript['dada']
-        desencriptador = PKCS1_OAEP.new(public_key)
-        clau_simetrica = desencriptador.decrypt(clau_dada)
+    def desencriptar(self, privat_key):
+        desencriptador = PKCS1_OAEP.new(privat_key)
+        clau_simetrica = desencriptador.decrypt(self.clau)
         key_simetric = Fernet(clau_simetrica)
-        dada_desencriptada = key_simetric.decrypt(retorn_encriptat).decode()
+        dada_desencriptada = key_simetric.decrypt(self.dada).decode()
         return dada_desencriptada
 
 
@@ -219,9 +229,9 @@ class Usuari:
     #         usuari = Professor(id_usuari, nif, nom, cognom, public_key)
     #     return usuari
 
-    def to_json(self):
-        rest = self.to_dict()
-        return json.dumps(rest, default=str)
+    # def to_json(self):
+    #     rest = self.to_dict()
+    #     return json.dumps(rest, default=str)
 
     def str_publickey(self):
         return self.public_key.exportKey('PEM').decode('ascii')
@@ -258,12 +268,12 @@ class Document:
             'id_document': "Usuari",  # self.id_document,
             'data_creacio': self.data_creacio,
             'id_tipus': self.tipus,
-            'usuari': self.usuari.to_json(),
+            'usuari': Factoria.to_json(self.usuari),
             'pdf': self.pdf})
 
-    def to_json(self):
-        rest = self.to_dict()
-        return json.dumps(rest, indent=4, sort_keys=True, default=str)
+    # def to_json(self):
+    #     rest = self.to_dict()
+    #     return json.dumps(rest, indent=4, sort_keys=True, default=str)
 
 
 class Examen(Document):
@@ -298,7 +308,7 @@ class Examen(Document):
     def to_dict(self):
         llista_json = []
         for x in self.estudiants:
-            estudiant_json = x.to_json()
+            estudiant_json = Factoria.to_json(x)
             llista_json.append(estudiant_json)
         return collections.OrderedDict({
             'id_document': self.id_document,
@@ -306,7 +316,7 @@ class Examen(Document):
             'data_inicial': self.data_inicial,
             'data_final': self.data_final,
             'id_tipus': self.tipus,
-            'professor': self.usuari.to_json(),
+            'professor': Factoria.to_json(self.usuari),
             'pdf': self.pdf,
             'estudiants': [llista_json]
         })
@@ -330,7 +340,7 @@ class RespostaExamen(Document):
             'id_examen': self.id_examen,
             'data_creacio': self.data_creacio,
             'id_tipus': self.tipus,
-            'estudiant': self.usuari.to_json(),
+            'estudiant': Factoria.to_json(self.usuari),
             'pdf': self.pdf
         })
 
@@ -352,7 +362,7 @@ class EvaluacioExamen(Document):
             'id_examen': self.id_examen,
             'data_creacio': self.data_creacio,
             'id_tipus': self.tipus,
-            'professor': self.usuari.to_json(),
+            'professor': Factoria.to_json(self.usuari),
             'pdf': self.pdf
         })
 
@@ -415,85 +425,46 @@ class Transaccio:
     def to_dict(self):
         return collections.OrderedDict({
             'id_transaccio': self.id_transaccio,
-            'emissor': self.emissor.to_json(),
-            'receptor': self.receptor.to_json(),
+            'emissor': Factoria.to_json(self.emissor),
+            'receptor': Factoria.to_json(self.receptor),
             'id_document': self.id_document,
-            'document': self.document.to_json(),
+            'document': Factoria.to_json(self.document),
             'data_creacio': self.data_creacio})
 
-    def to_json(self):
-        rest = self.to_dict()
-        return json.dumps(rest, default=str)
+    # def to_json(self):
+    #     rest = self.to_dict()
+    #     return json.dumps(rest, default=str)
 
     def sign_transaction(self):
         # return self.emissor.sign(str(self.to_dict()).encode('utf8'))
-        block_json = self.to_json()
+        block_json = Factoria.to_json(self)
         return self.emissor.sign(block_json.encode(UTF_8))
-
-    # def encriptar(self, public_key):
-    #     key_simetric = Fernet.generate_key()
-    #     encriptar_clau = PKCS1_OAEP.new(public_key)
-    #     clau_simetrica = encriptar_clau.encrypt(key_simetric)
-    #     examen_byte = self.to_json().encode("utf-8")
-    #     encriptador = Fernet(key_simetric)
-    #     document = encriptador.encrypt(examen_byte)
-    #     retorn = {'clau': clau_simetrica, 'document': document}
-    #     return retorn
-    #
-    # @staticmethod
-    # def desencriptar(examen_encript, public_key):
-    #     clau_examen = examen_encript['clau']
-    #     examen_encriptat = examen_encript['document']
-    #     desencriptador = PKCS1_OAEP.new(public_key)
-    #     clau_simetrica = desencriptador.decrypt(clau_examen)
-    #     key_simetric = Fernet(clau_simetrica)
-    #     examen = key_simetric.decrypt(examen_encriptat).decode()
-    #     return examen
-
-
-# class TransaccioExamen(Transaccio):
-#
-#     def __init__(self, emissor=None, receptor=None, examen=None):
-#         super().__init__(emissor, receptor, examen)
 
 
 class Bloc:
     # Classe creació del bloc
-
-    def __init__(self, index=None, trans=None, hash_bloc_anterior=None, universitat_public_key=None):
-        self._index = index
+    def __init__(self, trans=None, hash_bloc_anterior=None, universitat_public_key=None):
+        self.index = 0
         self.data_transaccio = trans.data_creacio
         self.id_emissor = trans.emissor.id
         self.id_receptor = trans.receptor.id
         self.id_document = trans.id_document
-        self.transaccions = Encriptador(trans, universitat_public_key)
+        self.transaccio = Encriptador(trans, universitat_public_key)
         self.hash_bloc_anterior = hash_bloc_anterior
         self.nonce = 0
 
-    @property
-    def index(self):
-        return self._index
-
-    @property
-    def timestamp(self):
-        return self._timestamp
-
-    @property
-    def previous_block_hash(self):
-        return self.hash_bloc_anterior
-
-    @property
-    def transaccio(self):
-        return self._transaccio
+    @classmethod
+    def crear_json(cls, dada):
+        pass
 
     def to_dict(self):
         return collections.OrderedDict({
-            'index': self._index,
-            'timestamp': self.timestamp,
-            'id_emissor': self.emissor.id,
-            'id_receptor': self.receptor.id,
-            'id_document': self.document.id,
-            'transaccions': self.transaccions,
+            'index': self.index,
+            'data_transaccio': self.data_transaccio,
+            'id_emissor': self.id_emissor,
+            'id_receptor': self.id_receptor,
+            'id_document': self.id_document,
+            'transaccions':Factoria.to_json(self.transaccio),
             'hash_bloc_anterior': self.hash_bloc_anterior})
 
     def calcular_hash(self):
@@ -502,14 +473,13 @@ class Bloc:
         return hashlib.sha256(block_string.encode()).hexdigest()
 
     def guardar_bloc(self, my_db):
-        id_bloc = self.timestamp
-        timestamp = self.timestamp
-        id_emissor = self.transaccio.emissor.id
-        id_receptor = self.transaccio.receptor.id
-        id_doc = self.transaccio.document.id_document_blockchain()
+        data_transaccio = self.data_transaccio
+        id_emissor = self.id_emissor
+        id_receptor = self.id_receptor
+        id_doc = self.id_document
         transaccio = self.transaccio
-        hash_bloc = self.calcular_hash()
-        my_db.guardar_bloc(id_bloc, timestamp, id_emissor, id_receptor, id_doc, transaccio, hash_bloc)
+        hash_bloc = self.hash_bloc_anterior
+        my_db.guardar_bloc(data_transaccio, id_emissor, id_receptor, id_doc, transaccio, hash_bloc)
 
 
 class BlockchainUniversity:

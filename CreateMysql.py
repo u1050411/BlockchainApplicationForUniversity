@@ -6,6 +6,7 @@ from Crypto.PublicKey import RSA
 from mysql.connector import errorcode, cursor
 
 # from BlockchainUniversity import Usuari
+from BlockchainUniversity import Factoria
 
 UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
@@ -65,7 +66,6 @@ class MySqlBloc:
                 "`id_transaccio` INT NOT NULL AUTO_INCREMENT,"
                 "`id_emissor` INT NOT NULL,"
                 "`id_receptor` INT NOT NULL,"
-                # "`clau` LONGBLOB NOT NULL ,"
                 "`document` JSON NOT NULL ,"
                 "`id_document` INT NOT NULL ,"
                 "`data_creacio` DATETIME NOT NULL ,"
@@ -96,12 +96,12 @@ class MySqlBloc:
 
                 "CREATE TABLE if not exists `bloc` ("
                 "`id_bloc` INT NOT NULL AUTO_INCREMENT,"
-                "`time` DATETIME NOT NULL,"
+                "`data_transaccio` DATETIME NOT NULL,"
                 "`id_emissor` INT NOT NULL,"
                 "`id_receptor` INT NOT NULL,"
                 "`id_document` INT NOT NULL,"
-                "`transaccio` LONGBLOB  NULL,"
-                "`hash` LONGBLOB  NULL,"
+                "`transaccio` JSON  NOT NULL,"
+                "`hash_bloc_anterior` LONGBLOB  NOT NULL,"
                 "PRIMARY KEY (`id_bloc`))",
 
                 "CREATE TABLE if not exists `Universitat` ("
@@ -198,6 +198,11 @@ class MySqlBloc:
         sql = f'select * from universitat LIMIT 1'
         return self.importar_sql(sql)
 
+    def importar_bloc(self, id_bloc):
+        sql = f'select id_bloc, data_transaccio, id_emissor, id_receptor, id_document, transaccio, hash_bloc_anterior ' \
+              f'from `bloc` where `id_bloc` = {id_bloc} LIMIT 1'
+        return self.importar_sql(sql)
+
     def esborrar_schema(self, schema):
         if self.existeix(schema, None, None, None):
             sql = f"DROP DATABASE `{schema}`"
@@ -275,9 +280,15 @@ class MySqlBloc:
         self.exportar_sql(sql, dades)
 
     def guardar_bloc(self, bloc):
-        sql = "INSERT INTO usuari (time, id_emissor, id_receptor, id_document, transaccio, hash) " \
+        data_transaccio = bloc.data_transaccio
+        id_emissor = bloc.id_emissor
+        id_receptor = bloc.id_receptor
+        id_doc = bloc.id_document
+        transaccio = bloc.transaccio
+        hash_bloc = bloc.hash_bloc_anterior
+        sql = "INSERT INTO bloc (data_transaccio, id_emissor, id_receptor, id_document, transaccio, hash_bloc_anterior) " \
               "VALUES (%s, %s, %s, %s, %s, %s)"
-        dades = (bloc.data_transaccio, bloc.id_emissor, bloc.id_receptor, bloc.id_document, bloc.transaccions, '')
+        dades = (data_transaccio, id_emissor, id_receptor, id_doc, Factoria.to_json(transaccio), hash_bloc)
         self.exportar_sql(sql, dades)
 
     @staticmethod
@@ -320,7 +331,7 @@ class MySqlBloc:
         self.exportar_sql(sql, dades)
 
     def guardar_transaccio(self, transaccio):
-        encrip_to_json = transaccio.document.to_json()
+        encrip_to_json = Factoria.to_json(transaccio.document)
         sql = "INSERT INTO transaccio(id_emissor, id_receptor, document, id_document, data_creacio) " \
               "VALUES (%s, %s, %s, %s, %s)"
         dades = (transaccio.emissor.id, transaccio.receptor.id, encrip_to_json,

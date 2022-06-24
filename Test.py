@@ -101,7 +101,6 @@ class CreacioTaulaTest:
         emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
         examen = Factoria.build_examen_from_db(self.my_db, 1)
         transaccio_inicial = Transaccio(emissor, receptor, examen)
-        tr = transaccio_inicial.document.to_json
         self.my_db.guardar_transaccio(transaccio_inicial)
         emissor2 = receptor
         receptor2 = emissor
@@ -265,6 +264,13 @@ class TestFactoria(unittest.TestCase):
         self.assertEqual(examen.id_document, 1)
         self.assertEqual(examen.usuari.id, 2050404)
 
+    def test_to_json(self):
+        examen = Factoria.build_examen_from_db(self.my_db, 1)
+        exament_print = examen.to_dict()
+        print(exament_print)
+        examen_json = Factoria.to_json(examen)
+        print(examen_json)
+
     def test_resposta(self):
         resposta = Factoria.build_resposta_alumne_from_db(self.my_db, 1, 1)
         self.assertEqual(resposta.id_document, 1)
@@ -290,6 +296,15 @@ class TestFactoria(unittest.TestCase):
         transaccio_guardat = Factoria.build_transaccio_from_db(self.my_db)
         self.assertEqual(transaccio_inicial.emissor.id, transaccio_guardat.emissor.id)
         self.assertEqual(transaccio_inicial.receptor.id, transaccio_guardat.receptor.id)
+
+    def test_bloc(self):
+        transaccio = Factoria.build_transaccio_from_db(self.my_db)
+        uni = Factoria.build_universitat_from_db(self.my_db)
+        bloc = Bloc(transaccio, "41b8e84497b3d73038a397e8b5e100", uni.public_key)
+        self.my_db.guardar_bloc(bloc)
+        bloc_final = Factoria.build_bloc_from_db(self.my_db, 1)
+        transaccio_final = Transaccio.crear_json(bloc_final.transaccio.desencriptar(uni.private_key))
+        self.assertEqual(transaccio_final.emissor.id, transaccio.emissor.id)
 
 
 class TestExamen(unittest.TestCase):
@@ -325,21 +340,6 @@ class TestExamen(unittest.TestCase):
         num_document = self.my_db.seguent_id_examen()
         self.assertIsNotNone(num_document)
 
-    def test_to_json(self):
-        examen = Factoria.build_examen_from_db(self.my_db, 1)
-        exament_print = examen.to_dict()
-        print(exament_print)
-        examen_json = examen.to_json()
-        print(examen_json)
-
-    # def test_encript(self):
-    #     privat_key = RSA.generate(1024)
-    #     public_key = privat_key.publickey()
-    #     examen = Factoria.build_examen_from_db(self.my_db, 1)
-    #     examen_encript = examen.encriptar(public_key)
-    #     examen_j_son = examen.desencriptar(examen_encript, privat_key)
-    #     self.assertEqual(examen.to_json(), examen_j_son)
-
 
 class TestRespostaExamen(unittest.TestCase):
 
@@ -362,13 +362,6 @@ class TestRespostaExamen(unittest.TestCase):
     def test_seguent_numero(self):
         num_document = self.my_db.seguent_id_resposta()
         self.assertIsNotNone(num_document)
-
-    def test_to_json(self):
-        resposta = Factoria.build_resposta_examen_from_db(self.my_db, 1,  1)
-        resposta_print = resposta.to_dict()
-        print(resposta_print)
-        examen_json = resposta.to_json()
-        print(examen_json)
 
 
 class TestEvaluacioExamen(unittest.TestCase):
@@ -394,7 +387,7 @@ class TestEvaluacioExamen(unittest.TestCase):
         evaluacio = Factoria.build_evaluacio_examen_from_db(self.my_db, 1, 3)
         evaluacio_print = evaluacio.to_dict()
         print(evaluacio_print)
-        evaluacio_json = evaluacio.to_json()
+        evaluacio_json = Factoria.to_json(evaluacio)
         print(evaluacio_json)
 
 
@@ -409,7 +402,7 @@ class TestEncriptador(unittest.TestCase):
         emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
         examen = Factoria.build_examen_from_db(self.my_db, 1)
         examen_encriptar = Encriptador(examen, emissor.public_key)
-        examen_resultat = examen_encriptar.get_dada(self.my_db.clau_privada(emissor.id))
+        examen_resultat = examen_encriptar.desencriptar(self.my_db.clau_privada(emissor.id))
         examen_final = Examen.create_json(examen_resultat)
         self.assertEqual(examen.id_document, examen_final.id_document)
         self.assertEqual(examen.usuari.id, examen_final.usuari.id)
@@ -455,17 +448,16 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(transaccio.document.dada, transaccio_inicial.document.dada)
         self.assertEqual(transaccio.document.clau, transaccio_inicial.document.clau)
 
-    def test_to_json(self):
-        (receptor, emissor, examen, transaccio) = self.crear_transaccio
-        uni = Factoria.build_universitat_from_db(self.my_db)
-        trans_json = transaccio.to_json()
-        print(trans_json)
+    # def test_to_json(self):
+    #     (receptor, emissor, examen, transaccio) = self.crear_transaccio
+    #     trans_json = transaccio.to_json()
+    #     print(trans_json)
 
     def test_encriptar_desencriptar(self):
         (receptor, emissor, examen, transaccio_inicial) = self.crear_transaccio
         uni = Factoria.build_universitat_from_db(self.my_db)
         transaccio_encriptat = Encriptador(transaccio_inicial, uni.public_key)
-        transaccio_json = Encriptador.get_dada(transaccio_encriptat, uni.private_key)
+        transaccio_json = transaccio_encriptat.desencriptar(uni.private_key)
         transaccio_final = Transaccio.crear_json(transaccio_json)
         self.assertEqual(transaccio_inicial.emissor.id, transaccio_final.emissor.id)
         self.assertEqual(transaccio_inicial.id_document, transaccio_final.id_document)
@@ -482,30 +474,19 @@ class TestBloc(unittest.TestCase):
         self.test.crear_schema_dades()
 
     def test_crear(self):
-        pass
         transaccio = Factoria.build_transaccio_from_db(self.my_db)
         uni = Factoria.build_universitat_from_db(self.my_db)
-        bloc = Bloc(1, transaccio, "", uni.public_key)
+        bloc = Bloc(transaccio, "41b8e84497b3d73038a397e8b5e100", uni.public_key)
+        return bloc
+
+    def test_guardar(self):
+        bloc = self.test_crear()
         self.my_db.guardar_bloc(bloc)
 
+    def test_calcular_Hash(self):
+        bloc = self.test_crear()
+        self.assertEqual(bloc.calcular_hash(), bloc.calcular_hash())
 
-    # self.assertEqual(bloc_prova.index, 0)
-    # self.assertEqual(bloc_prova.transaccio, t1)
-    # self.assertEqual(bloc_prova.hash_bloc_anterior, '0')
-
-    # Revisar dona un hash diferent cada cop
-    # def test_calcular_Hash(self):
-    #     key = RSA.generate(1024)
-    #     public_key = key.publickey()
-    #     receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
-    #     emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
-    #     examen = Factoria.build_examen_from_db(self.my_db, 1)
-    #     examen_encriptar = examen.encriptar(public_key)
-    #     transaccio = Transaccio(emissor, receptor, examen_encriptar)
-    #     bloc_prova = Bloc(0, '0', transaccio)
-    #     hash_anterior = bloc_prova.calcular_hash()
-    #     print(hash_anterior)
-    #     # self.assertEqual(hash_anterior, '62a1420789f37ee5ddfb6524170c3cf0f5a7083f007e85bcd119bf814befef5a')
 
 class TestBlockchainUniversity(unittest.TestCase):
     pass
