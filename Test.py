@@ -3,7 +3,7 @@ import unittest
 from Crypto.PublicKey import RSA
 
 from BlockchainUniversity import Estudiant, Transaccio, Professor, Examen, Factoria, RespostaExamen, EvaluacioExamen, \
-    Bloc, Universitat, Encriptador, Document
+    Bloc, Universitat, Encriptador, Document, BlockchainUniversity
 from CreateMysql import MySqlBloc
 
 UTF_8 = 'utf8'
@@ -63,7 +63,7 @@ class CreacioTaulaTest:
                        , '2022-10-01T13:00']]
 
         for id_document, nom_fitxer, id_professor, data_inicial, data_final in examens:
-            pdf = self.my_db.recuperar_fitxer(nom_fitxer)
+            pdf = Factoria.recuperar_fitxer(nom_fitxer)
             professor = Factoria.build_usuari_from_db(self.my_db, id_professor)
             examen = Examen(id_document, professor, pdf, data_inicial, data_final)
             estudiant = Factoria.build_usuari_from_db(self.my_db, '1050402')
@@ -78,7 +78,7 @@ class CreacioTaulaTest:
                       f'Examen_2020-21-_26-03_primer_parcial.pdf']]
 
         for id_resposta, id_examen, id_usuari,  nom_fitxer in respostes:
-            pdf = self.my_db.recuperar_fitxer(nom_fitxer)
+            pdf = Factoria.recuperar_fitxer(nom_fitxer)
             estudiant = Factoria.build_usuari_from_db(self.my_db, id_usuari)
             resposta = RespostaExamen(id_resposta, id_examen, estudiant, pdf)
             self.my_db.guardar_resposta_examen(resposta)
@@ -91,7 +91,7 @@ class CreacioTaulaTest:
                       f'Examen_2020-21-_26-03_primer_parcial.pdf']]
 
         for id_resposta, id_examen, id_usuari,  nom_fitxer in respostes:
-            pdf = self.my_db.recuperar_fitxer(nom_fitxer)
+            pdf = Factoria.recuperar_fitxer(nom_fitxer)
             professor = Factoria.build_usuari_from_db(self.my_db, id_usuari)
             resposta = EvaluacioExamen(id_resposta, id_examen, professor, pdf)
             self.my_db.guardar_resposta_examen(resposta)
@@ -106,7 +106,7 @@ class CreacioTaulaTest:
         receptor2 = emissor
         nom_fitxer = f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf' \
                      f'/Examen_2021_20_10_01_primer_parcial-solucio.pdf'
-        pdf = self.my_db.recuperar_fitxer(nom_fitxer)
+        pdf = Factoria.recuperar_fitxer(nom_fitxer)
         resposta = RespostaExamen(1, 1, emissor2, pdf)
         transaccio2 = Transaccio(emissor2, receptor2, resposta)
         self.my_db.guardar_transaccio(transaccio2)
@@ -236,7 +236,7 @@ class TestMysql(unittest.TestCase):
         self.test.crear_schema_dades()
         nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
-        pdf = self.my_db.recuperar_fitxer(nom_fitxer)
+        pdf = Factoria.recuperar_fitxer(nom_fitxer)
         estudiant = Factoria.build_usuari_from_db(self.my_db, 1050411)
         id_resposta = self.my_db.seguent_id_resposta()
         resposta = RespostaExamen(id_resposta, 1, estudiant, pdf)
@@ -318,7 +318,7 @@ class TestExamen(unittest.TestCase):
     def test_creacio_examen(self):
         nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
-        pdf = MySqlBloc.recuperar_fitxer(nom_fitxer)
+        pdf = Factoria.recuperar_fitxer(nom_fitxer)
         professor = Factoria.build_usuari_from_db(self.my_db, 2000256)
         examen = Examen(1111, professor, pdf, '00000000', '00000000')
 
@@ -328,7 +328,7 @@ class TestExamen(unittest.TestCase):
         examen.estudiants.append(estudiant2)
         nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
-        pdf = MySqlBloc.recuperar_fitxer(nom_fitxer)
+        pdf = Factoria.recuperar_fitxer(nom_fitxer)
         estudiant = Factoria.build_usuari_from_db(self.my_db, 1050411)
         resposta = RespostaExamen(1, 1, estudiant, pdf)
         examen.respostes.append(resposta)
@@ -351,7 +351,7 @@ class TestRespostaExamen(unittest.TestCase):
     def test_creacio_resposta_examen(self):
         nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
-        pdf = MySqlBloc.recuperar_fitxer(nom_fitxer)
+        pdf = Factoria.recuperar_fitxer(nom_fitxer)
         estudiant = Factoria.build_usuari_from_db(self.my_db, 1050411)
         resposta = RespostaExamen(1, 1, estudiant, pdf)
         self.assertEqual(resposta.id_document, 1)
@@ -375,7 +375,7 @@ class TestEvaluacioExamen(unittest.TestCase):
     def test_creacio_resposta_examen(self):
         nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
-        pdf = MySqlBloc.recuperar_fitxer(nom_fitxer)
+        pdf = Factoria.recuperar_fitxer(nom_fitxer)
         estudiant = Factoria.build_usuari_from_db(self.my_db, 1050411)
         resposta = EvaluacioExamen(1, 1, estudiant, pdf)
         self.assertEqual(resposta.id_document, 1)
@@ -495,14 +495,21 @@ class TestBloc(unittest.TestCase):
 
 
 class TestBlockchainUniversity(unittest.TestCase):
-    pass
 
-    # def test_crear_genesis_bloc(self):
-    #     bloc_chain = BlockchainUniversity()
-    #     bloc = bloc_chain.ultim_bloc
-    #     self.assertEqual(bloc.index, 0)
-    #     self.assertEqual(bloc.transaccio, [])
-    #     self.assertEqual(bloc.hash_bloc_anterior, '0')
+    def setUp(self):
+        self.my_db = MySqlBloc('localhost', 'root', 'root')
+        self.schema = 'blockchainuniversity'
+        self.test = CreacioTaulaTest(self.my_db, self.schema)
+        self.test.crear_schema_dades()
+
+    def test_crear_genesis_bloc(self):
+        bloc_chain = BlockchainUniversity(self.my_db)
+        bloc_chain.crear_genesis_bloc()
+        bloc_genesis = Factoria.build_bloc_from_db(self.my_db, 1)
+
+        self.assertEqual(bloc_genesis.index, 0)
+        self.assertEqual(bloc_genesis.hash_bloc_anterior, "asfassdfsadfsa")
+        self.assertEqual(bloc_genesis.id_document, '00000')
     #
     # def test_minat(self):
     #     bloc_chain = BlockchainUniversity()

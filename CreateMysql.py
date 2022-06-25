@@ -303,13 +303,6 @@ class MySqlBloc:
         id_tipus = int(num_document[-4:])
         return [id_document, id_tipus]
 
-    @staticmethod
-    def recuperar_fitxer(nom_fitxer):
-        pdf_file = open(nom_fitxer, "rb")
-        save_pdf = base64.b64encode(pdf_file.read())
-        pdf_file.close()
-        return save_pdf
-
     def guardar_examen(self, examen):
         id_document = examen.id_document
         id_usuari = examen.usuari.id

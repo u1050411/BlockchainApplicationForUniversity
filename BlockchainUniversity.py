@@ -28,6 +28,13 @@ class Factoria:
         return json.dumps(rest, indent=4, sort_keys=True, default=str)
 
     @staticmethod
+    def recuperar_fitxer(nom_fitxer):
+        pdf_file = open(nom_fitxer, "rb")
+        save_pdf = base64.b64encode(pdf_file.read())
+        pdf_file.close()
+        return save_pdf
+
+    @staticmethod
     def build_universitat_from_db(my_db):
         universiat_db = my_db.importar_universitat()
         if universiat_db is not None:
@@ -271,9 +278,9 @@ class Document:
             'usuari': Factoria.to_json(self.usuari),
             'pdf': self.pdf})
 
-    # def to_json(self):
-    #     rest = self.to_dict()
-    #     return json.dumps(rest, indent=4, sort_keys=True, default=str)
+    @property
+    def id_document_blockchain(self):
+        return str(self.id_document) + "0000"
 
 
 class Examen(Document):
@@ -396,7 +403,7 @@ class Transaccio:
             self.id_document = document.id_document_blockchain
         else:
             self.document = None
-            self.id_document = 0
+
 
     @classmethod
     def crear_json(cls, dada):
@@ -472,36 +479,39 @@ class Bloc:
         block_string = json.dumps(self.__dict__, sort_keys=True, default=str)
         return hashlib.sha256(block_string.encode()).hexdigest()
 
-    def guardar_bloc(self, my_db):
-        data_transaccio = self.data_transaccio
-        id_emissor = self.id_emissor
-        id_receptor = self.id_receptor
-        id_doc = self.id_document
-        transaccio = self.transaccio
-        hash_bloc = self.hash_bloc_anterior
-        my_db.guardar_bloc(data_transaccio, id_emissor, id_receptor, id_doc, transaccio, hash_bloc)
+    # def guardar_bloc(self, my_db):
+    #     data_transaccio = self.data_transaccio
+    #     id_emissor = self.id_emissor
+    #     id_receptor = self.id_receptor
+    #     id_doc = self.id_document
+    #     transaccio = self.transaccio
+    #     hash_bloc = self.hash_bloc_anterior
+    #     my_db.guardar_bloc(data_transaccio, id_emissor, id_receptor, id_doc, transaccio, hash_bloc)
 
 
 class BlockchainUniversity:
     # Dificultat del hash
     dificultat = 2
 
-    def __init__(self):
+    def __init__(self, my_db):
         self.transaccio_noconfirmades = []
         self.cadena = []
+        self.my_db = my_db
         self.crear_genesis_bloc()
 
     def crear_genesis_bloc(self):
         """
        Creacio del bloc Inicial.
         """
-        emissor = Usuari("Genesis")
-        receptor = Usuari("Genesis")
-        document = Document("Genesis")
-        transaccio = Transaccio(emissor, receptor, document)
-        genesis_bloc = Bloc(0, transaccio, 0)
+        uni = Factoria.build_universitat_from_db(self.my_db)
+        public_key = RSA.generate(1024).publickey()
+        genesis = Estudiant(0, '0', 'Genesis', "Genesis", public_key)
+        pdf = base64.b64encode("Genesis".encode())
+        doc = Document(0, 0, genesis, pdf)
+        transaccio = Transaccio(genesis, genesis, doc)
+        genesis_bloc = Bloc(transaccio, 0, uni.public_key)
         genesis_bloc.hash = genesis_bloc.calcular_hash()
-        self.cadena.append(genesis_bloc)
+        self.my_db.guardar_bloc(genesis_bloc)
 
     @property
     def ultim_bloc(self):
