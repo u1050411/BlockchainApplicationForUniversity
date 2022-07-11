@@ -1,3 +1,4 @@
+import socket
 import unittest
 
 from Crypto.PublicKey import RSA
@@ -510,6 +511,32 @@ class TestBlockchainUniversity(unittest.TestCase):
         self.assertEqual(bloc_genesis.index, 0)
         self.assertEqual(bloc_genesis.hash_bloc_anterior, "asfassdfsadfsa")
         self.assertEqual(bloc_genesis.id_document, '00000')
+
+
+class TestConexions(unittest.TestCase):
+
+    def test_conexio_servidor(self):
+        HOST = '192.168.50.26'                 # Symbolic name meaning all available interfaces
+        PORT = 50007              # Arbitrary non-privileged port
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind((HOST, PORT))
+            s.listen(1)
+            conn, addr = s.accept()
+            with conn:
+                print('Connected by', addr)
+                while True:
+                    data = conn.recv(1024)
+                    if not data: break
+                    conn.sendall(data)
+
+    def test_conexio_client(self):
+        HOST = '192.168.50.25'  # The remote host
+        PORT = 50007  # The same port as used by the server
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect((HOST, PORT))
+            s.sendall(b'Hello, world')
+            data = s.recv(1024)
+        print('Received', repr(data))
     #
     # def test_minat(self):
     #     bloc_chain = BlockchainUniversity()

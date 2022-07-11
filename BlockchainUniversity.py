@@ -452,10 +452,10 @@ class Bloc:
     # Classe creació del bloc
     def __init__(self, trans=None, hash_bloc_anterior=None, universitat_public_key=None):
         self.index = 0
-        self.data_transaccio = trans.data_creacio
-        self.id_emissor = trans.emissor.id
-        self.id_receptor = trans.receptor.id
-        self.id_document = trans.id_document
+        self.data_bloc = datetime.now().isoformat()
+        # self.id_emissor = trans.emissor.id
+        # self.id_receptor = trans.receptor.id
+        # self.id_document = trans.id_document
         self.transaccio = Encriptador(trans, universitat_public_key)
         self.hash_bloc_anterior = hash_bloc_anterior
         self.nonce = 0
@@ -467,16 +467,16 @@ class Bloc:
     def to_dict(self):
         return collections.OrderedDict({
             'index': self.index,
-            'data_transaccio': self.data_transaccio,
-            'id_emissor': self.id_emissor,
-            'id_receptor': self.id_receptor,
-            'id_document': self.id_document,
-            'transaccions':Factoria.to_json(self.transaccio),
+            'data_bloc': self.data_bloc,
+            # 'id_emissor': self.id_emissor,
+            # 'id_receptor': self.id_receptor,
+            # 'id_document': self.id_document,
+            'transaccions': Factoria.to_json(self.transaccio),
             'hash_bloc_anterior': self.hash_bloc_anterior})
 
     def calcular_hash(self):
         # Converteix el bloc en una cadena json i retorna el hash
-        block_string = json.dumps(self.__dict__, sort_keys=True, default=str)
+        block_string = Factoria.to_json(self.__dict__)
         return hashlib.sha256(block_string.encode()).hexdigest()
 
     # def guardar_bloc(self, my_db):
@@ -494,8 +494,6 @@ class BlockchainUniversity:
     dificultat = 2
 
     def __init__(self, my_db):
-        self.transaccio_noconfirmades = []
-        self.cadena = []
         self.my_db = my_db
         self.crear_genesis_bloc()
 
@@ -513,10 +511,6 @@ class BlockchainUniversity:
         genesis_bloc.hash = genesis_bloc.calcular_hash()
         self.my_db.guardar_bloc(genesis_bloc)
 
-    @property
-    def ultim_bloc(self):
-        return self.cadena[-1]
-
     def afegir_bloc(self, bloc, hash_prova):
         """
         Una funció que afegeix el bloc a la cadena després de la verificació.
@@ -524,7 +518,7 @@ class BlockchainUniversity:
          * Block apunti al block anterior
          * Que hash_prova satisfà la dificultat prevista
         """
-        hash_anterior = self.ultim_bloc.hash
+        hash_anterior = self.my_db.ultim_bloc().calcular_hash()
 
         if hash_anterior != bloc.hash_bloc_anterior:
             return False

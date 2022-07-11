@@ -280,7 +280,7 @@ class MySqlBloc:
         self.exportar_sql(sql, dades)
 
     def guardar_bloc(self, bloc):
-        data_transaccio = bloc.data_transaccio
+        data_transaccio = bloc.data_bloc
         id_emissor = bloc.id_emissor
         id_receptor = bloc.id_receptor
         id_doc = bloc.id_document
@@ -291,9 +291,10 @@ class MySqlBloc:
         dades = (data_transaccio, id_emissor, id_receptor, id_doc, Factoria.to_json(transaccio), hash_bloc)
         self.exportar_sql(sql, dades)
 
-    def id_ultim_bloc(self):
+    def ultim_bloc(self):
         sql = "SELECT MAX(id_bloc) FROM bloc"
-        return self.importar_sql(sql)[0]
+        id_bloc = self.importar_sql(sql)[0]
+        return self.importar_bloc(id_bloc)
 
 
     @staticmethod
