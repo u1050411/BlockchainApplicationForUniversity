@@ -1,3 +1,57 @@
-body{
-    background: aqua;
+body {
+    background: white;
+    color: #1b1b1b;
+}
+
+#blue_bar {
+    height: 44px;
+    margin-botton: 2em;
+    width: 100%;
+    background-color: #001489;
+}
+
+#titol_ini {
+    text-align: center;
+    color: black;
+}
+
+/* Barra navegacio ocidental
+ */
+
+#nav_header{
+    alignment: right;
+}
+ul {
+    list-style-type: none; /* Treu el subratllat*/
+    margin: 0px; /*Treiem espais i marges */
+    padding: 0px;
+    background: #5b80b2;
+    overflow: hidden;
+    color: white;
+}
+
+li {
+    float: left; /*Esto pose la lista una detras de otra */
+}
+
+li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 16px 16px;
+    text-decoration: none;
+    border-right: black; /*Creem un borde blau a la dreta*/
+}
+
+/*Al visitarlos */
+li a:visited {
+    color: #001489;
+    list-style-type: none; /* Treu el subratllat*/
+}
+
+/**/
+li a:hover {
+    background-color: #001489;
+    color: #4ac1f7;
+    list-style-type: none; /* Treu el subratllat*/
 }

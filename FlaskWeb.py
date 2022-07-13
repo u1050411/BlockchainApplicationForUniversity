@@ -15,7 +15,7 @@ def professor():  # put application's code here
 
 @app.route('/alumne')
 def alumne():  # put application's code here
-    return 'Hola Alumne'
+    return render_template('estudiants.html')
 
 
 if __name__ == '__main__':
