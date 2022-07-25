@@ -253,6 +253,15 @@ class Professor(Usuari):
         super(Professor, self).__init__(id_usuari, nif, nom, cognom, public_key)
         self.tipus = PROFESSOR
 
+    def llista_alumnes(self, my_db):
+        llista = my_db.importar_estudiants_professor(self)
+        llista_json = list()
+        for x in llista:
+            estudiant = Factoria.build_usuari_from_db(my_db, x)
+            estudiant_json = Factoria.to_json(estudiant)
+            llista_json.append(estudiant_json)
+        return llista_json
+
 
 class Estudiant(Usuari):
     def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None):
@@ -476,7 +485,7 @@ class Bloc:
 
     def calcular_hash(self):
         # Converteix el bloc en una cadena json i retorna el hash
-        block_string = Factoria.to_json(self.__dict__)
+        block_string = Factoria.to_json(self)
         return hashlib.sha256(block_string.encode()).hexdigest()
 
     # def guardar_bloc(self, my_db):

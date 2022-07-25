@@ -1,5 +1,6 @@
 import socket
 import unittest
+import ast
 
 from Crypto.PublicKey import RSA
 
@@ -41,6 +42,7 @@ class CreacioTaulaTest:
         usuaris = [[1050411, '40373747T', ESTUDIANT, 'Pau', 'de Jesus Bras'],
                    [1050402, '40373946E', ESTUDIANT, 'Pere', 'de la Rosa'],
                    [1050403, '40332506M', ESTUDIANT, 'Cristina', 'Sabari Vidal'],
+                   [1050404, '40372506P', ESTUDIANT, 'Diaz', 'Marti Sanchez'],
                    [2050404, '40332507Y', PROFESSOR, 'Albert', 'Marti Sabari'],
                    [2000256, '40332508Y', PROFESSOR, 'Teodor Maria', 'Jove Lagunas']]
 
@@ -55,6 +57,20 @@ class CreacioTaulaTest:
             elif tipus == PROFESSOR:
                 usuari = Professor(id_usuari, nif, nom, cognom, public_key)
             self.my_db.guardar_usuari(usuari)
+
+        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 2000256),
+                                                Factoria.build_usuari_from_db(self.my_db, 1050411))
+        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 2000256),
+                                                Factoria.build_usuari_from_db(self.my_db, 1050402))
+        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 2000256),
+                                                Factoria.build_usuari_from_db(self.my_db, 1050404))
+        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 2050404),
+                                                Factoria.build_usuari_from_db(self.my_db, 1050403))
+        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 2050404),
+                                                Factoria.build_usuari_from_db(self.my_db, 1050411))
+
+
+
 
     def crear_examens(self):
         examens = [[1, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
@@ -131,6 +147,20 @@ class TestUsuaris(unittest.TestCase):
         self.assertEqual(estudiant.public_key, public_key)
 
 
+class TestProfessors(unittest.TestCase):
+
+    def setUp(self):
+        self.my_db = MySqlBloc('localhost', 'root', 'root')
+        self.schema = 'blockchainuniversity'
+        self.test = CreacioTaulaTest(self.my_db, self.schema)
+        self.test.crear_schema_dades()
+
+    def test_llista_alumnes(self):
+        professor = Factoria.build_usuari_from_db(self.my_db, 2000256)
+        llista_alumnes = professor.llista_alumnes(self.my_db)
+        print(llista_alumnes)
+
+
 class TestUniversitat(unittest.TestCase):
     pass
 
@@ -188,6 +218,20 @@ class TestMysql(unittest.TestCase):
         self.test.crear_usuaris()
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'id', '1050403'), True)
 
+
+    def test_afegir_alumne_professor(self):
+        self.test.crear_schema_dades()
+        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 2000256),
+                                                Factoria.build_usuari_from_db(self.my_db, 1050403))
+
+    def test_llista_estudiant_professor(self):
+        self.test.crear_schema_dades()
+        llista = self.my_db.importar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 2000256))
+        self.assertEqual(llista[0], 1050402)
+        self.assertEqual(llista[1], 1050404)
+        self.assertEqual(llista[2], 1050411)
+
+
     def test_crear_examens(self):
         self.my_db.esborrar_schema(self.schema)
         self.my_db.crear_schema(self.schema)
@@ -208,7 +252,7 @@ class TestMysql(unittest.TestCase):
 
     def test_guardar_usuari(self):
         self.test.crear_schema_dades()
-        id_usuari = 1050404
+        id_usuari = 1050704
         nif = '40373944C'
         nom = 'Pablo'
         cognom = 'Gutierrez'
@@ -298,14 +342,14 @@ class TestFactoria(unittest.TestCase):
         self.assertEqual(transaccio_inicial.emissor.id, transaccio_guardat.emissor.id)
         self.assertEqual(transaccio_inicial.receptor.id, transaccio_guardat.receptor.id)
 
-    def test_bloc(self):
-        transaccio = Factoria.build_transaccio_from_db(self.my_db)
-        uni = Factoria.build_universitat_from_db(self.my_db)
-        bloc = Bloc(transaccio, "41b8e84497b3d73038a397e8b5e100", uni.public_key)
-        self.my_db.guardar_bloc(bloc)
-        bloc_final = Factoria.build_bloc_from_db(self.my_db, 1)
-        transaccio_final = Transaccio.crear_json(bloc_final.transaccio.desencriptar(uni.private_key))
-        self.assertEqual(transaccio_final.emissor.id, transaccio.emissor.id)
+    # def test_bloc(self):
+    #     transaccio = Factoria.build_transaccio_from_db(self.my_db)
+    #     uni = Factoria.build_universitat_from_db(self.my_db)
+    #     bloc = Bloc(transaccio, "41b8e84497b3d73038a397e8b5e100", uni.public_key)
+    #     self.my_db.guardar_bloc(bloc)
+    #     bloc_final = Factoria.build_bloc_from_db(self.my_db, 1)
+    #     transaccio_final = Transaccio.crear_json(bloc_final.transaccio.desencriptar(uni.private_key))
+    #     self.assertEqual(transaccio_final.emissor.id, transaccio.emissor.id)
 
 
 class TestExamen(unittest.TestCase):
@@ -488,11 +532,12 @@ class TestBloc(unittest.TestCase):
         bloc = self.test_crear()
         self.assertEqual(bloc.calcular_hash(), bloc.calcular_hash())
 
-    def test_importar_ultim_bloc(self):
-        self.test_guardar()
-        num_bloc = self.my_db.id_ultim_bloc()
-        bloc = Factoria.build_bloc_from_db(self.my_db, num_bloc)
-        self.assertEqual(bloc.calcular_hash(), bloc.calcular_hash())
+
+    # def test_importar_ultim_bloc(self):
+    #     self.test_guardar()
+    #     num_bloc = self.my_db.id_ultim_bloc()
+    #     bloc = Factoria.build_bloc_from_db(self.my_db, num_bloc)
+    #     self.assertEqual(bloc.calcular_hash(), bloc.calcular_hash())
 
 
 class TestBlockchainUniversity(unittest.TestCase):
@@ -537,48 +582,3 @@ class TestConexions(unittest.TestCase):
             s.sendall(b'Hello, world udg')
             data = s.recv(1024)
         print('Received', repr(data))
-    #
-    # def test_minat(self):
-    #     bloc_chain = BlockchainUniversity()
-    #     estudiant = Estudiant('Pau')
-    #     professor = Professor('Teo')
-    #     t1 = Transaccio(estudiant, 'DocumentEncriptat', 'idDocument')
-    #     bloc_chain.afegir_nova_transaccio(t1)
-    #     t2 = TransaccioExamen(professor, 'DocumentEncriptat', 'idDocument', 10)
-    #     bloc_chain.afegir_nova_transaccio(t2)
-    #
-    #     for x in bloc_chain.transaccio_noconfirmades:
-    #         y = 0
-    #         if x is not None:
-    #             print(bloc_chain.minat())
-    #         y += y
-    #         x = []
-
-    # def test_llegir_pdf(self):
-    #     nom_fitxer = f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
-    #     pdf_file = open(nom_fitxer, "rb")
-    #     my_db = MySqlBloc('localhost', 'root', 'root')
-    #     my_db.crear_schema_dades(my_db, 'blockchainuniversity')
-    #     id_document = 1
-    #     id_tipus = 1
-    #     versio = 1
-    #     id_usuari = 1050412
-    #     save_pdf = base64.b64encode(pdf_file.read())
-    #     pdf_file.close()
-    #     sql = f'INSERT INTO documents (`id_document`, `id_tipus`, `versio`, `id_usuari`, `pdf`) VALUES({id_document}, ' \
-    #           f'{id_tipus}, {versio}, {id_usuari}, "{save_pdf}") '
-    #     my_db.exportar_sql(sql)
-
-    # def test_print_pdf(self, pdffile, printer_name):
-    #     # acroread = r'C:\Program Files (x86)\Adobe\Reader 11.0\Reader\AcroRd32.exe'
-    #     acrobat = r'C:\Program Files (x86)\Adobe\Acrobat 11.0\Acrobat\Acrobat.exe'
-    #
-    #     # '"%s"'is to wrap double quotes around paths
-    #     # as subprocess will use list2cmdline internally if we pass it a list
-    #     # which escapes double quotes and Adobe Reader doesn't like that
-    #
-    #     cmd = '"{}" /N /T "{}" "{}"'.format(acrobat, pdffile, printer_name)
-    #
-    #     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    #     stdout, stderr = proc.communicate()
-    #     exit_code = proc.wait()

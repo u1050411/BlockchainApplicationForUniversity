@@ -12,6 +12,10 @@ def inici():  # put application's code here
 def professor():  # put application's code here
     return render_template('professor.html')
 
+@app.route('/enviar_examen')
+def enviar_examen():  # put application's code here
+    return render_template('enviar_examen.html')
+
 
 @app.route('/alumne')
 def alumne():  # put application's code here

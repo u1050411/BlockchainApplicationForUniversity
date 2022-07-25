@@ -86,6 +86,12 @@ class MySqlBloc:
                 "`nota` INT NULL,"
                 "PRIMARY KEY (`id_document`, `id_estudiant`))",
 
+                "CREATE TABLE if not exists `estudiants_professor` ("
+                "`id_professor` INT NOT NULL,"
+                "`id_estudiant` INT NOT NULL,"
+                "`nota` INT NULL,"
+                "PRIMARY KEY (`id_professor`, `id_estudiant`))",
+
                 "CREATE TABLE if not exists `resposta_examen` ("
                 "`id_resposta` INT NOT NULL AUTO_INCREMENT,"
                 "`id_examen` INT NOT NULL,"
@@ -96,10 +102,10 @@ class MySqlBloc:
 
                 "CREATE TABLE if not exists `bloc` ("
                 "`id_bloc` INT NOT NULL AUTO_INCREMENT,"
-                "`data_transaccio` DATETIME NOT NULL,"
-                "`id_emissor` INT NOT NULL,"
-                "`id_receptor` INT NOT NULL,"
-                "`id_document` INT NOT NULL,"
+                "`data_bloc` DATETIME NOT NULL,"
+                # "`id_emissor` INT NOT NULL,"
+                # "`id_receptor` INT NOT NULL,"
+                # "`id_document` INT NOT NULL,"
                 "`transaccio` JSON  NOT NULL,"
                 "`hash_bloc_anterior` LONGBLOB  NOT NULL,"
                 "PRIMARY KEY (`id_bloc`))",
@@ -162,9 +168,33 @@ class MySqlBloc:
             exit(1)
         return self._cursor.fetchall()
 
+    def importar_llista_enter_sql(self, sql):
+        try:
+            self._cursor.execute(sql)
+            llista = list()
+            punter = self._cursor.fetchone()
+            while None != punter:
+                llista.append(punter[0])
+                punter = self._cursor.fetchone()
+            return llista
+
+        except mysql.connector.Error as err:
+            print("Error Mysql : {}".format(err))
+            exit(1)
+        return self._cursor.fetchall()
+
+
     def importar_estudiants_examen(self, id_document):
         sql = f'select `id_estudiant` from `estudiant_examen` where `id_document` = {id_document}'
         return self.importar_llista_sql(sql)
+
+    def importar_estudiants_examen(self, id_document):
+        sql = f'select `id_estudiant` from `estudiant_examen` where `id_document` = {id_document}'
+        return self.importar_llista_sql(sql)
+
+    def importar_estudiants_professor(self, professor):
+        sql = f'select id from `usuari` where `id` in (select id_estudiant from estudiants_professor where id_professor = {professor.id});'
+        return self.importar_llista_enter_sql(sql)
 
     def importar_respostes(self, id_document):
         sql = f'select id_resposta, data_creacio, id_usuari, pdf  ' \
@@ -279,23 +309,28 @@ class MySqlBloc:
         dades = (usuari.id, usuari.tipus, usuari.nif, usuari.nom, usuari.cognom, usuari.str_publickey())
         self.exportar_sql(sql, dades)
 
-    def guardar_bloc(self, bloc):
-        data_transaccio = bloc.data_bloc
-        id_emissor = bloc.id_emissor
-        id_receptor = bloc.id_receptor
-        id_doc = bloc.id_document
-        transaccio = bloc.transaccio
-        hash_bloc = bloc.hash_bloc_anterior
-        sql = "INSERT INTO bloc (data_transaccio, id_emissor, id_receptor, id_document, transaccio, hash_bloc_anterior) " \
-              "VALUES (%s, %s, %s, %s, %s, %s)"
-        dades = (data_transaccio, id_emissor, id_receptor, id_doc, Factoria.to_json(transaccio), hash_bloc)
+    def guardar_estudiants_professor(self, professor, estudiant):
+        sql = "INSERT INTO estudiants_professor(id_professor, id_estudiant) VALUES (%s, %s)"
+        dades = (professor.id, estudiant.id)
         self.exportar_sql(sql, dades)
+
+    def guardar_bloc(self, bloc):
+        ultim = self.ultim_bloc()
+        if ultim is None:
+            id = 0
+        else:
+            id = ultim.id_bloc
+        sql = "INSERT INTO bloc (`id_bloc`,`data_bloc`, `transaccio`,`hash_bloc_anterior`) VALUES (%s, %s, %s, %s)"
+        dades = (id, bloc.data_bloc, Factoria.to_json(bloc.transaccio), bloc.hash_bloc_anterior)
+        self.exportar_sql(sql, dades)
+
 
     def ultim_bloc(self):
         sql = "SELECT MAX(id_bloc) FROM bloc"
         id_bloc = self.importar_sql(sql)[0]
+        if id_bloc is None:
+            return None
         return self.importar_bloc(id_bloc)
-
 
     @staticmethod
     def dades_num(num_document):
@@ -334,5 +369,5 @@ class MySqlBloc:
         sql = "INSERT INTO transaccio(id_emissor, id_receptor, document, id_document, data_creacio) " \
               "VALUES (%s, %s, %s, %s, %s)"
         dades = (transaccio.emissor.id, transaccio.receptor.id, encrip_to_json,
-                 transaccio.id_document, transaccio.data_creacio, )
+                 transaccio.id_document, transaccio.data_creacio,)
         self.exportar_sql(sql, dades)
