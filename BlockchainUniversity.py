@@ -258,8 +258,7 @@ class Professor(Usuari):
         llista_json = list()
         for x in llista:
             estudiant = Factoria.build_usuari_from_db(my_db, x)
-            estudiant_json = Factoria.to_json(estudiant)
-            llista_json.append(estudiant_json)
+            llista_json.append(estudiant)
         return llista_json
 
 
@@ -267,6 +266,13 @@ class Estudiant(Usuari):
     def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None):
         super(Estudiant, self).__init__(id_usuari, nif, nom, cognom, public_key)
         self.tipus = ESTUDIANT
+
+    def to_dict(self):
+        return collections.OrderedDict({
+            'id': self.id,
+            'nif': self.nif,
+            'nom': self.nom,
+            'cognom': self.cognom})
 
 
 class Document:

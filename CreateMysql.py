@@ -15,9 +15,9 @@ PROFESSOR = 'professor'
 
 class MySqlBloc:
 
-    def __init__(self, ip=None, usuari=None, password=None):
+    def __init__(self, ip=None, usuari=None, password=None, db=None):
         try:
-            self._conexio = mysql.connector.connect(host=ip, user=usuari, passwd=password)
+            self._conexio = mysql.connector.connect(host=ip, user=usuari, passwd=password, database=db)
             self._cursor = self._conexio.cursor()
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:

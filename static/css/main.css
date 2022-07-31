@@ -13,7 +13,7 @@ body {
 	background-color: #FFFFFF;
 }
 /* Header */
-header {
+.header {
 	width: 100%;
     height:5.75em;
 
@@ -26,19 +26,51 @@ header {
 	padding: 30px;
 	float: left;
 }
-.column {
+
+.column_dreta {
 	width: 50%;
 	text-align: left;
-	padding-top: 30px;
-	float: left;
+	padding-top: 50px;
+    padding-left: 20px;
+	/*float: left;*/
+    /*alignment: left;*/
+    overflow: hidden;
 }
-.intro .column h3 {
-	color: #FFFFFF;
-	text-align: center;
-}
-.intro .column p {
-	color: #000000;
-}
+
+.column_dreta ul {
+        display:table-row;
+    }
+    .column_dreta ul li
+    {
+        /*display: table-cell;*/
+        height: 100px;
+        /*list-style-type: none;*/
+        margin: 10px;
+        vertical-align: middle;
+    }
+    .column_dreta ul li a {
+        display:table-cell;
+        vertical-align: middle;
+        height:100px;
+        border: solid 1px black;
+    }
+    .column_dreta ul li.button a {
+        height:50px;
+        border: solid 1px black;
+    }
+
+/*.column {*/
+/*	width: 50%;*/
+/*	text-align: left;*/
+/*	padding-top: 30px;*/
+/*}*/
+/*.intro .column h3 {*/
+/*	color: #FFFFFF;*/
+/*	text-align: center;*/
+/*}*/
+/*.intro .column p {*/
+/*	color: #000000;*/
+/*}*/
 
 .logo {
 	color: #fff;
@@ -81,9 +113,6 @@ header {
 /* Barra navegacio ocidental
  */
 
-#nav_header{
-    alignment: right;
-}
 
 #nav_professor{
     alignment: initial;
@@ -92,7 +121,7 @@ header {
     color: white;
 }
 
-header ul {
+.header ul {
     list-style-type: none; /* Treu el subratllat*/
     margin: 0px; /*Treiem espais i marges */
     padding: 0px;
@@ -100,15 +129,40 @@ header ul {
     overflow: hidden;
     color: white;
 }
-
-header li a:visited {
+.header ul li {
+    float: left; /*Esto pose la lista una detras de otra */
+}
+.header ul li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 16px 16px;
+    text-decoration: none;
+    border-right: black; /*Creem un borde blau a la dreta*/
+}
+.header ul li a:visited {
     background: #6f94c6;
     overflow: hidden;
     color: black;
     list-style-type: none; /* Treu el subratllat*/
+    display: block;
+    text-align: center;
+    padding: 16px 16px;
+    text-decoration: none;
+    border-right: black;
 }
 
-#nav_professor ul {
+.header ul li a:hover {
+    background-color: #001489;
+    color: #4ac1f7;
+    list-style-type: none; /* Treu el subratllat*/
+}
+
+.nav_opcions{
+    alignment: right;
+}
+
+.nav_opcions ul {
     list-style-type: none; /* Treu el subratllat*/
     margin: 0px; /*Treiem espais i marges */
     padding: 0px;
@@ -117,12 +171,11 @@ header li a:visited {
     color: white;
 }
 
-
-li {
+.nav_opcions ul li {
     float: left; /*Esto pose la lista una detras de otra */
 }
 
-li a {
+.nav_opcions ul li a {
     display: block;
     color: white;
     text-align: center;
@@ -132,14 +185,75 @@ li a {
 }
 
 /*Al visitarlos */
-li a:visited {
+.nav_opcions ul li a:visited {
     color: #001489;
     list-style-type: none; /* Treu el subratllat*/
 }
 
 /**/
-li a:hover {
+.nav_opcions ul li a:hover {
     background-color: #001489;
     color: #4ac1f7;
     list-style-type: none; /* Treu el subratllat*/
 }
+
+.button-1 {
+    background: #5E5DF0;
+    border-radius: 999px;
+    box-shadow: #5E5DF0 0 10px 20px -10px;
+    box-sizing: border-box;
+    color: #FFFFFF;
+    cursor: pointer;
+    font-family: Inter,Helvetica,"Apple Color Emoji","Segoe UI Emoji",NotoColorEmoji,"Noto Color Emoji","Segoe UI Symbol","Android Emoji",EmojiSymbols,-apple-system,system-ui,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans",sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    opacity: 1;
+    outline: 0 solid transparent;
+    padding: 3px 15px;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    width: fit-content;
+    word-break: break-word;
+    border: 0;
+}
+.button-2{
+    border: 0; /* Cancelar borde del botón */
+    width: 150px; /* Establecer la longitud y el ancho apropiados del botón */
+    height: 30px;
+    margin-top: 18px; /* Establezca el ancho apropiado del marco exterior superior y aumente la distancia desde el cuadro de contraseña superior */
+    font-size: 18px; /* Modificar el tamaño del texto del botón */
+    color: white; /* Modificar el color del texto en el botón */
+    border-radius: 25px; /* Establecer los bordes izquierdo y derecho del botón en arcos */
+    background-image: linear-gradient(to right, #00dbde 0%, #fc00ff 100%); /* Agrega un colo*/
+}
+#login-box {
+    border: 1px solid blue;
+    width: 30%;
+    text-align: center;
+    margin: 5% auto 0;
+    background: #00000080;
+    padding: 10px 50px;
+}
+
+#login-box h1 {
+    color: white;
+}
+
+#login-box .form .item input {
+    width: 200px; /* Establecer el ancho apropiado */
+    border: 0; /* Primero cancele el borde, para que pueda modificar el ancho del borde inferior debajo */
+    border-bottom: 5px solid white; /* Modificar el límite inferior para mostrar el efecto de línea horizontal */
+    font-size: 18px; /* Aumentar el tamaño de fuente de forma adecuada */
+    background: #ffffff00; /* Establecer el cuadro de entrada en transparente */
+    color: white; /* El color del texto anterior se establece en blanco, pero el color del marcador de posición debe establecerse por separado */
+    padding: 5px 10px; /* Para que el contenido del marcador de posición no se muestre en la cuadrícula superior, aumente el borde interno */
+    appearance:auto;
+}
+#login-box .form .item i {
+    color: white;
+    font-size: 18px;
+}
+
+

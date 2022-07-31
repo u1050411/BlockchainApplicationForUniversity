@@ -1,0 +1,26 @@
+{% extends 'layout.html' %}
+{% block navegacio %}
+    <div class="nav_opcions">
+    <ul>
+        <li><a href="professor">Veure Examens</a></li>
+        <li><a href="alumne">Enviar Correcció Examens</a></li>
+    </ul>
+    </div>
+{% endblock %}
+{% block content %}
+ <section class="intro">
+    <div class="columna_esquerra">
+     <p>Tria els alumne als que vols enviar l'examen </p>
+    </div>
+   <div class="column_dreta">
+        <form action="/enviar_examens" method="POST">
+          <select  name="select_usuaris" id="enviar" multiple >
+                   {% for id, nif, nom, cognom in llista %}
+                   {<option value={{id}}>{{id}} {{nom}} {{cognom}}</option>
+                   {% endfor %}
+            </select>
+          <input type="submit" value="enviar" class="button-1">
+        </form>
+   </div>
+  </section>
+{% endblock %}
