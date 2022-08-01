@@ -49,13 +49,13 @@ class Factoria:
         if my_db.existeix_usuari(id_usuari):
             usuari_db = my_db.importar_usuari(id_usuari)
             if usuari_db is not None:
-                id_us, tipus, nif, nom, cognom, public_key_str = usuari_db
+                id_us, tipus, nif, nom, cognom, public_key_str, contrasenya = usuari_db
                 public_key = RSA.importKey(public_key_str)
                 if tipus == ESTUDIANT:
-                    estudiant = Estudiant(id_usuari, nif, nom, cognom, public_key)
+                    estudiant = Estudiant(id_usuari, nif, nom, cognom, public_key, contrasenya)
                     return estudiant
                 elif tipus == PROFESSOR:
-                    professor = Professor(id_usuari, nif, nom, cognom, public_key)
+                    professor = Professor(id_usuari, nif, nom, cognom, public_key, contrasenya)
                     return professor
         return None
 
@@ -65,7 +65,7 @@ class Factoria:
             id_document, id_professor, data_examen, data_inicial, data_final, pdf = my_db.importar_examen(id_document)
             professor = Factoria.build_usuari_from_db(my_db, id_professor)
             examen = Examen(id_document, professor, pdf, data_inicial, data_final)
-            if per_estudiant == None:
+            if per_estudiant is None:
                 estudiants = my_db.importar_estudiants_examen(id_document)
                 if estudiants is not None:
                     for id_estudiant in estudiants:
@@ -189,11 +189,12 @@ class Encriptador:
 
 class Usuari:
 
-    def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None):
+    def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None, contrasenya=None):
         self.id = id_usuari
         self.nif = nif
         self.nom = nom
         self.cognom = cognom
+        self.contrasenya = contrasenya
         self.tipus = USUARI
         self.public_key = public_key
 
@@ -204,7 +205,8 @@ class Usuari:
             'nom': self.nom,
             'cognom': self.cognom,
             'tipus': self.tipus,
-            'public_key': self.str_publickey()})
+            'public_key': self.str_publickey(),
+            'contrasenya': self.contrasenya})
 
     @staticmethod
     def crear_json(usuari_json):
@@ -214,11 +216,12 @@ class Usuari:
         nom = usuari['nom']
         cognom = usuari['cognom']
         tipus = usuari['tipus']
+        contrasenya = usuari['contrasenya']
         public_key = RSA.importKey(usuari['public_key'])
         if tipus == ESTUDIANT:
-            usuari = Estudiant(id_usuari, nif, nom, cognom, public_key)
+            usuari = Estudiant(id_usuari, nif, nom, cognom, public_key, contrasenya)
         if tipus == PROFESSOR:
-            usuari = Professor(id_usuari, nif, nom, cognom, public_key)
+            usuari = Professor(id_usuari, nif, nom, cognom, public_key, contrasenya)
         return usuari
 
     # @staticmethod
@@ -236,9 +239,9 @@ class Usuari:
     #         usuari = Professor(id_usuari, nif, nom, cognom, public_key)
     #     return usuari
 
-    # def to_json(self):
-    #     rest = self.to_dict()
-    #     return json.dumps(rest, default=str)
+    def to_json(self):
+        rest = self.to_dict()
+        return json.dumps(rest, default=str)
 
     def str_publickey(self):
         return self.public_key.exportKey('PEM').decode('ascii')
@@ -249,8 +252,8 @@ class Usuari:
 
 
 class Professor(Usuari):
-    def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None):
-        super(Professor, self).__init__(id_usuari, nif, nom, cognom, public_key)
+    def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None, contrasenya=None):
+        super(Professor, self).__init__(id_usuari, nif, nom, cognom, public_key, contrasenya)
         self.tipus = PROFESSOR
 
     def llista_alumnes(self, my_db):
@@ -263,16 +266,16 @@ class Professor(Usuari):
 
 
 class Estudiant(Usuari):
-    def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None):
-        super(Estudiant, self).__init__(id_usuari, nif, nom, cognom, public_key)
+    def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None, contrasenya=None):
+        super(Estudiant, self).__init__(id_usuari, nif, nom, cognom, public_key, contrasenya)
         self.tipus = ESTUDIANT
 
-    def to_dict(self):
-        return collections.OrderedDict({
-            'id': self.id,
-            'nif': self.nif,
-            'nom': self.nom,
-            'cognom': self.cognom})
+    # def to_dict(self):
+    #     return collections.OrderedDict({
+    #         'id': self.id,
+    #         'nif': self.nif,
+    #         'nom': self.nom,
+    #         'cognom': self.cognom})
 
 
 class Document:

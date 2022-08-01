@@ -55,6 +55,7 @@ class MySqlBloc:
                 "`nom` varchar(45) DEFAULT NULL,"
                 "`cognom` varchar(100) DEFAULT NULL,"
                 "`public_key` longtext NULL,"
+                "`contrasenya` longtext NULL,"
                 "PRIMARY KEY (`id`)) ",
 
                 "CREATE TABLE if not exists `private_key` ("
@@ -207,11 +208,16 @@ class MySqlBloc:
         return self.importar_llista_sql(sql)
 
     def importar_sql(self, sql):
-        llista = self.importar_llista_sql(sql)
-        return llista[0]
+        try:
+            self._cursor.execute(sql)
+        except mysql.connector.Error as err:
+            print("Error Mysql : {}".format(err))
+            exit(1)
+        return self._cursor.fetchone()
 
     def importar_usuari(self, id_usuari):
-        sql = f'select * from usuari where id = {id_usuari} LIMIT 1'
+        sql = f'select `id`,`tipus`,`nif`,`nom`,`cognom`,`public_key`,`contrasenya` ' \
+              f'from usuari where id = {id_usuari} LIMIT 1'
         return self.importar_sql(sql)
 
     def importar_examen(self, id_document):
@@ -265,7 +271,7 @@ class MySqlBloc:
         return self.existeix(self.schema, 'usuari', 'id', id_usuari)
 
     def existeix_examen(self, id_document):
-        return self.existeix('BlockchainUniversity', 'examen', 'id_document', id_document)
+        return self.existeix(self.schema, 'examen', 'id_document', id_document)
 
     def seguent_id(self, taula, columna):
         sql = f"select Max(`{columna}`) from `{taula}`"
@@ -286,7 +292,7 @@ class MySqlBloc:
         return self.seguent_id("bloc", "id_bloc")
 
     def clau_privada(self, id_usuari):
-        sql = f'select `private_key` from `blockchainuniversity`.`private_key` where `id_usuari` = {id_usuari} LIMIT 1'
+        sql = f'select `private_key` from `private_key` where `id_usuari` = {id_usuari} LIMIT 1'
         clau_string = self.importar_sql(sql)
         return RSA.importKey(clau_string[0])
 
@@ -305,8 +311,10 @@ class MySqlBloc:
         self.exportar_sql(sql, dades)
 
     def guardar_usuari(self, usuari):
-        sql = "INSERT INTO usuari(id, tipus, nif, nom, cognom, public_key) VALUES (%s, %s, %s, %s, %s, %s)"
-        dades = (usuari.id, usuari.tipus, usuari.nif, usuari.nom, usuari.cognom, usuari.str_publickey())
+        sql = "INSERT INTO usuari(id, tipus, nif, nom, cognom, public_key, contrasenya) " \
+              "VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        dades = (usuari.id, usuari.tipus, usuari.nif, usuari.nom, usuari.cognom, usuari.str_publickey(),
+                 usuari.contrasenya)
         self.exportar_sql(sql, dades)
 
     def guardar_estudiants_professor(self, professor, estudiant):

@@ -1,20 +1,40 @@
+import secrets
+
 from pandas._libs import json
 
 from BlockchainUniversity import Factoria
 from CreateMysql import MySqlBloc
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, session
 
 from Test import CreacioTaulaTest
 
 app = Flask(__name__)
 my_db = MySqlBloc('localhost', 'Pau', 'UsuariUdg2022', 'blockchainuniversity')
-
+app.secret_key = secrets.token_urlsafe()
+users= {}
 
 @app.route('/')
 def inici():  # put application's code here
     name_udg = "udg dels rosals"
     return render_template("home.html", name=name_udg)
 
+
+@app.get("/protected")
+def protected():
+    if not session.get("user"):
+        inici()
+    return render_template("protected.html")
+
+@app.route("login", methods=["GET","POST"])
+def login():
+    username = request.form.get("username")
+    password = request.form.get("password")
+    user = Factoria.build_usuari_from_db(my_db, username)
+    return render_template("login.html")
+
+@app.route("/signup",  methods=["GET","POST"])
+def signup():
+    return render_template("signup.html")
 
 @app.route('/professor')
 def professor():  # put application's code here

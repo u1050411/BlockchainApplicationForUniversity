@@ -11,6 +11,7 @@ from CreateMysql import MySqlBloc
 UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
 PROFESSOR = 'professor'
+SCHEMA = 'blockchainuniversity2'
 
 
 class CreacioTaulaTest:
@@ -39,23 +40,23 @@ class CreacioTaulaTest:
         self.my_db.guardar_universitat(uni)
 
     def crear_usuaris(self):
-        usuaris = [[1050411, '40373747T', ESTUDIANT, 'Pau', 'de Jesus Bras'],
-                   [1050402, '40373946E', ESTUDIANT, 'Pere', 'de la Rosa'],
-                   [1050403, '40332506M', ESTUDIANT, 'Cristina', 'Sabari Vidal'],
-                   [1050404, '40372506P', ESTUDIANT, 'Diaz', 'Marti Sanchez'],
-                   [2050404, '40332507Y', PROFESSOR, 'Albert', 'Marti Sabari'],
-                   [2000256, '40332508Y', PROFESSOR, 'Teodor Maria', 'Jove Lagunas']]
+        usuaris = [[1050411, '40373747T', ESTUDIANT, 'Pau', 'de Jesus Bras', 'password1'],
+                   [1050402, '40373946E', ESTUDIANT, 'Pere', 'de la Rosa', 'password2'],
+                   [1050403, '40332506M', ESTUDIANT, 'Cristina', 'Sabari Vidal', 'password3'],
+                   [1050404, '40372506P', ESTUDIANT, 'Diaz', 'Marti Sanchez', 'password4'],
+                   [2050404, '40332507Y', PROFESSOR, 'Albert', 'Marti Sabari', 'password5'],
+                   [2000256, '40332508Y', PROFESSOR, 'Teodor Maria', 'Jove Lagunas', 'password6']]
 
-        for id_usuari, nif, tipus, nom, cognom in usuaris:
+        for id_usuari, nif, tipus, nom, cognom , contrasenya in usuaris:
             key = RSA.generate(1024)
             private_key = key.exportKey('PEM').decode('ascii')
             sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{private_key}")'
             self.my_db.exportar_sql(sql)
             public_key = key.publickey()
             if tipus == ESTUDIANT:
-                usuari = Estudiant(id_usuari, nif, nom, cognom, public_key)
+                usuari = Estudiant(id_usuari, nif, nom, cognom, public_key, contrasenya)
             elif tipus == PROFESSOR:
-                usuari = Professor(id_usuari, nif, nom, cognom, public_key)
+                usuari = Professor(id_usuari, nif, nom, cognom, public_key, contrasenya)
             self.my_db.guardar_usuari(usuari)
 
         self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 2000256),
@@ -115,7 +116,7 @@ class CreacioTaulaTest:
 
     def crear_transaccions(self):
         receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
-        emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
+        emissor = Factoria.build_usuari_from_db(self.my_db, 2050404)
         examen = Factoria.build_examen_from_db(self.my_db, 1)
         transaccio_inicial = Transaccio(emissor, receptor, examen)
         self.my_db.guardar_transaccio(transaccio_inicial)
@@ -133,13 +134,13 @@ class TestUsuaris(unittest.TestCase):
 
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.schema = 'blockchainuniversity'
+        self.schema = SCHEMA
         self.test = CreacioTaulaTest(self.my_db, self.schema)
         self.test.crear_schema_dades()
 
     def test_creation(self):
         public_key = RSA.generate(1024).publickey()
-        estudiant = Estudiant(1050406, '40332505G', 'Marta', "Rodriguez", public_key)
+        estudiant = Estudiant(1050406, '40332505G', 'Marta', "Rodriguez", public_key, "password7")
         self.assertEqual(estudiant.id, 1050406)
         self.assertEqual(estudiant.nif, '40332505G')
         self.assertEqual(estudiant.nom, 'Marta')
@@ -151,7 +152,7 @@ class TestProfessors(unittest.TestCase):
 
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.schema = 'blockchainuniversity'
+        self.schema = SCHEMA
         self.test = CreacioTaulaTest(self.my_db, self.schema)
         self.test.crear_schema_dades()
 
@@ -169,7 +170,7 @@ class TestMysql(unittest.TestCase):
 
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.schema = 'blockchainuniversity'
+        self.schema = SCHEMA
         self.test = CreacioTaulaTest(self.my_db, self.schema)
 
     def tearDown(self):
@@ -256,9 +257,10 @@ class TestMysql(unittest.TestCase):
         nif = '40373944C'
         nom = 'Pablo'
         cognom = 'Gutierrez'
+        password ='password9'
         key = RSA.generate(1024)
         public_key = key.publickey()
-        estudiant = Estudiant(id_usuari, nif, nom, cognom, public_key)
+        estudiant = Estudiant(id_usuari, nif, nom, cognom, public_key, password)
         self.my_db.guardar_usuari(estudiant)
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'id', '1050411'), True)
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'nom', 'Pere'), True)
@@ -292,8 +294,8 @@ class TestFactoria(unittest.TestCase):
 
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.my_db.esborrar_schema('blockchainuniversity')
-        self.test = CreacioTaulaTest(self.my_db, 'blockchainuniversity')
+        self.my_db.esborrar_schema(SCHEMA)
+        self.test = CreacioTaulaTest(self.my_db, SCHEMA)
         self.test.crear_schema_dades()
 
     def test_usuari(self):
@@ -356,8 +358,8 @@ class TestExamen(unittest.TestCase):
 
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.my_db.esborrar_schema('blockchainuniversity')
-        self.test = CreacioTaulaTest(self.my_db, 'blockchainuniversity')
+        self.my_db.esborrar_schema(SCHEMA)
+        self.test = CreacioTaulaTest(self.my_db, SCHEMA)
         self.test.crear_schema_dades()
 
     def test_creacio_examen(self):
@@ -390,7 +392,7 @@ class TestRespostaExamen(unittest.TestCase):
 
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.test = CreacioTaulaTest(self.my_db, 'blockchainuniversity')
+        self.test = CreacioTaulaTest(self.my_db, SCHEMA)
         self.test.crear_schema_dades()
 
     def test_creacio_resposta_examen(self):
@@ -413,8 +415,8 @@ class TestEvaluacioExamen(unittest.TestCase):
 
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.my_db.esborrar_schema('blockchainuniversity')
-        self.test = CreacioTaulaTest(self.my_db, 'blockchainuniversity')
+        self.my_db.esborrar_schema(SCHEMA)
+        self.test = CreacioTaulaTest(self.my_db, SCHEMA)
         self.test.crear_schema_dades()
 
     def test_creacio_resposta_examen(self):
@@ -439,8 +441,8 @@ class TestEvaluacioExamen(unittest.TestCase):
 class TestEncriptador(unittest.TestCase):
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.my_db.esborrar_schema('blockchainuniversity')
-        self.test = CreacioTaulaTest(self.my_db, 'blockchainuniversity')
+        self.my_db.esborrar_schema(SCHEMA)
+        self.test = CreacioTaulaTest(self.my_db, SCHEMA)
         self.test.crear_schema_dades()
 
     def test_encriptar_desencriptar(self):
@@ -459,7 +461,7 @@ class TestTransaction(unittest.TestCase):
 
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.schema = 'blockchainuniversity'
+        self.schema = SCHEMA
         self.test = CreacioTaulaTest(self.my_db, self.schema)
         self.my_db.esborrar_schema(self.schema)
         self.my_db.crear_schema(self.schema)
@@ -509,76 +511,76 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(transaccio_inicial.document.dada, transaccio_final.document.dada)
         self.assertEqual(transaccio_inicial.document.clau, transaccio_final.document.clau)
 
+#
+# class TestBloc(unittest.TestCase):
+#
+#     def setUp(self):
+#         self.my_db = MySqlBloc('localhost', 'root', 'root')
+#         self.schema = SCHEMA
+#         self.test = CreacioTaulaTest(self.my_db, self.schema)
+#         self.test.crear_schema_dades()
+#
+#     def test_crear(self):
+#         transaccio = Factoria.build_transaccio_from_db(self.my_db)
+#         uni = Factoria.build_universitat_from_db(self.my_db)
+#         bloc = Bloc(transaccio, "41b8e84497b3d73038a397e8b5e100", uni.public_key)
+#         return bloc
+#
+#     def test_guardar(self):
+#         bloc = self.test_crear()
+#         self.my_db.guardar_bloc(bloc)
+#
+#     def test_calcular_Hash(self):
+#         bloc = self.test_crear()
+#         self.assertEqual(bloc.calcular_hash(), bloc.calcular_hash())
+#
+#
+#     # def test_importar_ultim_bloc(self):
+#     #     self.test_guardar()
+#     #     num_bloc = self.my_db.id_ultim_bloc()
+#     #     bloc = Factoria.build_bloc_from_db(self.my_db, num_bloc)
+#     #     self.assertEqual(bloc.calcular_hash(), bloc.calcular_hash())
+#
+#
+# class TestBlockchainUniversity(unittest.TestCase):
+#
+#     def setUp(self):
+#         self.my_db = MySqlBloc('localhost', 'root', 'root')
+#         self.schema = SCHEMA
+#         self.test = CreacioTaulaTest(self.my_db, self.schema)
+#         self.test.crear_schema_dades()
+#
+#     def test_crear_genesis_bloc(self):
+#         bloc_chain = BlockchainUniversity(self.my_db)
+#         bloc_chain.crear_genesis_bloc()
+#         bloc_genesis = Factoria.build_bloc_from_db(self.my_db, 1)
+#
+#         self.assertEqual(bloc_genesis.index, 0)
+#         self.assertEqual(bloc_genesis.hash_bloc_anterior, "asfassdfsadfsa")
+#         self.assertEqual(bloc_genesis.id_document, '00000')
 
-class TestBloc(unittest.TestCase):
 
-    def setUp(self):
-        self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.schema = 'blockchainuniversity'
-        self.test = CreacioTaulaTest(self.my_db, self.schema)
-        self.test.crear_schema_dades()
+# class TestConexions(unittest.TestCase):
+#
+#     def test_conexio_servidor(self):
+#         HOST = ''  # Symbolic name meaning all available interfaces
+#         PORT = 50007  # Arbitrary non-privileged port
+#         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+#             s.bind((HOST, PORT))
+#             s.listen(1)
+#             conn, addr = s.accept()
+#             with conn:
+#                 print('Connected by', addr)
+#                 while True:
+#                     data = conn.recv(1024)
+#                     if not data: break
+#                     conn.sendall(data)
 
-    def test_crear(self):
-        transaccio = Factoria.build_transaccio_from_db(self.my_db)
-        uni = Factoria.build_universitat_from_db(self.my_db)
-        bloc = Bloc(transaccio, "41b8e84497b3d73038a397e8b5e100", uni.public_key)
-        return bloc
-
-    def test_guardar(self):
-        bloc = self.test_crear()
-        self.my_db.guardar_bloc(bloc)
-
-    def test_calcular_Hash(self):
-        bloc = self.test_crear()
-        self.assertEqual(bloc.calcular_hash(), bloc.calcular_hash())
-
-
-    # def test_importar_ultim_bloc(self):
-    #     self.test_guardar()
-    #     num_bloc = self.my_db.id_ultim_bloc()
-    #     bloc = Factoria.build_bloc_from_db(self.my_db, num_bloc)
-    #     self.assertEqual(bloc.calcular_hash(), bloc.calcular_hash())
-
-
-class TestBlockchainUniversity(unittest.TestCase):
-
-    def setUp(self):
-        self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.schema = 'blockchainuniversity'
-        self.test = CreacioTaulaTest(self.my_db, self.schema)
-        self.test.crear_schema_dades()
-
-    def test_crear_genesis_bloc(self):
-        bloc_chain = BlockchainUniversity(self.my_db)
-        bloc_chain.crear_genesis_bloc()
-        bloc_genesis = Factoria.build_bloc_from_db(self.my_db, 1)
-
-        self.assertEqual(bloc_genesis.index, 0)
-        self.assertEqual(bloc_genesis.hash_bloc_anterior, "asfassdfsadfsa")
-        self.assertEqual(bloc_genesis.id_document, '00000')
-
-
-class TestConexions(unittest.TestCase):
-
-    def test_conexio_servidor(self):
-        HOST = ''  # Symbolic name meaning all available interfaces
-        PORT = 50007  # Arbitrary non-privileged port
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind((HOST, PORT))
-            s.listen(1)
-            conn, addr = s.accept()
-            with conn:
-                print('Connected by', addr)
-                while True:
-                    data = conn.recv(1024)
-                    if not data: break
-                    conn.sendall(data)
-
-    def test_conexio_client(self):
-        HOST = '192.168.50.26'  # The remote host
-        PORT = 50007  # The same port as used by the server
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((HOST, PORT))
-            s.sendall(b'Hello, world udg')
-            data = s.recv(1024)
-        print('Received', repr(data))
+    # def test_conexio_client(self):
+    #     HOST = '192.168.50.26'  # The remote host
+    #     PORT = 50007  # The same port as used by the server
+    #     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    #         s.connect((HOST, PORT))
+    #         s.sendall(b'Hello, world udg')
+    #         data = s.recv(1024)
+    #     print('Received', repr(data))
