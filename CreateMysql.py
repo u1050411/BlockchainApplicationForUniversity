@@ -49,24 +49,25 @@ class MySqlBloc:
 
     def crear_taules_inicials(self):
         sqls = ["CREATE TABLE if not exists `usuari` ("
-                "`id` int NOT NULL,"
+                "`id`  varchar(8) NOT NULL,"
                 "`tipus` varchar(9) NOT NULL,"
                 "`nif` varchar(9) NOT NULL,"
                 "`nom` varchar(45) DEFAULT NULL,"
                 "`cognom` varchar(100) DEFAULT NULL,"
                 "`public_key` longtext NULL,"
                 "`contrasenya` longtext NULL,"
+                "`email` varchar(45) DEFAULT NULL,"
                 "PRIMARY KEY (`id`)) ",
 
                 "CREATE TABLE if not exists `private_key` ("
-                "`id_usuari` INT NOT NULL,"
+                "`id_usuari`  varchar(8) NOT NULL,"
                 "`private_key` longtext NULL,"
                 "PRIMARY KEY (`id_usuari`))",
 
                 "CREATE TABLE if not exists `transaccio` ("
                 "`id_transaccio` INT NOT NULL AUTO_INCREMENT,"
-                "`id_emissor` INT NOT NULL,"
-                "`id_receptor` INT NOT NULL,"
+                "`id_emissor` varchar(8) NOT NULL,"
+                "`id_receptor` varchar(8) NOT NULL,"
                 "`document` JSON NOT NULL ,"
                 "`id_document` INT NOT NULL ,"
                 "`data_creacio` DATETIME NOT NULL ,"
@@ -74,7 +75,7 @@ class MySqlBloc:
 
                 "CREATE TABLE if not exists `examen` ("
                 "`id_document` INT NOT NULL AUTO_INCREMENT,"
-                "`id_professor` INT NOT NULL,"
+                "`id_professor`  varchar(8) NOT NULL,"
                 "`data_examen` DATETIME NOT NULL,"
                 "`data_inici` DATETIME NULL,"
                 "`data_final` DATETIME NULL,"
@@ -83,13 +84,13 @@ class MySqlBloc:
 
                 "CREATE TABLE if not exists `estudiant_examen` ("
                 "`id_document` INT NOT NULL,"
-                "`id_estudiant` INT NOT NULL,"
+                "`id_estudiant`  varchar(8) NOT NULL,"
                 "`nota` INT NULL,"
                 "PRIMARY KEY (`id_document`, `id_estudiant`))",
 
                 "CREATE TABLE if not exists `estudiants_professor` ("
-                "`id_professor` INT NOT NULL,"
-                "`id_estudiant` INT NOT NULL,"
+                "`id_professor`  varchar(8) NOT NULL,"
+                "`id_estudiant`  varchar(8) NOT NULL,"
                 "`nota` INT NULL,"
                 "PRIMARY KEY (`id_professor`, `id_estudiant`))",
 
@@ -97,7 +98,7 @@ class MySqlBloc:
                 "`id_resposta` INT NOT NULL AUTO_INCREMENT,"
                 "`id_examen` INT NOT NULL,"
                 "`data_creacio` DATETIME NOT NULL,"
-                "`id_usuari` INT NOT NULL,"
+                "`id_usuari` varchar(8) NOT NULL,"
                 "`pdf` LONGBLOB  NULL,"
                 "PRIMARY KEY (`id_resposta`))",
 
@@ -194,7 +195,7 @@ class MySqlBloc:
         return self.importar_llista_sql(sql)
 
     def importar_estudiants_professor(self, professor):
-        sql = f'select id from `usuari` where `id` in (select id_estudiant from estudiants_professor where id_professor = {professor.id});'
+        sql = f'select id from `usuari` where `id` in (select id_estudiant from estudiants_professor where id_professor = "{professor.id}");'
         return self.importar_llista_enter_sql(sql)
 
     def importar_respostes(self, id_document):
@@ -216,8 +217,8 @@ class MySqlBloc:
         return self._cursor.fetchone()
 
     def importar_usuari(self, id_usuari):
-        sql = f'select `id`,`tipus`,`nif`,`nom`,`cognom`,`public_key`,`contrasenya` ' \
-              f'from usuari where id = {id_usuari} LIMIT 1'
+        sql = f'select `id`,`tipus`,`nif`,`nom`,`cognom`,`public_key`,`contrasenya` , `email` ' \
+              f'from usuari where id = "{id_usuari}" LIMIT 1'
         return self.importar_sql(sql)
 
     def importar_examen(self, id_document):
@@ -292,7 +293,7 @@ class MySqlBloc:
         return self.seguent_id("bloc", "id_bloc")
 
     def clau_privada(self, id_usuari):
-        sql = f'select `private_key` from `private_key` where `id_usuari` = {id_usuari} LIMIT 1'
+        sql = f'select `private_key` from `private_key` where `id_usuari` = "{id_usuari}" LIMIT 1'
         clau_string = self.importar_sql(sql)
         return RSA.importKey(clau_string[0])
 
@@ -311,10 +312,10 @@ class MySqlBloc:
         self.exportar_sql(sql, dades)
 
     def guardar_usuari(self, usuari):
-        sql = "INSERT INTO usuari(id, tipus, nif, nom, cognom, public_key, contrasenya) " \
-              "VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        sql = "INSERT INTO usuari(id, tipus, nif, nom, cognom, public_key, contrasenya, email) " \
+              "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
         dades = (usuari.id, usuari.tipus, usuari.nif, usuari.nom, usuari.cognom, usuari.str_publickey(),
-                 usuari.contrasenya)
+                 usuari.contrasenya, usuari.email)
         self.exportar_sql(sql, dades)
 
     def guardar_estudiants_professor(self, professor, estudiant):

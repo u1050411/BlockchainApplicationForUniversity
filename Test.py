@@ -40,62 +40,63 @@ class CreacioTaulaTest:
         self.my_db.guardar_universitat(uni)
 
     def crear_usuaris(self):
-        usuaris = [[1050411, '40373747T', ESTUDIANT, 'Pau', 'de Jesus Bras', 'password1'],
-                   [1050402, '40373946E', ESTUDIANT, 'Pere', 'de la Rosa', 'password2'],
-                   [1050403, '40332506M', ESTUDIANT, 'Cristina', 'Sabari Vidal', 'password3'],
-                   [1050404, '40372506P', ESTUDIANT, 'Diaz', 'Marti Sanchez', 'password4'],
-                   [2050404, '40332507Y', PROFESSOR, 'Albert', 'Marti Sabari', 'password5'],
-                   [2000256, '40332508Y', PROFESSOR, 'Teodor Maria', 'Jove Lagunas', 'password6']]
+        usuaris = [['u1050411', '40373747T', ESTUDIANT, 'Pau', 'de Jesus Bras', 'password1', 'u1050411@campus.udg.edu'],
+                   ['u1050402', '40373946E', ESTUDIANT, 'Pere', 'de la Rosa', 'password2', 'u1050411@campus.udg.edu'],
+                   ['u1050403', '40332506M', ESTUDIANT, 'Cristina', 'Sabari Vidal', 'password3',
+                    'u1050411@campus.udg.edu'],
+                   ['u1050404', '40372506P', ESTUDIANT, 'Diaz', 'Marti Sanchez', 'password4',
+                    'u1050411@campus.udg.edu'],
+                   ['u2050404', '40332507Y', PROFESSOR, 'Albert', 'Marti Sabari', 'password5',
+                    'u1050411@campus.udg.edu'],
+                   ['u2000256', '40332508Y', PROFESSOR, 'Teodor Maria', 'Jove Lagunas', 'password6',
+                    'u1050411@campus.udg.edu']]
 
-        for id_usuari, nif, tipus, nom, cognom , contrasenya in usuaris:
+        for id_usuari, nif, tipus, nom, cognom, contrasenya, email in usuaris:
             key = RSA.generate(1024)
             private_key = key.exportKey('PEM').decode('ascii')
-            sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES({id_usuari}, "{private_key}")'
+            sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES("{id_usuari}", "{private_key}")'
             self.my_db.exportar_sql(sql)
             public_key = key.publickey()
             if tipus == ESTUDIANT:
-                usuari = Estudiant(id_usuari, nif, nom, cognom, public_key, contrasenya)
+                usuari = Estudiant(id_usuari, nif, nom, cognom, public_key, contrasenya, email)
             elif tipus == PROFESSOR:
-                usuari = Professor(id_usuari, nif, nom, cognom, public_key, contrasenya)
+                usuari = Professor(id_usuari, nif, nom, cognom, public_key, contrasenya, email)
             self.my_db.guardar_usuari(usuari)
 
-        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 2000256),
-                                                Factoria.build_usuari_from_db(self.my_db, 1050411))
-        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 2000256),
-                                                Factoria.build_usuari_from_db(self.my_db, 1050402))
-        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 2000256),
-                                                Factoria.build_usuari_from_db(self.my_db, 1050404))
-        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 2050404),
-                                                Factoria.build_usuari_from_db(self.my_db, 1050403))
-        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 2050404),
-                                                Factoria.build_usuari_from_db(self.my_db, 1050411))
-
-
-
+        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 'u2000256'),
+                                                Factoria.build_usuari_from_db(self.my_db, 'u1050411'))
+        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 'u2000256'),
+                                                Factoria.build_usuari_from_db(self.my_db, 'u1050402'))
+        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 'u2000256'),
+                                                Factoria.build_usuari_from_db(self.my_db, 'u1050404'))
+        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 'u2050404'),
+                                                Factoria.build_usuari_from_db(self.my_db, 'u1050403'))
+        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 'u2050404'),
+                                                Factoria.build_usuari_from_db(self.my_db, 'u1050411'))
 
     def crear_examens(self):
         examens = [[1, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
-                       f'pdf_minimo.pdf', 2050404, '2022-10-01T13:00', '2022-10-01T14:00'],
+                       f'pdf_minimo.pdf', 'u2050404', '2022-10-01T13:00', '2022-10-01T14:00'],
                    [2, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
-                       f'/pdf/Examen_2020-21-_26-03_primer_parcial.pdf', 2000256, '2022-10-01T12:00'
+                       f'/pdf/Examen_2020-21-_26-03_primer_parcial.pdf', 'u2000256', '2022-10-01T12:00'
                        , '2022-10-01T13:00']]
 
         for id_document, nom_fitxer, id_professor, data_inicial, data_final in examens:
             pdf = Factoria.recuperar_fitxer(nom_fitxer)
             professor = Factoria.build_usuari_from_db(self.my_db, id_professor)
             examen = Examen(id_document, professor, pdf, data_inicial, data_final)
-            estudiant = Factoria.build_usuari_from_db(self.my_db, '1050402')
+            estudiant = Factoria.build_usuari_from_db(self.my_db, 'u1050402')
             examen.afegir_estudiants(estudiant)
             self.my_db.guardar_examen(examen)
 
     def crear_respostes(self):
 
-        respostes = [[1, 1, 1050402, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
-                      f'Examen_2021_20_10_01_primer_parcial-solucio.pdf'],
-                     [2, 2, 1050403, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
-                      f'Examen_2020-21-_26-03_primer_parcial.pdf']]
+        respostes = [[1, 1, 'u1050402', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
+                                     f'Examen_2021_20_10_01_primer_parcial-solucio.pdf'],
+                     [2, 2, 'u1050403', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
+                                     f'Examen_2020-21-_26-03_primer_parcial.pdf']]
 
-        for id_resposta, id_examen, id_usuari,  nom_fitxer in respostes:
+        for id_resposta, id_examen, id_usuari, nom_fitxer in respostes:
             pdf = Factoria.recuperar_fitxer(nom_fitxer)
             estudiant = Factoria.build_usuari_from_db(self.my_db, id_usuari)
             resposta = RespostaExamen(id_resposta, id_examen, estudiant, pdf)
@@ -103,20 +104,20 @@ class CreacioTaulaTest:
 
     def crear_evaluacio(self):
 
-        respostes = [[3, 1, 2000256, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
-                      f'Examen_2021_20_10_01_primer_parcial-solucio.pdf'],
-                     [4, 2, 2050404, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
-                      f'Examen_2020-21-_26-03_primer_parcial.pdf']]
+        respostes = [[3, 1, 'u2000256', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
+                                     f'Examen_2021_20_10_01_primer_parcial-solucio.pdf'],
+                     [4, 2, 'u2050404', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
+                                     f'Examen_2020-21-_26-03_primer_parcial.pdf']]
 
-        for id_resposta, id_examen, id_usuari,  nom_fitxer in respostes:
+        for id_resposta, id_examen, id_usuari, nom_fitxer in respostes:
             pdf = Factoria.recuperar_fitxer(nom_fitxer)
             professor = Factoria.build_usuari_from_db(self.my_db, id_usuari)
             resposta = EvaluacioExamen(id_resposta, id_examen, professor, pdf)
             self.my_db.guardar_resposta_examen(resposta)
 
     def crear_transaccions(self):
-        receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
-        emissor = Factoria.build_usuari_from_db(self.my_db, 2050404)
+        receptor = Factoria.build_usuari_from_db(self.my_db, 'u1050402')
+        emissor = Factoria.build_usuari_from_db(self.my_db, 'u2050404')
         examen = Factoria.build_examen_from_db(self.my_db, 1)
         transaccio_inicial = Transaccio(emissor, receptor, examen)
         self.my_db.guardar_transaccio(transaccio_inicial)
@@ -140,8 +141,8 @@ class TestUsuaris(unittest.TestCase):
 
     def test_creation(self):
         public_key = RSA.generate(1024).publickey()
-        estudiant = Estudiant(1050406, '40332505G', 'Marta', "Rodriguez", public_key, "password7")
-        self.assertEqual(estudiant.id, 1050406)
+        estudiant = Estudiant('u1050406', '40332505G', 'Marta', "Rodriguez", public_key, "password7")
+        self.assertEqual(estudiant.id, 'u1050406')
         self.assertEqual(estudiant.nif, '40332505G')
         self.assertEqual(estudiant.nom, 'Marta')
         self.assertEqual(estudiant.cognom, 'Rodriguez')
@@ -157,7 +158,7 @@ class TestProfessors(unittest.TestCase):
         self.test.crear_schema_dades()
 
     def test_llista_alumnes(self):
-        professor = Factoria.build_usuari_from_db(self.my_db, 2000256)
+        professor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
         llista_alumnes = professor.llista_alumnes(self.my_db)
         print(llista_alumnes)
 
@@ -217,21 +218,19 @@ class TestMysql(unittest.TestCase):
         self.my_db.crear_schema(self.schema)
         self.my_db.crear_taules_inicials()
         self.test.crear_usuaris()
-        self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'id', '1050403'), True)
-
+        self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'id', 'u1050403'), True)
 
     def test_afegir_alumne_professor(self):
         self.test.crear_schema_dades()
-        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 2000256),
-                                                Factoria.build_usuari_from_db(self.my_db, 1050403))
+        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 'u2000256'),
+                                                Factoria.build_usuari_from_db(self.my_db, 'u1050403'))
 
     def test_llista_estudiant_professor(self):
         self.test.crear_schema_dades()
-        llista = self.my_db.importar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 2000256))
-        self.assertEqual(llista[0], 1050402)
-        self.assertEqual(llista[1], 1050404)
-        self.assertEqual(llista[2], 1050411)
-
+        llista = self.my_db.importar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 'u2000256'))
+        self.assertEqual(llista[0], 'u1050402')
+        self.assertEqual(llista[1], 'u1050404')
+        self.assertEqual(llista[2], 'u1050411')
 
     def test_crear_examens(self):
         self.my_db.esborrar_schema(self.schema)
@@ -247,22 +246,23 @@ class TestMysql(unittest.TestCase):
         self.assertEqual(self.my_db.existeix(self.schema, 'no_Taula', None, None), False)
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'nom', None), True)
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'no_Columna', None), False)
-        self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'id', '1050403'), True)
-        self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'id', '1070401'), False)
-        self.assertEqual(self.my_db.existeix(self.schema, 'private_key', 'id_usuari', '1050403'), True)
+        self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'id', 'u1050403'), True)
+        self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'id', 'u1070401'), False)
+        self.assertEqual(self.my_db.existeix(self.schema, 'private_key', 'id_usuari', 'u1050403'), True)
 
     def test_guardar_usuari(self):
         self.test.crear_schema_dades()
-        id_usuari = 1050704
+        id_usuari = 'u1050704'
         nif = '40373944C'
         nom = 'Pablo'
         cognom = 'Gutierrez'
-        password ='password9'
+        password = 'password9'
+        email = 'u1050704@campus.udg.edu'
         key = RSA.generate(1024)
         public_key = key.publickey()
         estudiant = Estudiant(id_usuari, nif, nom, cognom, public_key, password)
         self.my_db.guardar_usuari(estudiant)
-        self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'id', '1050411'), True)
+        self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'id', 'u1050411'), True)
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'nom', 'Pere'), True)
 
     def test_clau(self):
@@ -284,7 +284,7 @@ class TestMysql(unittest.TestCase):
         nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
         pdf = Factoria.recuperar_fitxer(nom_fitxer)
-        estudiant = Factoria.build_usuari_from_db(self.my_db, 1050411)
+        estudiant = Factoria.build_usuari_from_db(self.my_db, 'u1050411')
         id_resposta = self.my_db.seguent_id_resposta()
         resposta = RespostaExamen(id_resposta, 1, estudiant, pdf)
         self.my_db.guardar_resposta_examen(resposta)
@@ -299,17 +299,17 @@ class TestFactoria(unittest.TestCase):
         self.test.crear_schema_dades()
 
     def test_usuari(self):
-        estudiant = Factoria.build_usuari_from_db(self.my_db, 1050402)
-        self.assertEqual(estudiant.id, 1050402)
+        estudiant = Factoria.build_usuari_from_db(self.my_db, 'u1050402')
+        self.assertEqual(estudiant.id, 'u1050402')
         self.assertEqual(estudiant.nom, 'Pere')
-        professor = Factoria.build_usuari_from_db(self.my_db, 2000256)
-        self.assertEqual(professor.id, 2000256)
+        professor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
+        self.assertEqual(professor.id, 'u2000256')
         self.assertEqual(professor.nom, 'Teodor Maria')
 
     def test_examen(self):
         examen = Factoria.build_examen_from_db(self.my_db, 1)
         self.assertEqual(examen.id_document, 1)
-        self.assertEqual(examen.usuari.id, 2050404)
+        self.assertEqual(examen.usuari.id, 'u2050404')
 
     def test_to_json(self):
         examen = Factoria.build_examen_from_db(self.my_db, 1)
@@ -322,19 +322,19 @@ class TestFactoria(unittest.TestCase):
         resposta = Factoria.build_resposta_alumne_from_db(self.my_db, 1, 1)
         self.assertEqual(resposta.id_document, 1)
         self.assertEqual(resposta.id_examen, 1)
-        self.assertEqual(resposta.usuari.id, 1050402)
+        self.assertEqual(resposta.usuari.id, 'u1050402')
         self.assertEqual(resposta.usuari.tipus, ESTUDIANT)
 
     def test_evaluacio(self):
         resposta = Factoria.build_evaluacio_examen_from_db(self.my_db, 1, 3)
         self.assertEqual(resposta.id_document, 3)
         self.assertEqual(resposta.id_examen, 1)
-        self.assertEqual(resposta.usuari.id, 2000256)
+        self.assertEqual(resposta.usuari.id, 'u2000256')
         self.assertEqual(resposta.usuari.tipus, PROFESSOR)
 
     def test_transaccio(self):
-        receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
-        emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
+        receptor = Factoria.build_usuari_from_db(self.my_db, 'u1050402')
+        emissor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
         examen = Factoria.build_examen_from_db(self.my_db, 1)
         transaccio_inicial = Transaccio(emissor, receptor, examen)
         self.my_db.guardar_transaccio(transaccio_inicial)
@@ -366,17 +366,17 @@ class TestExamen(unittest.TestCase):
         nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
         pdf = Factoria.recuperar_fitxer(nom_fitxer)
-        professor = Factoria.build_usuari_from_db(self.my_db, 2000256)
+        professor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
         examen = Examen(1111, professor, pdf, '00000000', '00000000')
 
-        estudiant1 = Factoria.build_usuari_from_db(self.my_db, 1050411)
+        estudiant1 = Factoria.build_usuari_from_db(self.my_db, 'u1050411')
         examen.estudiants.append(estudiant1)
-        estudiant2 = Factoria.build_usuari_from_db(self.my_db, 1050402)
+        estudiant2 = Factoria.build_usuari_from_db(self.my_db, 'u1050402')
         examen.estudiants.append(estudiant2)
         nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
         pdf = Factoria.recuperar_fitxer(nom_fitxer)
-        estudiant = Factoria.build_usuari_from_db(self.my_db, 1050411)
+        estudiant = Factoria.build_usuari_from_db(self.my_db, 'u1050411')
         resposta = RespostaExamen(1, 1, estudiant, pdf)
         examen.respostes.append(resposta)
         self.assertEqual(examen.estudiants[0], estudiant1)
@@ -399,7 +399,7 @@ class TestRespostaExamen(unittest.TestCase):
         nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
         pdf = Factoria.recuperar_fitxer(nom_fitxer)
-        estudiant = Factoria.build_usuari_from_db(self.my_db, 1050411)
+        estudiant = Factoria.build_usuari_from_db(self.my_db, 'u1050411')
         resposta = RespostaExamen(1, 1, estudiant, pdf)
         self.assertEqual(resposta.id_document, 1)
         self.assertEqual(resposta.id_examen, 1)
@@ -423,7 +423,7 @@ class TestEvaluacioExamen(unittest.TestCase):
         nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
         pdf = Factoria.recuperar_fitxer(nom_fitxer)
-        estudiant = Factoria.build_usuari_from_db(self.my_db, 1050411)
+        estudiant = Factoria.build_usuari_from_db(self.my_db, 'u1050411')
         resposta = EvaluacioExamen(1, 1, estudiant, pdf)
         self.assertEqual(resposta.id_document, 1)
         self.assertEqual(resposta.id_examen, 1)
@@ -446,7 +446,7 @@ class TestEncriptador(unittest.TestCase):
         self.test.crear_schema_dades()
 
     def test_encriptar_desencriptar(self):
-        emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
+        emissor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
         examen = Factoria.build_examen_from_db(self.my_db, 1)
         examen_encriptar = Encriptador(examen, emissor.public_key)
         examen_resultat = examen_encriptar.desencriptar(self.my_db.clau_privada(emissor.id))
@@ -475,8 +475,8 @@ class TestTransaction(unittest.TestCase):
 
     @property
     def crear_transaccio(self):
-        receptor = Factoria.build_usuari_from_db(self.my_db, 1050402)
-        emissor = Factoria.build_usuari_from_db(self.my_db, 2000256)
+        receptor = Factoria.build_usuari_from_db(self.my_db, 'u1050402')
+        emissor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
         examen = Factoria.build_examen_from_db(self.my_db, 1)
         transaccio = Transaccio(emissor, receptor, examen)
         return receptor, emissor, examen, transaccio
@@ -576,11 +576,11 @@ class TestTransaction(unittest.TestCase):
 #                     if not data: break
 #                     conn.sendall(data)
 
-    # def test_conexio_client(self):
-    #     HOST = '192.168.50.26'  # The remote host
-    #     PORT = 50007  # The same port as used by the server
-    #     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    #         s.connect((HOST, PORT))
-    #         s.sendall(b'Hello, world udg')
-    #         data = s.recv(1024)
-    #     print('Received', repr(data))
+# def test_conexio_client(self):
+#     HOST = '192.168.50.26'  # The remote host
+#     PORT = 50007  # The same port as used by the server
+#     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+#         s.connect((HOST, PORT))
+#         s.sendall(b'Hello, world udg')
+#         data = s.recv(1024)
+#     print('Received', repr(data))

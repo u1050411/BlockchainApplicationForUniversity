@@ -49,13 +49,13 @@ class Factoria:
         if my_db.existeix_usuari(id_usuari):
             usuari_db = my_db.importar_usuari(id_usuari)
             if usuari_db is not None:
-                id_us, tipus, nif, nom, cognom, public_key_str, contrasenya = usuari_db
+                id_us, tipus, nif, nom, cognom, public_key_str, contrasenya, email = usuari_db
                 public_key = RSA.importKey(public_key_str)
                 if tipus == ESTUDIANT:
-                    estudiant = Estudiant(id_usuari, nif, nom, cognom, public_key, contrasenya)
+                    estudiant = Estudiant(id_usuari, nif, nom, cognom, public_key, contrasenya, email)
                     return estudiant
                 elif tipus == PROFESSOR:
-                    professor = Professor(id_usuari, nif, nom, cognom, public_key, contrasenya)
+                    professor = Professor(id_usuari, nif, nom, cognom, public_key, contrasenya, email)
                     return professor
         return None
 
@@ -189,12 +189,13 @@ class Encriptador:
 
 class Usuari:
 
-    def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None, contrasenya=None):
+    def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None, contrasenya=None, email=None):
         self.id = id_usuari
         self.nif = nif
         self.nom = nom
         self.cognom = cognom
         self.contrasenya = contrasenya
+        self.email = email
         self.tipus = USUARI
         self.public_key = public_key
 
@@ -206,7 +207,10 @@ class Usuari:
             'cognom': self.cognom,
             'tipus': self.tipus,
             'public_key': self.str_publickey(),
-            'contrasenya': self.contrasenya})
+            'contrasenya': self.contrasenya,
+            'email': self.email
+
+        })
 
     @staticmethod
     def crear_json(usuari_json):
@@ -217,6 +221,7 @@ class Usuari:
         cognom = usuari['cognom']
         tipus = usuari['tipus']
         contrasenya = usuari['contrasenya']
+        email = usuari['email']
         public_key = RSA.importKey(usuari['public_key'])
         if tipus == ESTUDIANT:
             usuari = Estudiant(id_usuari, nif, nom, cognom, public_key, contrasenya)
@@ -252,8 +257,8 @@ class Usuari:
 
 
 class Professor(Usuari):
-    def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None, contrasenya=None):
-        super(Professor, self).__init__(id_usuari, nif, nom, cognom, public_key, contrasenya)
+    def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None, contrasenya=None, email=None):
+        super(Professor, self).__init__(id_usuari, nif, nom, cognom, public_key, contrasenya, email)
         self.tipus = PROFESSOR
 
     def llista_alumnes(self, my_db):
@@ -266,8 +271,8 @@ class Professor(Usuari):
 
 
 class Estudiant(Usuari):
-    def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None, contrasenya=None):
-        super(Estudiant, self).__init__(id_usuari, nif, nom, cognom, public_key, contrasenya)
+    def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None, contrasenya=None, email=None):
+        super(Estudiant, self).__init__(id_usuari, nif, nom, cognom, public_key, contrasenya, email)
         self.tipus = ESTUDIANT
 
     # def to_dict(self):
