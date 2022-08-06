@@ -198,6 +198,11 @@ class MySqlBloc:
         sql = f'select id from `usuari` where `id` in (select id_estudiant from estudiants_professor where id_professor = "{professor.id}");'
         return self.importar_llista_enter_sql(sql)
 
+    def importar_examens_professor(self, professor):
+        sql = f'select `id_document`, `id_professor`, `data_examen`, `data_inici`, `data_final`, `pdf` ' \
+              f'from `examen` where `id_professor` = "{professor.id}"'
+        return self.importar_llista_enter_sql(sql)
+
     def importar_respostes(self, id_document):
         sql = f'select id_resposta, data_creacio, id_usuari, pdf  ' \
               f'from `resposta_examen` where `id_examen` = {id_document}'

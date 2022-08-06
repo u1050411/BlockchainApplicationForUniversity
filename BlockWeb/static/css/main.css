@@ -20,6 +20,46 @@ body {
     background-color: #001489;
 	border-bottom: 1px solid #353635;
 }
+
+
+.header ul {
+    list-style-type: none; /* Treu el subratllat*/
+    margin: 0px; /*Treiem espais i marges */
+    padding: 0px;
+    background: #5b80b2;
+    overflow: hidden;
+    color: white;
+}
+.header ul li {
+    float: left; /*Esto pose la lista una detras de otra */
+    color: white;
+}
+.header ul li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 16px 16px;
+    text-decoration: none;
+    border-right: black; /*Creem un borde blau a la dreta*/
+}
+.header ul li a:visited {
+    /*background: #6f94c6;*/
+    overflow: hidden;
+    color: white;
+    list-style-type: none; /* Treu el subratllat*/
+    display: block;
+    text-align: center;
+    padding: 16px 16px;
+    text-decoration: none;
+    border-right: black;
+}
+
+.header ul li a:hover {
+    /*background-color: #001489;*/
+    color: #4ac1f7;
+    list-style-type: none; /* Treu el subratllat*/
+}
+
 .columna_esquerra{
 	width: 30%;
 	text-align: center;
@@ -120,44 +160,6 @@ body {
     overflow: hidden;
     color: white;
 }
-
-.header ul {
-    list-style-type: none; /* Treu el subratllat*/
-    margin: 0px; /*Treiem espais i marges */
-    padding: 0px;
-    background: #5b80b2;
-    overflow: hidden;
-    color: white;
-}
-.header ul li {
-    float: left; /*Esto pose la lista una detras de otra */
-}
-.header ul li a {
-    display: block;
-    color: white;
-    text-align: center;
-    padding: 16px 16px;
-    text-decoration: none;
-    border-right: black; /*Creem un borde blau a la dreta*/
-}
-.header ul li a:visited {
-    background: #6f94c6;
-    overflow: hidden;
-    color: black;
-    list-style-type: none; /* Treu el subratllat*/
-    display: block;
-    text-align: center;
-    padding: 16px 16px;
-    text-decoration: none;
-    border-right: black;
-}
-
-.header ul li a:hover {
-    background-color: #001489;
-    color: #4ac1f7;
-    list-style-type: none; /* Treu el subratllat*/
-}
-
 .nav_opcions{
     alignment: right;
 }
@@ -254,6 +256,12 @@ body {
 #login-box .form .item i {
     color: white;
     font-size: 18px;
+}
+.logout
+{
+    z-index: 5;
+    right: 10px;
+    position: absolute;
 }
 
 

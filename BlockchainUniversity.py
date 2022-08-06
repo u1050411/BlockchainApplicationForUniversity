@@ -263,11 +263,18 @@ class Professor(Usuari):
 
     def llista_alumnes(self, my_db):
         llista = my_db.importar_estudiants_professor(self)
-        llista_json = list()
+        llista_alumnes = list()
         for x in llista:
             estudiant = Factoria.build_usuari_from_db(my_db, x)
-            llista_json.append(estudiant)
-        return llista_json
+            llista_alumnes.append(estudiant)
+        return llista_alumnes
+
+    def llista_examens(self, my_db):
+        llista = my_db.importar_examens_professor(self)
+        llista_examens = list()
+        for x in llista:
+            llista_examens.append(x)
+        return llista_examens
 
 
 class Estudiant(Usuari):

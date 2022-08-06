@@ -16,17 +16,23 @@
              <a href="http://www.udg.edu/" title="www.udg.edu">
         <img img="logo_img" src="../static/img/logo_udg_inv.png" >
         </a>
+            {% if session %}
+            <ul class="logout">
+            <li><p>{{session['nom']}}</p></li>
+            <li><a href="logout">logout</a></li>
+            </ul>
+            {% endif %}
+
             <ul>
-        <li><a href="/BlockWeb/static">Inici</a></li>
-        <li><a href="professor">Professors</a></li>
-        <li><a href="alumne">Alumnes</a></li>
+{% block navegacio1 %}
+{% endblock %}
     </ul>
         </div>
 
 </header>
 <!-- Aqui posarem el codi de la pagina -->
 
-{% block navegacio %}
+{% block navegacio2 %}
 {% endblock %}
 {% block content %}
 {% endblock %}

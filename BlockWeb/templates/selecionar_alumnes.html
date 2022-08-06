@@ -1,11 +1,10 @@
 {% extends 'layout.html' %}
-{% block navegacio %}
-    <div class="nav_opcions">
-    <ul>
-        <li><a href="professor">Veure Examens</a></li>
-        <li><a href="alumne">Enviar Correcció Examens</a></li>
+{% block navegacio1 %}
+     <ul>
+        <li><a href="seleccionar alumnes">Enviar Examens</a></li>
+        <li><a href="afegir_examen">Veure Examens</a></li>
+        <li><a href="correccio">Enviar Correcció Examens</a></li>
     </ul>
-    </div>
 {% endblock %}
 {% block content %}
  <section class="intro">
@@ -14,11 +13,19 @@
     </div>
    <div class="column_dreta">
         <form action="/enviar_examens" method="POST">
-          <select  name="select_usuaris" id="enviar" multiple >
-                   {% for id, nif, nom, cognom in llista %}
+          <p>Tria el examen</p>
+          <select  name="select_examen" id="enviar">
+                   {% for id in llista_2 %}
+                   {<option value={{id}}>{{id}}</option>
+                   {% endfor %}
+            </select>
+            <p>Tria els alumnes </p>
+            <select  name="select_usuaris" id="examens" multiple >
+                   {% for id, nif, nom, cognom in llista_1 %}
                    {<option value={{id}}>{{id}} {{nom}} {{cognom}}</option>
                    {% endfor %}
             </select>
+            <p></p>
           <input type="submit" value="enviar" class="button-1">
         </form>
    </div>

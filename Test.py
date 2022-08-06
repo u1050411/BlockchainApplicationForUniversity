@@ -79,7 +79,13 @@ class CreacioTaulaTest:
                        f'pdf_minimo.pdf', 'u2050404', '2022-10-01T13:00', '2022-10-01T14:00'],
                    [2, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
                        f'/pdf/Examen_2020-21-_26-03_primer_parcial.pdf', 'u2000256', '2022-10-01T12:00'
-                       , '2022-10-01T13:00']]
+                       , '2022-10-01T13:00'],
+                   [3, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
+                       f'pdf_minimo.pdf', 'u2000256', '2022-10-01T13:00', '2022-10-01T14:00'],
+                   [4, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
+                       f'/pdf/Examen_2020-21-_26-03_primer_parcial.pdf', 'u2050404', '2022-10-01T12:00'
+                       , '2022-10-01T13:00']
+                   ]
 
         for id_document, nom_fitxer, id_professor, data_inicial, data_final in examens:
             pdf = Factoria.recuperar_fitxer(nom_fitxer)
@@ -160,6 +166,11 @@ class TestProfessors(unittest.TestCase):
     def test_llista_alumnes(self):
         professor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
         llista_alumnes = professor.llista_alumnes(self.my_db)
+        print(llista_alumnes)
+
+    def test_llista_examens(self):
+        professor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
+        llista_alumnes = professor.llista_examens(self.my_db)
         print(llista_alumnes)
 
 
