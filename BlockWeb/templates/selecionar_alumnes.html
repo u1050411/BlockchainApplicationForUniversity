@@ -12,13 +12,14 @@
      <p>Tria els alumne als que vols enviar l'examen </p>
     </div>
    <div class="column_dreta">
-        <form action="/enviar_examens" method="POST">
-          <p>Tria el examen</p>
-          <select  name="select_examen" id="enviar">
-                   {% for id in llista_2 %}
-                   {<option value={{id}}>{{id}}</option>
-                   {% endfor %}
-            </select>
+        <form action="{{ url_for('enviar_examen') }}" method="POST" autocomplete="off" enctype="multipart/form-data">
+          <p>Tria l'hora limit de entrega</p>
+            <input type="datetime-local"
+       name="data_entrega" value={{data_avui}}
+       min={{data_avui}} max="2030-06-14T00:00">
+          <p>Tria el pdf</p>
+            <input name="path_fitxer" type="file" value="" />
+<!--            <embed src="files/Brochure.pdf" type="application/pdf" width="100%" height="600px" />-->
             <p>Tria els alumnes </p>
             <select  name="select_usuaris" id="examens" multiple >
                    {% for id, nif, nom, cognom in llista_1 %}
