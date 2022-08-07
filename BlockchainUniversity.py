@@ -9,7 +9,9 @@ from datetime import datetime
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA1
 from Crypto.PublicKey import RSA
+from Crypto.Signature import PKCS1_PSS
 from cryptography.fernet import Fernet
+from Crypto.Hash import SHA
 
 UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
@@ -149,14 +151,29 @@ class Encriptador:
             self.dada = encriptador.encrypt(dada_byte)
 
     @staticmethod
-    def crear_json(dada_json):
-        encript_json = json.loads(dada_json)
-        clau = encript_json['clau']
-        dada = encript_json['dada']
-        dada_encriptat = Encriptador()
-        dada_encriptat.dada = dada
-        dada_encriptat.clau = clau
-        return dada_encriptat
+    def signar(dada=None, private_key=None):
+        h = SHA.new()
+        h.update(dada)
+        signer = PKCS1_PSS.new(private_key)
+        return signer.sign(h)
+
+    @staticmethod
+    def verificar_sign(dada=None, public_key=None):
+        h = SHA.new()
+        h.update(dada)
+        verifier = PKCS1_PSS.new(public_key)
+        return verifier.verify(h, public_key)
+
+
+    # @staticmethod
+    # def crear_json(dada_json):
+    #     encript_json = json.loads(dada_json)
+    #     clau = encript_json['clau']
+    #     dada = encript_json['dada']
+    #     dada_encriptat = Encriptador()
+    #     dada_encriptat.dada = dada
+    #     dada_encriptat.clau = clau
+    #     return dada_encriptat
 
     # def get_dada(self, private_key):
     #     desencriptador = PKCS1_OAEP.new(private_key)
@@ -185,6 +202,8 @@ class Encriptador:
         key_simetric = Fernet(clau_simetrica)
         dada_desencriptada = key_simetric.decrypt(self.dada).decode()
         return dada_desencriptada
+
+
 
 
 class Usuari:
@@ -604,11 +623,3 @@ class BlockchainUniversity:
         self.transaccio_noconfirmades = []
         return new_bloc.index
 
-# class FitxersPdf:
-#     OUTPUT_DIR = Path('data')
-#
-#
-#     def llegirPdf(self):
-# # read the binary signature
-# with open(signature_file_name, 'rb') as f:
-#     read_signature = f.read()

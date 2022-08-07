@@ -467,6 +467,13 @@ class TestEncriptador(unittest.TestCase):
         self.assertEqual(examen.pdf, examen_final.pdf)
         self.assertEqual(examen.data_creacio, examen_final.data_creacio)
 
+    def test_signar_verificar(self):
+        private_key = RSA.generate(1024)
+        public_key = private_key.publickey()
+
+        dada = Encriptador.signar("Hola".encode("utf8"), private_key)
+        self.assertEqual(Encriptador.verificar_sign(dada,public_key), True)
+
 
 class TestTransaction(unittest.TestCase):
 
@@ -522,20 +529,20 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(transaccio_inicial.document.dada, transaccio_final.document.dada)
         self.assertEqual(transaccio_inicial.document.clau, transaccio_final.document.clau)
 
-#
-# class TestBloc(unittest.TestCase):
-#
-#     def setUp(self):
-#         self.my_db = MySqlBloc('localhost', 'root', 'root')
-#         self.schema = SCHEMA
-#         self.test = CreacioTaulaTest(self.my_db, self.schema)
-#         self.test.crear_schema_dades()
-#
-#     def test_crear(self):
-#         transaccio = Factoria.build_transaccio_from_db(self.my_db)
-#         uni = Factoria.build_universitat_from_db(self.my_db)
-#         bloc = Bloc(transaccio, "41b8e84497b3d73038a397e8b5e100", uni.public_key)
-#         return bloc
+
+class TestBloc(unittest.TestCase):
+
+    def setUp(self):
+        self.my_db = MySqlBloc('localhost', 'root', 'root')
+        self.schema = SCHEMA
+        self.test = CreacioTaulaTest(self.my_db, self.schema)
+        self.test.crear_schema_dades()
+
+    def test_crear(self):
+        transaccio = Factoria.build_transaccio_from_db(self.my_db)
+        uni = Factoria.build_universitat_from_db(self.my_db)
+        bloc = Bloc(transaccio, "41b8e84497b3d73038a397e8b5e100", uni.public_key)
+        return bloc
 #
 #     def test_guardar(self):
 #         bloc = self.test_crear()
