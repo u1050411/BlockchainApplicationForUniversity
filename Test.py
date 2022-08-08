@@ -468,11 +468,20 @@ class TestEncriptador(unittest.TestCase):
         self.assertEqual(examen.data_creacio, examen_final.data_creacio)
 
     def test_signar_verificar(self):
-        private_key = RSA.generate(1024)
-        public_key = private_key.publickey()
+        emissor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
+        examen = Factoria.build_examen_from_db(self.my_db, 1)
+        examen_encriptar = Encriptador(examen, emissor.public_key)
+        examen_encriptar.signar(self.my_db.clau_privada(emissor.id))
+        self.assertTrue(examen_encriptar.verificar_sign(emissor.public_key))
+        examen_resultat = examen_encriptar.desencriptar(self.my_db.clau_privada(emissor.id))
+        examen_final = Examen.create_json(examen_resultat)
+        self.assertEqual(examen.id_document, examen_final.id_document)
+        self.assertEqual(examen.usuari.id, examen_final.usuari.id)
+        self.assertEqual(examen.pdf, examen_final.pdf)
+        self.assertEqual(examen.data_creacio, examen_final.data_creacio)
 
-        dada = Encriptador.signar("Hola".encode("utf8"), private_key)
-        self.assertEqual(Encriptador.verificar_sign(dada,public_key), True)
+
+
 
 
 class TestTransaction(unittest.TestCase):

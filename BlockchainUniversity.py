@@ -7,11 +7,12 @@ import json
 from datetime import datetime
 
 from Crypto.Cipher import PKCS1_OAEP
-from Crypto.Hash import SHA1
+from Crypto.Hash import SHA1, SHA
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_PSS
 from cryptography.fernet import Fernet
 from Crypto.Hash import SHA
+from cryptography.hazmat.primitives.hashes import SHA256
 
 UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
@@ -141,6 +142,7 @@ class Encriptador:
         if dada is None:
             self.clau = None
             self.dada = None
+            self.sign = None
         else:
             key_simetric = Fernet.generate_key()
             encriptar_clau = PKCS1_OAEP.new(public_key)
@@ -149,21 +151,17 @@ class Encriptador:
             dada_byte = data_json.encode("utf-8")
             encriptador = Fernet(key_simetric)
             self.dada = encriptador.encrypt(dada_byte)
+            self.sign = None
 
-    @staticmethod
-    def signar(dada=None, private_key=None):
-        h = SHA.new()
-        h.update(dada)
+    def signar(self, private_key=None):
+        h = SHA.new(self.dada)
         signer = PKCS1_PSS.new(private_key)
-        return signer.sign(h)
+        self.sign = signer.sign(h)
 
-    @staticmethod
-    def verificar_sign(dada=None, public_key=None):
-        h = SHA.new()
-        h.update(dada)
+    def verificar_sign(self, public_key=None):
+        h = SHA.new(self.dada)
         verifier = PKCS1_PSS.new(public_key)
-        return verifier.verify(h, public_key)
-
+        return verifier.verify(h, self.sign)
 
     # @staticmethod
     # def crear_json(dada_json):
@@ -506,6 +504,7 @@ class Bloc:
         # self.id_receptor = trans.receptor.id
         # self.id_document = trans.id_document
         self.transaccio = Encriptador(trans, universitat_public_key)
+        self.transaccio.signar(private_key)
         self.hash_bloc_anterior = hash_bloc_anterior
         self.nonce = 0
 
