@@ -250,6 +250,15 @@ class MySqlBloc:
             sql = f"DROP DATABASE `{schema}`"
             self.exportar_sql(sql)
 
+    def esborrar_dada(self, taula, columna, dada):
+        if self.existeix(self.schema, taula, columna, dada):
+            sql = f"DELETE FROM `{self.schema}`.`{taula}` WHERE `{columna}` = {dada}"
+            self.exportar_sql(sql)
+
+    def esborrar_transaccio(self, id_transac):
+        self.esborrar_dada("transaccio", "id_transaccio", id_transac)
+
+
     def tancar(self):
         try:
             self._cursor.close()
@@ -278,6 +287,9 @@ class MySqlBloc:
 
     def existeix_examen(self, id_document):
         return self.existeix(self.schema, 'examen', 'id_document', id_document)
+
+    def existeix_transaccio(self, id_transac):
+        return self.existeix(self.schema, 'transaccio', 'id_transaccio', id_transac)
 
     def seguent_id(self, taula, columna):
         sql = f"select Max(`{columna}`) from `{taula}`"
@@ -329,15 +341,9 @@ class MySqlBloc:
         self.exportar_sql(sql, dades)
 
     def guardar_bloc(self, bloc):
-        ultim = self.ultim_bloc()
-        if ultim is None:
-            id = 0
-        else:
-            id = ultim.id_bloc
-        sql = "INSERT INTO bloc (`id_bloc`,`data_bloc`, `transaccio`,`hash_bloc_anterior`) VALUES (%s, %s, %s, %s)"
-        dades = (id, bloc.data_bloc, Factoria.to_json(bloc.transaccio), bloc.hash_bloc_anterior)
+        sql = "INSERT INTO bloc (`id_bloc`,`transaccio`,`hash_bloc_anterior`) VALUES (%s, %s, %s, %s)"
+        dades = (bloc.id, bloc.transaccio, bloc.hash_bloc_anterior)
         self.exportar_sql(sql, dades)
-
 
     def ultim_bloc(self):
         sql = "SELECT MAX(id_bloc) FROM bloc"
@@ -385,3 +391,5 @@ class MySqlBloc:
         dades = (transaccio.emissor.id, transaccio.receptor.id, encrip_to_json,
                  transaccio.id_document, transaccio.data_creacio,)
         self.exportar_sql(sql, dades)
+
+

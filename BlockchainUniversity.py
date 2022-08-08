@@ -140,6 +140,7 @@ class Encriptador:
 
     def __init__(self, dada=None, public_key=None):
         if dada is None:
+            self.nom = None
             self.clau = None
             self.dada = None
             self.sign = None
@@ -152,6 +153,7 @@ class Encriptador:
             encriptador = Fernet(key_simetric)
             self.dada = encriptador.encrypt(dada_byte)
             self.sign = None
+            self.nom = None
 
     def signar(self, private_key=None):
         h = SHA.new(self.dada)
@@ -472,9 +474,9 @@ class Transaccio:
         trans.data_creacio = data_creacio
         return trans
 
-    def sign(self, data):
-        h = SHA1.new(data)
-        return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
+    # def sign(self, data):
+    #     h = SHA1.new(data)
+    #     return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
 
     def to_dict(self):
         return collections.OrderedDict({
@@ -489,37 +491,33 @@ class Transaccio:
     #     rest = self.to_dict()
     #     return json.dumps(rest, default=str)
 
-    def sign_transaction(self):
-        # return self.emissor.sign(str(self.to_dict()).encode('utf8'))
-        block_json = Factoria.to_json(self)
-        return self.emissor.sign(block_json.encode(UTF_8))
+    # def sign_transaction(self):
+    #     # return self.emissor.sign(str(self.to_dict()).encode('utf8'))
+    #     block_json = Factoria.to_json(self)
+    #     return self.emissor.sign(block_json.encode(UTF_8))
 
 
 class Bloc:
     # Classe creació del bloc
-    def __init__(self, trans=None, hash_bloc_anterior=None, universitat_public_key=None):
-        self.index = 0
+    def __init__(self, id=None, trans=None, hash_bloc_anterior=None, my_db=None):
+        self.id = id
         self.data_bloc = datetime.now().isoformat()
-        # self.id_emissor = trans.emissor.id
-        # self.id_receptor = trans.receptor.id
-        # self.id_document = trans.id_document
-        self.transaccio = Encriptador(trans, universitat_public_key)
-        self.transaccio.signar(private_key)
+        uni = Factoria.build_universitat_from_db(my_db)
+        self.transaccio = Encriptador(trans, uni.public_key)
+        self.transaccio.signar(uni.private_key)
+        self.transaccio.nom = uni.nom
         self.hash_bloc_anterior = hash_bloc_anterior
-        self.nonce = 0
 
     @classmethod
-    def crear_json(cls, dada):
-        pass
+    def crear_json(cls, bloc_json):
+        cls.id = bloc_json['id']
+        cls.transaccio = bloc_json['transaccions']
+        cls.hash_bloc_anterior = bloc_json['hash_bloc_anterior']
 
     def to_dict(self):
         return collections.OrderedDict({
-            'index': self.index,
-            'data_bloc': self.data_bloc,
-            # 'id_emissor': self.id_emissor,
-            # 'id_receptor': self.id_receptor,
-            # 'id_document': self.id_document,
-            'transaccions': Factoria.to_json(self.transaccio),
+            'id': self.id,
+            'transaccions': self.transaccio,
             'hash_bloc_anterior': self.hash_bloc_anterior})
 
     def calcular_hash(self):
@@ -527,79 +525,43 @@ class Bloc:
         block_string = Factoria.to_json(self)
         return hashlib.sha256(block_string.encode()).hexdigest()
 
-    # def guardar_bloc(self, my_db):
-    #     data_transaccio = self.data_transaccio
-    #     id_emissor = self.id_emissor
-    #     id_receptor = self.id_receptor
-    #     id_doc = self.id_document
-    #     transaccio = self.transaccio
-    #     hash_bloc = self.hash_bloc_anterior
-    #     my_db.guardar_bloc(data_transaccio, id_emissor, id_receptor, id_doc, transaccio, hash_bloc)
 
 
 class BlockchainUniversity:
-    # Dificultat del hash
-    dificultat = 2
 
-    def __init__(self, my_db):
+    def __init__(self,my_db):
         self.my_db = my_db
-        self.crear_genesis_bloc()
+
 
     def crear_genesis_bloc(self):
         """
        Creacio del bloc Inicial.
         """
-        uni = Factoria.build_universitat_from_db(self.my_db)
         public_key = RSA.generate(1024).publickey()
-        genesis = Estudiant(0, '0', 'Genesis', "Genesis", public_key)
+        genesis = Estudiant('Genesis', 'Genesis', 'Genesis', "Genesis", public_key, "Genesis")
         pdf = base64.b64encode("Genesis".encode())
         doc = Document(0, 0, genesis, pdf)
         transaccio = Transaccio(genesis, genesis, doc)
-        genesis_bloc = Bloc(transaccio, 0, uni.public_key)
+        genesis_bloc = Bloc(0, transaccio, 0, self.my_db)
         genesis_bloc.hash = genesis_bloc.calcular_hash()
         self.my_db.guardar_bloc(genesis_bloc)
 
-    def afegir_bloc(self, bloc, hash_prova):
+    def afegir_bloc(self, bloc):
         """
         Una funció que afegeix el bloc a la cadena després de la verificació.
          La verificació inclou:
          * Block apunti al block anterior
-         * Que hash_prova satisfà la dificultat prevista
+         * Que vingui de una font valida
         """
-        hash_anterior = self.my_db.ultim_bloc().calcular_hash()
 
-        if hash_anterior != bloc.hash_bloc_anterior:
-            return False
-
-        if not self.es_prova_valida(bloc, hash_prova):
-            return False
-
-        bloc.hash = hash_prova
-        self.cadena.append(bloc)
-        return True
-
-    @staticmethod
-    def es_prova_valida(bloc, hash_bloc):
-        """
-        Comprovem si el hash del bloc és vàlid i satisfà els criteris de dificultat
-        """
-        return (hash_bloc.startswith('0' * BlockchainUniversity.dificultat) and
-                hash_bloc == bloc.hash_correcte)
-
-    @staticmethod
-    def hash_correcte(bloc, bloc_hash):
-        """
-        Funció que prova diferents valors de nonce per obtenir un hash
-        que compleix els nostres criteris de dificultat.
-        """
-        bloc.nonce = 0
-
-        hash_calculat = bloc.calcular_hash()
-        while not hash_calculat.startswith('0' * BlockchainUniversity.dificultat):
-            bloc.nonce += 1
-            hash_calculat = bloc.calcular_hash()
-
-        return hash_calculat
+        bloc = bloc.crear_json(bloc)
+        ultim_bloc = self.my_db.ultim_bloc()
+        if bloc.transaccio.verificar:
+            if bloc.hash_bloc_anterior == ultim_bloc.calcular_hash():
+                if bloc.id == ultim_bloc.id+1:
+                    self.my_db.guardar_bloc(bloc)
+                    return False
+        return False
 
     def afegir_nova_transaccio(self, transaccio):
         self.transaccio_noconfirmades.append(transaccio)
@@ -609,16 +571,14 @@ class BlockchainUniversity:
     Aquesta funció serveix com a interfície per afegir la transacció pendent a la cadena de blocs afegint-les al bloc
          i esbrinar el hash.
         """
-        if not self.transaccio_noconfirmades:
-            return False
-
-        ultim_bloc = self.ultim_bloc
-        index = ultim_bloc.index + 1
-        transactions = self.transaccio_noconfirmades
-        hash_anterior = ultim_bloc.calcular_hash()
-        new_bloc = Bloc(index, hash_anterior, transactions, )
-        hash_actual = self.hash_correcte
-        self.afegir_bloc(new_bloc, hash_actual)
-        self.transaccio_noconfirmades = []
-        return new_bloc.index
+        ultim_bloc = self.my_db.ultim_bloc()
+        if ultim_bloc:
+            index = ultim_bloc.id + 1
+            transactions = Factoria.build_transaccio_from_db(self.my_db)
+            hash_anterior = ultim_bloc.calcular_hash()
+            new_bloc = Bloc(index, hash_anterior, transactions, )
+            hash_actual = self.hash_correcte
+            self.afegir_bloc(new_bloc, hash_actual)
+            return new_bloc.id
+        return False
 

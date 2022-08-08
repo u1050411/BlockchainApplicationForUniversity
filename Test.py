@@ -197,6 +197,12 @@ class TestMysql(unittest.TestCase):
         self.my_db.esborrar_schema(self.schema)
         self.assertEqual(self.my_db.existeix(self.schema, None, None, None), False)
 
+    def test_esborrar_transaccio(self):
+        self.test.crear_schema_dades()
+        self.my_db.esborrar_transaccio(1)
+        self.my_db.esborrar_transaccio(2)
+        self.assertEqual(self.my_db.importar_transaccions(), None)
+
     def test_crear_schema(self):
         self.my_db.crear_schema(self.schema)
         self.assertEqual(self.my_db.existeix(self.schema, None, None, None), True)
@@ -549,9 +555,11 @@ class TestBloc(unittest.TestCase):
 
     def test_crear(self):
         transaccio = Factoria.build_transaccio_from_db(self.my_db)
+        bloc = Bloc(transaccio, "41b8e84497b3d73038a397e8b5e100", self.my_db)
         uni = Factoria.build_universitat_from_db(self.my_db)
-        bloc = Bloc(transaccio, "41b8e84497b3d73038a397e8b5e100", uni.public_key)
-        return bloc
+        transaccio_final = bloc.transaccio.desencriptar(uni.private_key)
+        self.assertTrue(bloc.transaccio.verificar_sign(uni.public_key))
+        self.assertEqual(transaccio.emissor.id, Transaccio.crear_json(transaccio_final).emissor.id)
 #
 #     def test_guardar(self):
 #         bloc = self.test_crear()
