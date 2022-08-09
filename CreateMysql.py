@@ -82,6 +82,12 @@ class MySqlBloc:
                 "`pdf` LONGBLOB  NULL,"
                 "PRIMARY KEY (`id_document`))",
 
+                "CREATE TABLE if not exists `hash_bloc_usuari` ("
+                "`id_bloc` INT NOT NULL,"
+                "`id_emissor`  varchar(8) NOT NULL,"
+                "`hash_bloc` LONGBLOB  NULL,"
+                "PRIMARY KEY (`id_bloc`))",
+
                 "CREATE TABLE if not exists `estudiant_examen` ("
                 "`id_document` INT NOT NULL,"
                 "`id_estudiant`  varchar(8) NOT NULL,"
@@ -340,10 +346,19 @@ class MySqlBloc:
         dades = (professor.id, estudiant.id)
         self.exportar_sql(sql, dades)
 
-    def guardar_bloc(self, bloc):
-        sql = "INSERT INTO bloc (`id_bloc`,`transaccio`,`hash_bloc_anterior`) VALUES (%s, %s, %s, %s)"
+    def guardar_bloc_dades(self, bloc):
+        sql = "INSERT INTO bloc (`id_bloc`,`transaccio`,`hash_bloc_anterior`) VALUES (%s, %s, %s)"
         dades = (bloc.id, bloc.transaccio, bloc.hash_bloc_anterior)
         self.exportar_sql(sql, dades)
+
+    def guardar_bloc_usuari(self, bloc, emissor):
+        sql = "INSERT INTO hash_bloc_usuari (`id_bloc`,`id_emissor`,`hash_bloc`) VALUES (%s, %s, %s)"
+        dades = (bloc.id, emissor.id, bloc.hash_bloc_anterior)
+        self.exportar_sql(sql, dades)
+
+    def guardar_bloc(self, bloc, emissor):
+        self.guardar_bloc_usuari(bloc, emissor)
+        self.guardar_bloc_dades(bloc)
 
     def ultim_bloc(self):
         sql = "SELECT MAX(id_bloc) FROM bloc"

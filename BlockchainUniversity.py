@@ -99,7 +99,6 @@ class Factoria:
         bloc.id_bloc = id_bloc
         return bloc
 
-
     @staticmethod
     def build_transaccio_from_db(my_db):
         trans_db = my_db.importar_transaccions()
@@ -188,7 +187,6 @@ class Encriptador:
             'dada': self.dada
         })
 
-
     @staticmethod
     def crear_json(j_son):
         nou = Encriptador()
@@ -202,8 +200,6 @@ class Encriptador:
         key_simetric = Fernet(clau_simetrica)
         dada_desencriptada = key_simetric.decrypt(self.dada).decode()
         return dada_desencriptada
-
-
 
 
 class Usuari:
@@ -453,7 +449,6 @@ class Transaccio:
         else:
             self.document = None
 
-
     @classmethod
     def crear_json(cls, dada):
         trans_json = json.loads(dada)
@@ -526,12 +521,10 @@ class Bloc:
         return hashlib.sha256(block_string.encode()).hexdigest()
 
 
-
 class BlockchainUniversity:
 
-    def __init__(self,my_db):
+    def __init__(self, my_db):
         self.my_db = my_db
-
 
     def crear_genesis_bloc(self):
         """
@@ -544,22 +537,21 @@ class BlockchainUniversity:
         transaccio = Transaccio(genesis, genesis, doc)
         genesis_bloc = Bloc(0, transaccio, 0, self.my_db)
         genesis_bloc.hash = genesis_bloc.calcular_hash()
-        self.my_db.guardar_bloc(genesis_bloc)
+        self.my_db.guardar_bloc_dades(genesis_bloc)
 
-    def afegir_bloc(self, bloc):
+    def afegir_bloc_extern(self, bloc):
         """
         Una funció que afegeix el bloc a la cadena després de la verificació.
          La verificació inclou:
          * Block apunti al block anterior
          * Que vingui de una font valida
         """
-
         bloc = bloc.crear_json(bloc)
         ultim_bloc = self.my_db.ultim_bloc()
         if bloc.transaccio.verificar:
             if bloc.hash_bloc_anterior == ultim_bloc.calcular_hash():
-                if bloc.id == ultim_bloc.id+1:
-                    self.my_db.guardar_bloc(bloc)
+                if bloc.id == ultim_bloc.id + 1:
+                    self.my_db.guardar_bloc_dades(bloc)
                     return False
         return False
 
@@ -571,14 +563,11 @@ class BlockchainUniversity:
     Aquesta funció serveix com a interfície per afegir la transacció pendent a la cadena de blocs afegint-les al bloc
          i esbrinar el hash.
         """
-        ultim_bloc = self.my_db.ultim_bloc()
-        if ultim_bloc:
+        for transactions in Factoria.build_transaccio_from_db(self.my_db):
+            emissor = transactions.emissor
+            ultim_bloc = self.my_db.ultim_bloc()
             index = ultim_bloc.id + 1
-            transactions = Factoria.build_transaccio_from_db(self.my_db)
             hash_anterior = ultim_bloc.calcular_hash()
-            new_bloc = Bloc(index, hash_anterior, transactions, )
-            hash_actual = self.hash_correcte
-            self.afegir_bloc(new_bloc, hash_actual)
-            return new_bloc.id
-        return False
+            new_bloc = Bloc(index, transactions, hash_anterior )
+            self.my_db.guardar_bloc(new_bloc, emissor)
 

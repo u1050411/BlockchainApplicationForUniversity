@@ -32,6 +32,7 @@ class CreacioTaulaTest:
         self.crear_evaluacio()
         self.crear_transaccions()
         self.crear_universitat()
+        self.crear_genesis_bloc()
 
     def crear_universitat(self):
         private_key = RSA.generate(1024)
@@ -135,6 +136,10 @@ class CreacioTaulaTest:
         resposta = RespostaExamen(1, 1, emissor2, pdf)
         transaccio2 = Transaccio(emissor2, receptor2, resposta)
         self.my_db.guardar_transaccio(transaccio2)
+
+    def crear_genesis_bloc(self):
+        bloc_chain = BlockchainUniversity(self.my_db)
+        bloc_chain.crear_genesis_bloc()
 
 
 class TestUsuaris(unittest.TestCase):
@@ -305,6 +310,17 @@ class TestMysql(unittest.TestCase):
         id_resposta = self.my_db.seguent_id_resposta()
         resposta = RespostaExamen(id_resposta, 1, estudiant, pdf)
         self.my_db.guardar_resposta_examen(resposta)
+
+    def test_guardar_bloc(self):
+        self.test.crear_schema_dades()
+        transactions = Factoria.build_transaccio_from_db(self.my_db)
+        emissor = transactions.emissor
+        ultim_bloc = self.my_db.ultim_bloc()
+        index = ultim_bloc.id + 1
+        hash_anterior = ultim_bloc.calcular_hash()
+        new_bloc = Bloc(index, transactions, hash_anterior)
+        self.my_db.guardar_bloc(new_bloc, emissor)
+
 
 
 class TestFactoria(unittest.TestCase):
@@ -560,39 +576,24 @@ class TestBloc(unittest.TestCase):
         transaccio_final = bloc.transaccio.desencriptar(uni.private_key)
         self.assertTrue(bloc.transaccio.verificar_sign(uni.public_key))
         self.assertEqual(transaccio.emissor.id, Transaccio.crear_json(transaccio_final).emissor.id)
-#
-#     def test_guardar(self):
-#         bloc = self.test_crear()
-#         self.my_db.guardar_bloc(bloc)
-#
-#     def test_calcular_Hash(self):
-#         bloc = self.test_crear()
-#         self.assertEqual(bloc.calcular_hash(), bloc.calcular_hash())
-#
-#
-#     # def test_importar_ultim_bloc(self):
-#     #     self.test_guardar()
-#     #     num_bloc = self.my_db.id_ultim_bloc()
-#     #     bloc = Factoria.build_bloc_from_db(self.my_db, num_bloc)
-#     #     self.assertEqual(bloc.calcular_hash(), bloc.calcular_hash())
-#
-#
-# class TestBlockchainUniversity(unittest.TestCase):
-#
-#     def setUp(self):
-#         self.my_db = MySqlBloc('localhost', 'root', 'root')
-#         self.schema = SCHEMA
-#         self.test = CreacioTaulaTest(self.my_db, self.schema)
-#         self.test.crear_schema_dades()
-#
-#     def test_crear_genesis_bloc(self):
-#         bloc_chain = BlockchainUniversity(self.my_db)
-#         bloc_chain.crear_genesis_bloc()
-#         bloc_genesis = Factoria.build_bloc_from_db(self.my_db, 1)
-#
-#         self.assertEqual(bloc_genesis.index, 0)
-#         self.assertEqual(bloc_genesis.hash_bloc_anterior, "asfassdfsadfsa")
-#         self.assertEqual(bloc_genesis.id_document, '00000')
+
+
+class TestBlockchainUniversity(unittest.TestCase):
+
+    def setUp(self):
+        self.my_db = MySqlBloc('localhost', 'root', 'root')
+        self.schema = SCHEMA
+        self.test = CreacioTaulaTest(self.my_db, self.schema)
+        self.test.crear_schema_dades()
+
+    def test_crear_genesis_bloc(self):
+        bloc_chain = BlockchainUniversity(self.my_db)
+        bloc_chain.crear_genesis_bloc()
+        # bloc_genesis = Factoria.build_bloc_from_db(self.my_db, 1)
+        #
+        # self.assertEqual(bloc_genesis.index, 0)
+        # self.assertEqual(bloc_genesis.hash_bloc_anterior, "asfassdfsadfsa")
+        # self.assertEqual(bloc_genesis.id_document, '00000')
 
 
 # class TestConexions(unittest.TestCase):
