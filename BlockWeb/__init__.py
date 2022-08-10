@@ -85,19 +85,22 @@ def professor():  # put application's code here
 @app.route('/seleccionar_alumnes')
 @es_usuari(tipus=PROFESSOR)
 def seleccionar_alumnes():
-    if session:
-        if session['tipus'] == "professor":
-            user = Factoria.build_usuari_from_db(my_db, session['id'])
-            llista_alumnes = user.llista_alumnes(my_db)
-            llista_dades = list()
-            for x in llista_alumnes:
-                valors = [x.id, x.nif, x.nom, x.cognom]
-                llista_dades.append(valors)
-            data = str(datetime.today())
-            avui_format = data[0:10] + "T" + data[11:16]
+    user = Factoria.build_usuari_from_db(my_db, session['id'])
+    llista_alumnes = user.llista_alumnes(my_db)
+    llista_dades = list()
 
-            return render_template('selecionar_alumnes.html', llista_1=llista_dades, data_avui=avui_format)
-    return redirect('/')
+    for x in llista_alumnes:
+        valors = [x.id, x.nif, x.nom, x.cognom]
+        llista_dades.append(valors)
+
+    # llista_pdf = user.llista
+
+    data = str(datetime.today())
+    avui_format = data[0:10] + "T" + data[11:16]
+
+
+    return render_template('selecionar_alumnes.html', llista_1=llista_dades, data_avui=avui_format)
+
 
 
 @app.route('/enviar_examens', methods=["GET", "POST"])

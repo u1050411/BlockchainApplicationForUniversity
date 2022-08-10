@@ -208,6 +208,7 @@ class MySqlBloc:
         sql = f'select `id_estudiant` from `estudiant_examen` where `id_document` = {id_document}'
         return self.importar_llista_sql(sql)
 
+
     def importar_estudiants_professor(self, professor):
         sql = f'select id from `usuari` where `id` in (select id_estudiant from estudiants_professor where id_professor = "{professor.id}");'
         return self.importar_llista_enter_sql(sql)
@@ -225,11 +226,10 @@ class MySqlBloc:
     def importar_pdf(self, id_pdf):
         sql = f'select id_pdf, data_creacio, id_usuari, pdf, nom_fitxer ' \
               f'from `pdf` where `id_pdf` ={id_pdf}'
-        return self.importar_llista_sql(sql)
+        return self.importar_sql(sql)
 
-    def importar_pdf_professor(self, professor):
-        sql = f'select id_pdf, data_creacio, id_usuari, pdf, nom_fitxer ' \
-              f'from `pdf` where `id_usuari` = "{professor.id}"'
+    def importar_pdf_usuari(self, usuari):
+        sql = f'select id_pdf from pdf where `id_usuari` = "{usuari.id}"'
         return self.importar_llista_sql(sql)
 
     def importar_resposta(self, id_document, id_resposta):

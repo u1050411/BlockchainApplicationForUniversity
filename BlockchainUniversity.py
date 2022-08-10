@@ -262,6 +262,15 @@ class Usuari:
             usuari = Professor(id_usuari, nif, nom, cognom, public_key, contrasenya)
         return usuari
 
+    def llista_pdf(self, my_db):
+        llista = my_db.importar_pdf_usuari(self)
+        llista_pdfs = list()
+        for x in llista:
+            id_int = x[0]
+            classe_pdf = Factoria.build_pdf_from_db(my_db, id_int)
+            llista_pdfs.append(classe_pdf)
+        return llista_pdfs
+
     # @staticmethod
     # def create_json(usuari_json):
     #     usuari = json.loads(usuari_json)
@@ -358,9 +367,11 @@ class Pdf(Document):
     def id_document_blockchain(self):
         return str(self.id_document) + "0000"
 
+    @classmethod
     def crear_mysql(cls, id_document=None, nom_fitxer=None, usuari=None, pdf=None, data_creacio=None):
         classe_pdf = cls(id_document, nom_fitxer, usuari, pdf)
-        classe_pdf.data_creacio = data_creacio
+        if classe_pdf:
+            classe_pdf.data_creacio = data_creacio
         return classe_pdf
 
 

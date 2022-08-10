@@ -175,6 +175,11 @@ class TestUsuaris(unittest.TestCase):
         self.assertEqual(estudiant.cognom, 'Rodriguez')
         self.assertEqual(estudiant.public_key, public_key)
 
+    def test_llista_pdf(self):
+        professor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
+        llista = professor.llista_pdf(self.my_db)
+        print(llista)
+
 
 class TestProfessors(unittest.TestCase):
 
