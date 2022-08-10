@@ -6,7 +6,7 @@ from Crypto.PublicKey import RSA
 from fontTools.misc.dictTools import hashdict
 
 from BlockchainUniversity import Estudiant, Transaccio, Professor, Examen, Factoria, RespostaExamen, EvaluacioExamen, \
-    Bloc, Universitat, Encriptador, Document, BlockchainUniversity
+    Bloc, Universitat, Encriptador, Document, BlockchainUniversity, Pdf
 from CreateMysql import MySqlBloc
 
 UTF_8 = 'utf8'
@@ -28,6 +28,7 @@ class CreacioTaulaTest:
         self.my_db.crear_taules_inicials()
         self.crear_universitat()
         self.crear_usuaris()
+        self.crear_pdf()
         self.crear_examens()
         self.crear_respostes()
         self.crear_evaluacio()
@@ -75,6 +76,20 @@ class CreacioTaulaTest:
                                                 Factoria.build_usuari_from_db(self.my_db, 'u1050403'))
         self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 'u2050404'),
                                                 Factoria.build_usuari_from_db(self.my_db, 'u1050411'))
+
+    def crear_pdf(self):
+        pdfs = [[1, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
+                       f'pdf_minimo.pdf', 'pdf_minimo.pdf', 'u2000256', '2022-10-01T13:00'],
+                   [2, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
+                       f'/pdf/Examen_2020-21-_26-03_primer_parcial.pdf', 'Examen_2020-21-_26-03_primer_parcial.pdf',
+                    'u2000256', '2022-10-01T12:00']
+                   ]
+
+        for id_pdf, path_fitxer, nom_fitxer, id_usuari, data_creacio in pdfs:
+            pdf = Factoria.recuperar_fitxer(path_fitxer)
+            usuari = Factoria.build_usuari_from_db(self.my_db, id_usuari)
+            classe_pdf = Pdf(id_pdf, nom_fitxer, usuari, pdf)
+            self.my_db.guardar_pdf(classe_pdf)
 
     def crear_examens(self):
         examens = [[1, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
@@ -340,6 +355,17 @@ class TestFactoria(unittest.TestCase):
         self.assertEqual(professor.id, 'u2000256')
         self.assertEqual(professor.nom, 'Teodor Maria')
 
+    def test_pdf(self):
+        path_fitxer = f'C:/Users/u1050/PycharmProjects/' \
+                     f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
+        nom_fitxer ='GEINF DOC1 full de TFG_V2.pdf'
+        pdf = Factoria.recuperar_fitxer(path_fitxer)
+        professor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
+        id = 10
+        pdfs = Pdf(id, nom_fitxer, professor, pdf)
+        self.my_db.guardar_pdf(pdfs)
+        pdf2 = Factoria.build_pdf_from_db(self.my_db, 10)
+
     def test_examen(self):
         examen = Factoria.build_examen_from_db(self.my_db, 1)
         self.assertEqual(examen.id_document, 1)
@@ -378,14 +404,26 @@ class TestFactoria(unittest.TestCase):
         self.assertEqual(transaccio_inicial.emissor.id, transaccio_guardat.emissor.id)
         self.assertEqual(transaccio_inicial.receptor.id, transaccio_guardat.receptor.id)
 
-    # def test_bloc(self):
-    #     transaccio = Factoria.build_transaccio_from_db(self.my_db)
-    #     uni = Factoria.build_universitat_from_db(self.my_db)
-    #     bloc = Bloc(transaccio, "41b8e84497b3d73038a397e8b5e100", uni.public_key)
-    #     self.my_db.guardar_bloc(bloc)
-    #     bloc_final = Factoria.build_bloc_from_db(self.my_db, 1)
-    #     transaccio_final = Transaccio.crear_json(bloc_final.transaccio.desencriptar(uni.private_key))
-    #     self.assertEqual(transaccio_final.emissor.id, transaccio.emissor.id)
+
+class TestPdf(unittest.TestCase):
+    def setUp(self):
+        self.my_db = MySqlBloc('localhost', 'root', 'root')
+        self.my_db.esborrar_schema(SCHEMA)
+        self.test = CreacioTaulaTest(self.my_db, SCHEMA)
+        self.test.crear_schema_dades()
+
+    def test_creacio_pdf(self):
+        path_fitxer = f'C:/Users/u1050/PycharmProjects/' \
+                     f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
+        nom_fitxer ='GEINF DOC1 full de TFG_V2.pdf'
+        pdf = Factoria.recuperar_fitxer(path_fitxer)
+        professor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
+        id = self.my_db.seguent_id_pdf() +1
+        pdfs = Pdf(id, nom_fitxer, professor, pdf)
+        self.my_db.guardar_pdf(pdfs)
+        self.assertEqual(pdfs.id_document, id)
+        self.assertEqual(pdfs.pdf, pdf)
+        self.assertEqual(pdfs.usuari, professor)
 
 
 class TestExamen(unittest.TestCase):

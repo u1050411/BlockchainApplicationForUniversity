@@ -64,6 +64,13 @@ class Factoria:
         return None
 
     @staticmethod
+    def build_pdf_from_db(my_db, id_pdf):
+        id_pdf, data_creacio, id_usuari, pdf, nom_fitxer = my_db.importar_pdf(id_pdf)
+        usuari = Factoria.build_usuari_from_db(my_db, id_usuari)
+        classe_pdf = Pdf.crear_mysql(id_pdf, nom_fitxer, usuari, pdf, data_creacio)
+        return classe_pdf
+
+    @staticmethod
     def build_examen_from_db(my_db, id_document, per_estudiant=None):
         if my_db.existeix_examen(id_document):
             id_document, id_professor, data_examen, data_inicial, data_final, pdf = my_db.importar_examen(id_document)
@@ -308,13 +315,6 @@ class Estudiant(Usuari):
         super(Estudiant, self).__init__(id_usuari, nif, nom, cognom, public_key, contrasenya, email)
         self.tipus = ESTUDIANT
 
-    # def to_dict(self):
-    #     return collections.OrderedDict({
-    #         'id': self.id,
-    #         'nif': self.nif,
-    #         'nom': self.nom,
-    #         'cognom': self.cognom})
-
 
 class Document:
     def __init__(self, id_document=None, tipus=None, usuari=None, pdf=None, data_creacio=None):
@@ -341,8 +341,27 @@ class Document:
     @classmethod
     def crear_json(cls, dades_json=None):
         trans_json = json.loads(dades_json)
+        if (trans_json['id_tipus']) == 0:
+            return Pdf.crear_json(dades_json)
         if (trans_json['id_tipus']) == 1:
             return Examen.crear_json(dades_json)
+
+
+
+class Pdf(Document):
+
+    def __init__(self, id_document=None, nom_fitxer=None, usuari=None, pdf=None):
+        super(Pdf, self).__init__(id_document, 0, usuari, pdf)
+        self.nom_fitxer = nom_fitxer
+
+    @property
+    def id_document_blockchain(self):
+        return str(self.id_document) + "0000"
+
+    def crear_mysql(cls, id_document=None, nom_fitxer=None, usuari=None, pdf=None, data_creacio=None):
+        classe_pdf = cls(id_document, nom_fitxer, usuari, pdf)
+        classe_pdf.data_creacio = data_creacio
+        return classe_pdf
 
 
 class Examen(Document):

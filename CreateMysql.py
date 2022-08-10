@@ -73,6 +73,14 @@ class MySqlBloc:
                 "`data_creacio` DATETIME NOT NULL ,"
                 "PRIMARY KEY(`id_transaccio`))",
 
+                "CREATE TABLE if not exists `pdf` ("
+                "`id_pdf` INT NOT NULL,"
+                "`data_creacio` DATETIME NOT NULL,"
+                "`id_usuari` varchar(8) NOT NULL,"
+                "`nom_fitxer` varchar(200) NOT NULL,"
+                "`pdf` LONGBLOB  NULL,"
+                "PRIMARY KEY (`id_pdf`))",
+
                 "CREATE TABLE if not exists `examen` ("
                 "`id_document` INT NOT NULL AUTO_INCREMENT,"
                 "`id_professor`  varchar(8) NOT NULL,"
@@ -214,6 +222,16 @@ class MySqlBloc:
               f'from `resposta_examen` where `id_examen` = {id_document}'
         return self.importar_llista_sql(sql)
 
+    def importar_pdf(self, id_pdf):
+        sql = f'select id_pdf, data_creacio, id_usuari, pdf, nom_fitxer ' \
+              f'from `pdf` where `id_pdf` ={id_pdf}'
+        return self.importar_llista_sql(sql)
+
+    def importar_pdf_professor(self, professor):
+        sql = f'select id_pdf, data_creacio, id_usuari, pdf, nom_fitxer ' \
+              f'from `pdf` where `id_usuari` = "{professor.id}"'
+        return self.importar_llista_sql(sql)
+
     def importar_resposta(self, id_document, id_resposta):
         sql = f'select id_resposta, data_creacio, id_usuari, pdf  from `resposta_examen` ' \
               f'where `id_examen` = {id_document} and `id_resposta` = {id_resposta}'
@@ -315,6 +333,9 @@ class MySqlBloc:
     def seguent_id_bloc(self):
         return self.seguent_id("bloc", "id_bloc")
 
+    def seguent_id_pdf(self):
+        return self.seguent_id("pdf", "id_pdf")
+
     def clau_privada(self, id_usuari):
         sql = f'select `private_key` from `private_key` where `id_usuari` = "{id_usuari}" LIMIT 1'
         clau_string = self.importar_sql(sql)
@@ -392,6 +413,12 @@ class MySqlBloc:
             sql = "INSERT INTO estudiant_examen(id_document, id_estudiant) VALUES (%s, %s)"
             dades = (id_document, estudiant.id)
             self.exportar_sql(sql, dades)
+
+    def guardar_pdf(self, classe_pdf):
+        sql = "INSERT INTO pdf(id_pdf, data_creacio, id_usuari, nom_fitxer, pdf) " \
+              "VALUES (%s, %s, %s, %s, %s)"
+        dades = (classe_pdf.id_document, classe_pdf.data_creacio, classe_pdf.usuari.id, classe_pdf.nom_fitxer, classe_pdf.pdf)
+        self.exportar_sql(sql, dades)
 
     def guardar_resposta_examen(self, resposta):
         sql = "INSERT INTO resposta_examen(id_examen, id_resposta, data_creacio, id_usuari, pdf) " \
