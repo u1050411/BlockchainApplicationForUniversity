@@ -3,6 +3,7 @@ import unittest
 import ast
 
 from Crypto.PublicKey import RSA
+from fontTools.misc.dictTools import hashdict
 
 from BlockchainUniversity import Estudiant, Transaccio, Professor, Examen, Factoria, RespostaExamen, EvaluacioExamen, \
     Bloc, Universitat, Encriptador, Document, BlockchainUniversity
@@ -315,10 +316,10 @@ class TestMysql(unittest.TestCase):
         self.test.crear_schema_dades()
         transactions = Factoria.build_transaccio_from_db(self.my_db)
         emissor = transactions.emissor
-        ultim_bloc = self.my_db.ultim_bloc()
+        ultim_bloc = Factoria.build_ultim_bloc_from_db((self.my_db))
         index = ultim_bloc.id + 1
         hash_anterior = ultim_bloc.calcular_hash()
-        new_bloc = Bloc(index, transactions, hash_anterior)
+        new_bloc = Bloc(index, transactions, hash_anterior, self.my_db)
         self.my_db.guardar_bloc(new_bloc, emissor)
 
 
@@ -483,7 +484,7 @@ class TestEncriptador(unittest.TestCase):
         examen = Factoria.build_examen_from_db(self.my_db, 1)
         examen_encriptar = Encriptador(examen, emissor.public_key)
         examen_resultat = examen_encriptar.desencriptar(self.my_db.clau_privada(emissor.id))
-        examen_final = Examen.create_json(examen_resultat)
+        examen_final = Examen.crear_json(examen_resultat)
         self.assertEqual(examen.id_document, examen_final.id_document)
         self.assertEqual(examen.usuari.id, examen_final.usuari.id)
         self.assertEqual(examen.pdf, examen_final.pdf)
@@ -496,7 +497,7 @@ class TestEncriptador(unittest.TestCase):
         examen_encriptar.signar(self.my_db.clau_privada(emissor.id))
         self.assertTrue(examen_encriptar.verificar_sign(emissor.public_key))
         examen_resultat = examen_encriptar.desencriptar(self.my_db.clau_privada(emissor.id))
-        examen_final = Examen.create_json(examen_resultat)
+        examen_final = Examen.crear_json(examen_resultat)
         self.assertEqual(examen.id_document, examen_final.id_document)
         self.assertEqual(examen.usuari.id, examen_final.usuari.id)
         self.assertEqual(examen.pdf, examen_final.pdf)
@@ -541,8 +542,7 @@ class TestTransaction(unittest.TestCase):
         transaccio = Factoria.build_transaccio_from_db(self.my_db)
         self.assertEqual(transaccio.emissor.id, emissor.id)
         self.assertEqual(transaccio.receptor.id, receptor.id)
-        self.assertEqual(transaccio.document.dada, transaccio_inicial.document.dada)
-        self.assertEqual(transaccio.document.clau, transaccio_inicial.document.clau)
+        self.assertEqual(transaccio.id_document, transaccio_inicial.id_document)
 
     # def test_to_json(self):
     #     (receptor, emissor, examen, transaccio) = self.crear_transaccio
@@ -557,8 +557,7 @@ class TestTransaction(unittest.TestCase):
         transaccio_final = Transaccio.crear_json(transaccio_json)
         self.assertEqual(transaccio_inicial.emissor.id, transaccio_final.emissor.id)
         self.assertEqual(transaccio_inicial.id_document, transaccio_final.id_document)
-        self.assertEqual(transaccio_inicial.document.dada, transaccio_final.document.dada)
-        self.assertEqual(transaccio_inicial.document.clau, transaccio_final.document.clau)
+
 
 
 class TestBloc(unittest.TestCase):
@@ -571,11 +570,12 @@ class TestBloc(unittest.TestCase):
 
     def test_crear(self):
         transaccio = Factoria.build_transaccio_from_db(self.my_db)
-        bloc = Bloc(transaccio, "41b8e84497b3d73038a397e8b5e100", self.my_db)
+        bloc = Bloc(0, transaccio, "41b8e84497b3d73038a397e8b5e100", self.my_db)
         uni = Factoria.build_universitat_from_db(self.my_db)
-        transaccio_final = bloc.transaccio.desencriptar(uni.private_key)
-        self.assertTrue(bloc.transaccio.verificar_sign(uni.public_key))
-        self.assertEqual(transaccio.emissor.id, Transaccio.crear_json(transaccio_final).emissor.id)
+        Encriptador_json = Encriptador.crear_json(bloc.transaccio)
+        transaccio_json = Encriptador_json.desencriptar(uni.private_key)
+        transaccio_final = Transaccio.crear_json(transaccio_json)
+        self.assertEqual(transaccio.emissor.id, transaccio_final.emissor.id)
 
 
 class TestBlockchainUniversity(unittest.TestCase):

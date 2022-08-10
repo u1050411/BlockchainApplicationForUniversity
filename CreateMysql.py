@@ -247,7 +247,7 @@ class MySqlBloc:
         return self.importar_sql(sql)
 
     def importar_bloc(self, id_bloc):
-        sql = f'select id_bloc, data_transaccio, id_emissor, id_receptor, id_document, transaccio, hash_bloc_anterior ' \
+        sql = f'select id_bloc, data_bloc, transaccio, hash_bloc_anterior ' \
               f'from `bloc` where `id_bloc` = {id_bloc} LIMIT 1'
         return self.importar_sql(sql)
 
@@ -347,8 +347,8 @@ class MySqlBloc:
         self.exportar_sql(sql, dades)
 
     def guardar_bloc_dades(self, bloc):
-        sql = "INSERT INTO bloc (`id_bloc`,`transaccio`,`hash_bloc_anterior`) VALUES (%s, %s, %s)"
-        dades = (bloc.id, bloc.transaccio, bloc.hash_bloc_anterior)
+        sql = "INSERT INTO bloc (`id_bloc`,`transaccio`,`data_bloc`,`hash_bloc_anterior`) VALUES (%s, %s, %s, %s)"
+        dades = (bloc.id, bloc.transaccio, bloc.data_bloc, bloc.hash_bloc_anterior)
         self.exportar_sql(sql, dades)
 
     def guardar_bloc_usuari(self, bloc, emissor):
@@ -400,10 +400,9 @@ class MySqlBloc:
         self.exportar_sql(sql, dades)
 
     def guardar_transaccio(self, transaccio):
-        encrip_to_json = Factoria.to_json(transaccio.document)
         sql = "INSERT INTO transaccio(id_emissor, id_receptor, document, id_document, data_creacio) " \
               "VALUES (%s, %s, %s, %s, %s)"
-        dades = (transaccio.emissor.id, transaccio.receptor.id, encrip_to_json,
+        dades = (transaccio.emissor.id, transaccio.receptor.id, transaccio.document,
                  transaccio.id_document, transaccio.data_creacio,)
         self.exportar_sql(sql, dades)
 

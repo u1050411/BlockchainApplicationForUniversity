@@ -27,7 +27,8 @@ class Factoria:
 
     @staticmethod
     def to_json(dada):
-        rest = dada.to_dict()
+        dades = dada
+        rest = dades.to_dict()
         return json.dumps(rest, indent=4, sort_keys=True, default=str)
 
     @staticmethod
@@ -100,12 +101,18 @@ class Factoria:
         return bloc
 
     @staticmethod
+    def build_ultim_bloc_from_db(my_db):
+        (id_bloc, data, transaccio, hash_anterior) = my_db.ultim_bloc()
+        bloc = Bloc.crear_msql(id_bloc, data, transaccio, hash_anterior)
+        return bloc
+
+    @staticmethod
     def build_transaccio_from_db(my_db):
         trans_db = my_db.importar_transaccions()
         (id_trans, emissor, receptor, dada_json, id_document, data_creacio) = trans_db
         emissor = Factoria.build_usuari_from_db(my_db, emissor)
         receptor = Factoria.build_usuari_from_db(my_db, receptor)
-        dada = Encriptador.crear_json(dada_json)
+        dada = Examen.crear_json(dada_json)
         transaccio = Transaccio.crear_mysql(id_trans, emissor, receptor, dada, id_document, data_creacio)
         return transaccio
 
@@ -184,7 +191,9 @@ class Encriptador:
     def to_dict(self):
         return collections.OrderedDict({
             'clau': self.clau,
-            'dada': self.dada
+            'dada': self.dada,
+            'sign': self.sign,
+            'nom': self.nom
         })
 
     @staticmethod
@@ -192,6 +201,8 @@ class Encriptador:
         nou = Encriptador()
         nou.clau = ast.literal_eval(json.loads(j_son)['clau'])
         nou.dada = ast.literal_eval(json.loads(j_son)['dada'])
+        nou.sign = ast.literal_eval(json.loads(j_son)['sign'])
+        nou.nom = json.loads(j_son)['nom']
         return nou
 
     def desencriptar(self, privat_key):
@@ -327,6 +338,12 @@ class Document:
     def id_document_blockchain(self):
         return str(self.id_document) + "0000"
 
+    @classmethod
+    def crear_json(cls, dades_json=None):
+        trans_json = json.loads(dades_json)
+        if (trans_json['id_tipus']) == 1:
+            return Examen.crear_json(dades_json)
+
 
 class Examen(Document):
 
@@ -340,7 +357,7 @@ class Examen(Document):
         self.respostes = []
 
     @classmethod
-    def create_json(cls, dades_json=None):
+    def crear_json(cls, dades_json=None):
         dades = json.loads(dades_json)
         id_examen = dades['id_document']
         data_creacio = dades['data_creacio']
@@ -355,7 +372,7 @@ class Examen(Document):
 
     @property
     def id_document_blockchain(self):
-        return str(self.id_document) + "0001"
+        return int(str(self.id_document) + "0001")
 
     def to_dict(self):
         llista_json = []
@@ -441,13 +458,9 @@ class Transaccio:
         self.id_transaccio = 0
         self.emissor = emissor
         self.receptor = receptor
-        self.id_document = 0
+        self.id_document = document.id_document_blockchain
         self.data_creacio = datetime.now().isoformat()
-        if document is not None:
-            self.document = Encriptador(document, emissor.public_key)
-            self.id_document = document.id_document_blockchain
-        else:
-            self.document = None
+        self.document = Factoria.to_json(document)
 
     @classmethod
     def crear_json(cls, dada):
@@ -457,15 +470,14 @@ class Transaccio:
         receptor = Usuari.crear_json(trans_json['receptor'])
         id_document = trans_json['id_document']
         data_creacio = trans_json['data_creacio']
-        dada = Encriptador.crear_json(trans_json['document'])
+        dada = Document.crear_json(trans_json['document'])
         return cls.crear_mysql(id_transaccio, emissor, receptor, dada, id_document, data_creacio)
 
     @classmethod
     def crear_mysql(cls, id_trans=None, emissor=None, receptor=None, dada=None, id_document=None, data_creacio=None):
-        trans = cls(emissor, receptor, None)
+        trans = cls(emissor, receptor, dada)
         trans.id_transaccio = id_trans
         trans.id_document = id_document
-        trans.document = dada
         trans.data_creacio = data_creacio
         return trans
 
@@ -479,7 +491,7 @@ class Transaccio:
             'emissor': Factoria.to_json(self.emissor),
             'receptor': Factoria.to_json(self.receptor),
             'id_document': self.id_document,
-            'document': Factoria.to_json(self.document),
+            'document': self.document,
             'data_creacio': self.data_creacio})
 
     # def to_json(self):
@@ -495,25 +507,46 @@ class Transaccio:
 class Bloc:
     # Classe creació del bloc
     def __init__(self, id=None, trans=None, hash_bloc_anterior=None, my_db=None):
-        self.id = id
-        self.data_bloc = datetime.now().isoformat()
-        uni = Factoria.build_universitat_from_db(my_db)
-        self.transaccio = Encriptador(trans, uni.public_key)
-        self.transaccio.signar(uni.private_key)
-        self.transaccio.nom = uni.nom
-        self.hash_bloc_anterior = hash_bloc_anterior
+        if trans:
+            self.id = id
+            self.data_bloc = datetime.now().isoformat()
+            uni = Factoria.build_universitat_from_db(my_db)
+            self.transaccio = Encriptador(trans, uni.public_key)
+            self.transaccio.signar(uni.private_key)
+            self.transaccio.nom = uni.nom
+            self.transaccio = Factoria.to_json(self.transaccio)
+            self.hash_bloc_anterior = hash_bloc_anterior
+        else:
+            self.id = 0
+            self.data_bloc = None
+            self.transaccio = None
+            self.hash_bloc_anterior = None
 
     @classmethod
     def crear_json(cls, bloc_json):
-        cls.id = bloc_json['id']
-        cls.transaccio = bloc_json['transaccions']
-        cls.hash_bloc_anterior = bloc_json['hash_bloc_anterior']
+        new_bloc = cls()
+        new_bloc.id = bloc_json['id']
+        new_bloc.data_bloc = ['data_bloc']
+        new_bloc.transaccio = bloc_json['transaccions']
+        new_bloc.hash_bloc_anterior = bloc_json['hash_bloc_anterior']
+        return new_bloc
+
+    @classmethod
+    def crear_msql(cls, id_bloc, data_bloc, transaccio, hash_anterior):
+        new_bloc= cls()
+        new_bloc.id = id_bloc
+        new_bloc.data_bloc = data_bloc
+        new_bloc.transaccio = transaccio
+        new_bloc.hash_bloc_anterior = hash_anterior
+        return new_bloc
 
     def to_dict(self):
         return collections.OrderedDict({
             'id': self.id,
             'transaccions': self.transaccio,
+            'data_bloc':  self.data_bloc,
             'hash_bloc_anterior': self.hash_bloc_anterior})
+
 
     def calcular_hash(self):
         # Converteix el bloc en una cadena json i retorna el hash
@@ -537,6 +570,7 @@ class BlockchainUniversity:
         transaccio = Transaccio(genesis, genesis, doc)
         genesis_bloc = Bloc(0, transaccio, 0, self.my_db)
         genesis_bloc.hash = genesis_bloc.calcular_hash()
+        genesis_bloc.data_bloc = datetime.now().isoformat()
         self.my_db.guardar_bloc_dades(genesis_bloc)
 
     def afegir_bloc_extern(self, bloc):
@@ -567,7 +601,7 @@ class BlockchainUniversity:
             emissor = transactions.emissor
             ultim_bloc = self.my_db.ultim_bloc()
             index = ultim_bloc.id + 1
-            hash_anterior = ultim_bloc.calcular_hash()
+            hash_anterior = Factoria.calcular_hash(ultim_bloc)
             new_bloc = Bloc(index, transactions, hash_anterior )
             self.my_db.guardar_bloc(new_bloc, emissor)
 
