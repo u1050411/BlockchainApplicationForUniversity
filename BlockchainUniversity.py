@@ -39,6 +39,15 @@ class Factoria:
         return save_pdf
 
     @staticmethod
+    def guardar_fitxer(nom_directory, pdf):
+        pdf_file = base64.b64decode(pdf, validate=True)
+        output = open(nom_directory, 'wb')
+        output.write(pdf_file)
+        output.close()
+
+
+
+    @staticmethod
     def build_universitat_from_db(my_db):
         universiat_db = my_db.importar_universitat()
         if universiat_db is not None:
@@ -324,6 +333,9 @@ class Estudiant(Usuari):
         super(Estudiant, self).__init__(id_usuari, nif, nom, cognom, public_key, contrasenya, email)
         self.tipus = ESTUDIANT
 
+    def importar_examens(self, my_db):
+        return my_db.importar_examens_estudiant(self)
+
 
 class Document:
     def __init__(self, id_document=None, tipus=None, usuari=None, pdf=None, data_creacio=None):
@@ -354,6 +366,8 @@ class Document:
             return Pdf.crear_json(dades_json)
         if (trans_json['id_tipus']) == 1:
             return Examen.crear_json(dades_json)
+        if (trans_json['id_tipus']) == 2:
+            return RespostaExamen.crear_json(dades_json)
 
 
 
@@ -467,6 +481,7 @@ class EvaluacioExamen(Document):
 
 
 class Universitat:
+
     def __init__(self, nom, private_key, public_key):
         self.nom = nom
         self._private_key = private_key  # Creació de la clau privada
@@ -622,16 +637,27 @@ class BlockchainUniversity:
     def afegir_nova_transaccio(self, transaccio):
         self.transaccio_noconfirmades.append(transaccio)
 
+
     def minat(self):
         """
     Aquesta funció serveix com a interfície per afegir la transacció pendent a la cadena de blocs afegint-les al bloc
          i esbrinar el hash.
         """
-        for transactions in Factoria.build_transaccio_from_db(self.my_db):
-            emissor = transactions.emissor
-            ultim_bloc = self.my_db.ultim_bloc()
-            index = ultim_bloc.id + 1
-            hash_anterior = Factoria.calcular_hash(ultim_bloc)
-            new_bloc = Bloc(index, transactions, hash_anterior )
-            self.my_db.guardar_bloc(new_bloc, emissor)
+
+        if self.my_db.existeix_alguna_transaccio():
+            transaccio = Factoria.build_transaccio_from_db(self.my_db)
+            if transaccio:
+                emissor = transaccio.emissor
+                ultim_bloc = Factoria.build_ultim_bloc_from_db(self.my_db)
+                index = ultim_bloc.id + 1
+                hash_anterior = ultim_bloc.calcular_hash()
+                new_bloc = Bloc(index, transaccio, hash_anterior, self.my_db)
+
+                self.my_db.guardar_bloc(new_bloc, emissor)
+                self.my_db.esborrar_transaccio(transaccio.id_transaccio)
+                return self.minat()
+
+
+
+
 

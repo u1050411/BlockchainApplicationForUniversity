@@ -210,12 +210,19 @@ class MySqlBloc:
 
 
     def importar_estudiants_professor(self, professor):
-        sql = f'select id from `usuari` where `id` in (select id_estudiant from estudiants_professor where id_professor = "{professor.id}");'
+        sql = f'select id from `usuari` where `id` in (select id_estudiant from estudiants_professor ' \
+              f'where id_professor = "{professor.id}");'
         return self.importar_llista_enter_sql(sql)
 
-    def importar_examens_professor(self, professor):
+    def importar_examens_estudiant(self, usuari):
+        sql = f'select `id_document`, `id_professor`, `data_inici`, `data_final`' \
+              f'from `examen` where `id_document` = (select `id_document` from `estudiant_examen` ' \
+              f'where `id_estudiant` = "{usuari.id}")'
+        return self.importar_llista_sql(sql)
+
+    def importar_examens_estudiants(self, usuari):
         sql = f'select `id_document`, `id_professor`, `data_examen`, `data_inici`, `data_final`, `pdf` ' \
-              f'from `examen` where `id_professor` = "{professor.id}"'
+              f'from `examen` where `id_professor` = "{usuari.id}"'
         return self.importar_llista_enter_sql(sql)
 
     def importar_respostes(self, id_document):
@@ -314,6 +321,10 @@ class MySqlBloc:
 
     def existeix_transaccio(self, id_transac):
         return self.existeix(self.schema, 'transaccio', 'id_transaccio', id_transac)
+
+    def existeix_alguna_transaccio(self):
+        num = self.seguent_id('transaccio', 'id_transaccio')
+        return num != 0
 
     def seguent_id(self, taula, columna):
         sql = f"select Max(`{columna}`) from `{taula}`"

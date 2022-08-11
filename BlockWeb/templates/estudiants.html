@@ -1,10 +1,11 @@
 {% extends 'layout.html' %}
 {% block navegacio1 %}
 
-    <ul>
-        <li><a href="professor">Veure Examens</a></li>
-        <li><a href="alumne">Enviar Correcció Examens</a></li>
-    </ul>
+<ul>
+    <li><a href="{{ url_for('examens_alumne') }}">Veure Examens</a></li>
+    <li><a href="afegir_examen">Veure Examens</a></li>
+    <li><a href="correccio">Enviar Correcció Examens</a></li>
+</ul>
 
 {% endblock %}
 

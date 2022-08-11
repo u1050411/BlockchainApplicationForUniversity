@@ -12,7 +12,7 @@ from CreateMysql import MySqlBloc
 UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
 PROFESSOR = 'professor'
-SCHEMA = 'blockchainuniversity2'
+SCHEMA = 'blockchainuniversity'
 
 
 class CreacioTaulaTest:
@@ -370,6 +370,9 @@ class TestFactoria(unittest.TestCase):
         pdfs = Pdf(id, nom_fitxer, professor, pdf)
         self.my_db.guardar_pdf(pdfs)
         pdf2 = Factoria.build_pdf_from_db(self.my_db, 10)
+        nom_fitxer2 = 'fitxer_guardat.pdf'
+        path_fitxer2 = f"C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/"
+        Factoria.guardar_fitxer(path_fitxer, pdf2.pdf)
 
     def test_examen(self):
         examen = Factoria.build_examen_from_db(self.my_db, 1)
@@ -630,8 +633,12 @@ class TestBlockchainUniversity(unittest.TestCase):
         self.test.crear_schema_dades()
 
     def test_crear_genesis_bloc(self):
-        bloc_chain = BlockchainUniversity(self.my_db)
-        bloc_chain.crear_genesis_bloc()
+        if self.my_db.ultim_bloc() is None:
+            bloc_chain = BlockchainUniversity(self.my_db)
+            bloc_chain.crear_genesis_bloc()
+        self.assertIsNotNone(self.my_db.ultim_bloc())
+
+
         # bloc_genesis = Factoria.build_bloc_from_db(self.my_db, 1)
         #
         # self.assertEqual(bloc_genesis.index, 0)
