@@ -216,7 +216,7 @@ class MySqlBloc:
 
     def importar_examens_estudiant(self, usuari):
         sql = f'select `id_document`, `id_professor`, `data_inici`, `data_final`' \
-              f'from `examen` where `id_document` = (select `id_document` from `estudiant_examen` ' \
+              f'from `examen` where `id_document` in (select `id_document` from `estudiant_examen` ' \
               f'where `id_estudiant` = "{usuari.id}")'
         return self.importar_llista_sql(sql)
 

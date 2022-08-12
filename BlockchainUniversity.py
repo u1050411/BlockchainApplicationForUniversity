@@ -41,11 +41,8 @@ class Factoria:
     @staticmethod
     def guardar_fitxer(nom_directory, pdf):
         pdf_file = base64.b64decode(pdf, validate=True)
-        output = open(nom_directory, 'wb')
-        output.write(pdf_file)
-        output.close()
-
-
+        with open(nom_directory, "wb") as f:
+            f.write(pdf_file)
 
     @staticmethod
     def build_universitat_from_db(my_db):
@@ -128,7 +125,7 @@ class Factoria:
         (id_trans, emissor, receptor, dada_json, id_document, data_creacio) = trans_db
         emissor = Factoria.build_usuari_from_db(my_db, emissor)
         receptor = Factoria.build_usuari_from_db(my_db, receptor)
-        dada = Examen.crear_json(dada_json)
+        dada = Document.crear_json(dada_json)
         transaccio = Transaccio.crear_mysql(id_trans, emissor, receptor, dada, id_document, data_creacio)
         return transaccio
 
@@ -334,6 +331,7 @@ class Estudiant(Usuari):
         self.tipus = ESTUDIANT
 
     def importar_examens(self, my_db):
+        llista = my_db.importar_examens_estudiant(self)
         return my_db.importar_examens_estudiant(self)
 
 
@@ -643,7 +641,6 @@ class BlockchainUniversity:
     Aquesta funció serveix com a interfície per afegir la transacció pendent a la cadena de blocs afegint-les al bloc
          i esbrinar el hash.
         """
-
         if self.my_db.existeix_alguna_transaccio():
             transaccio = Factoria.build_transaccio_from_db(self.my_db)
             if transaccio:

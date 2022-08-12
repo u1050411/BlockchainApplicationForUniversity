@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 {% block navegacio1 %}
 <ul>
-    <li><a href="examens_alumne">Enviar Examens</a></li>
+    <li><a href="{{ url_for('triar_examens')}}">Enviar Examens</a></li>
     <li><a href="afegir_examen">Veure Examens</a></li>
     <li><a href="correccio">Enviar Correcció Examens</a></li>
 </ul>
@@ -33,7 +33,6 @@
             <p>Tria els alumnes </p>
             <select id="examens" multiple name="select_usuaris">
                 {% for id, nif, nom, cognom in llista_1 %}
-                {
                 <option value={{id}}>{{id}} {{nom}} {{cognom}}</option>
                 {% endfor %}
             </select>

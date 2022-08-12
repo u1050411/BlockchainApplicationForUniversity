@@ -7,39 +7,10 @@
 </ul>
 {% endblock %}
 {% block content %}
-<section class="intro">
-    <div class="columna_esquerra">
-        <p>Tria els alumne als que vols enviar l'examen </p>
-    </div>
-    <div class="column_dreta">
-        <form action="{{ url_for('enviar_examen') }}" autocomplete="off" enctype="multipart/form-data" method="POST">
-            <p>Posa l'hora de començament Examen</p>
-            <input max="2030-06-14T00:00"
-                   min={{data_avui}} name="data_inici"
-                   type="datetime-local" value={{data_avui}}>
-            <p>Posa l'hora limit d'entrega</p>
-            <input max="2030-06-14T00:00"
-                   min={{data_avui}} name="data_entrega"
-                   type="datetime-local" value={{data_avui}}>
-            <p>Tria el pdf</p>
-            <select id="pdf" name="path_fitxer">
-                {% for id_pdf, data, nom in llista_2 %}
-                {
-                <option value={{id_pdf}}>{{data}} {{nom}}</option>
-                {% endfor %}
-            </select>
-<!--            <input name="path_fitxer" type="file" value=""/>-->
-            <!--            <embed src="files/Brochure.pdf" type="application/pdf" width="100%" height="600px" />-->
-            <p>Tria els alumnes </p>
-            <select id="examens" multiple name="select_usuaris">
-                {% for id, nif, nom, cognom in llista_1 %}
-                {
-                <option value={{id}}>{{id}} {{nom}} {{cognom}}</option>
-                {% endfor %}
-            </select>
-            <p></p>
-            <input class="button-1" type="submit" value="enviar">
-        </form>
-    </div>
-</section>
+<style>
+		.centrado{text-align:center;border:0px dotted #000; padding:8px;}
+	</style>
+<p class="centrado">L'hora limit per entregar l'examen es : {{hora}}</p>
+<embed src="\static\fitxers\veure_examen.pdf" type="application/pdf" width="100%" height="600px" />
+
 {% endblock %}

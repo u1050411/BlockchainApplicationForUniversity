@@ -21,10 +21,10 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 # Definim la carpeta on guardarem els pdf
 BASE_DIR = dirname(dirname(abspath(__file__)))
-WEB_DIR = join(BASE_DIR, 'BlockWeb\\static')
-STATIC_DIR = join(BASE_DIR, 'static')
-# directori pdf
-app.config["PDF_FILES"] = join(STATIC_DIR, 'fitxers')
+# WEB_DIR = join(BASE_DIR, 'BlockWeb')
+# STATIC_DIR = join(WEB_DIR, 'static')
+# # directori pdf
+# PDF_FILES = join(STATIC_DIR, 'fitxers')
 PROFESSOR = "professor"
 ESTUDIANT = "estudiant"
 
@@ -108,19 +108,10 @@ def seleccionar_alumnes():
 
 
 @app.route('/enviar_examens', methods=["GET", "POST"])
-@es_usuari(tipus=PROFESSOR)
 def enviar_examen():  # put application's code here
     if request.method == "POST":
-        # # fitxer = request.files['path_fitxer']
-        # if fitxer.filename:
-        #     image_name = secure_filename(fitxer.filename)
-        #     images_dir = app.config['PDF_FILES']
-        #     os.makedirs(images_dir, exist_ok=True)
-        #     file_path = os.path.join(images_dir, image_name)
-        #     fitxer.save(file_path)
         id_pdf = request.form.get('path_fitxer')
         pdf = Factoria.build_pdf_from_db(my_db, id_pdf)
-
         datai = request.form.get('data_inici')
         dataf = request.form.get('data_entrega')
         id_examen = my_db.seguent_id_examen()
@@ -141,12 +132,11 @@ def enviar_examen():  # put application's code here
 @app.route('/alumne', methods=["GET", "POST"])
 @es_usuari(tipus=ESTUDIANT)
 def alumne():  # put application's code here
-    return render_template('estudiants.html')
+    return render_template('alumne.html')
 
 
-@app.route('/examens_alumne')
-@es_usuari(tipus=ESTUDIANT)
-def examens_alumne():
+@app.route('/triar_examens')
+def triar_examens():
     user = Factoria.build_usuari_from_db(my_db, session['id'])
     llista = user.importar_examens(my_db)
     llista_examens = list()
@@ -155,17 +145,24 @@ def examens_alumne():
         profe = Factoria.build_usuari_from_db(my_db, id_professor)
         valors = [id_document, profe.nom, profe.cognom, data_inici, data_final]
         llista_examens.append(valors)
-    return render_template('examens_alumne.html', llista=llista_examens)
+    return render_template('triar_examens.html', llista=llista_examens)
 
 
-@app.route('/examens_alumne', methods=["GET", "POST"])
+@app.route('/veure_examen', methods=["GET", "POST"])
 @es_usuari(tipus=ESTUDIANT)
 def veure_examen():
-    id_examen = request.form.get('id')
+    id_examen = request.form.get('examen')
     examen = Factoria.build_examen_from_db(my_db, id_examen, True)
+    hora_limit = examen.data_final
     pdf = examen.pdf
-    return render_template('veure_examen', pdf)
+    path_relatiu = join('static', 'fitxers', 'veure_examen.pdf')
+    path_total = join (BASE_DIR, 'BlockWeb', path_relatiu)
+    Factoria.guardar_fitxer(path_total, pdf)
+    return render_template('veure_examen.html', fitxer=path_relatiu, hora=hora_limit)
 
+# @app.route('/veure_examen', methods=["GET", "POST"])
+# @es_usuari(tipus=ESTUDIANT)
+# def pujar_pdf():
 
 
 if __name__ == '__main__':

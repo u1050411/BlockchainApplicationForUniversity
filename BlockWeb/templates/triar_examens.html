@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 {% block navegacio1 %}
 <ul>
-    <li><a href="{{ url_for('examens_alumne') }}">Veure Examens</a></li>
+    <li><a href="{{ url_for('triar_examens')}}">Enviar Examens</a></li>
     <li><a href="afegir_examen">Veure Examens</a></li>
     <li><a href="correccio">Enviar Correcció Examens</a></li>
 </ul>
@@ -13,12 +13,10 @@
     </div>
     <div class="column_dreta">
         <b><p>Tria un examen per veure-ho</p></b>
-        <form action="{{ url_for('enviar_examen') }}" autocomplete="off" enctype="multipart/form-data" method="POST">
-            <select id="examens" name="seleccionar_examen">
-                {% for id, nomProfessor, cognom, data_inici, data_fi in llista %}
-                {
-                <option value={{id}}><p><b>Professor</b> :{{nom}} {{cognom}} <b>Data Inici:</b> {{data_inici}}
-                    <b>Data Final:</b> {{data_fi}}</p></option>
+        <form action="{{ url_for('veure_examen') }}" autocomplete="off" enctype="multipart/form-data" method="POST">
+            <select id="examens" name="examen">
+                {% for id_examen, nomProfessor, cognom, data_inici, data_fi in llista %}
+                <option value={{id_examen}}>{{id_examen}} Professor:{{nom}} {{cognom}} Data Inici:{{data_inici}} Data Final:{{data_fi}}</option>
                 {% endfor %}
             </select>
             <p></p>
