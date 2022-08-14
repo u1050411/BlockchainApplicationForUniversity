@@ -199,15 +199,13 @@ class MySqlBloc:
             exit(1)
         return self._cursor.fetchall()
 
-
     def importar_estudiants_examen(self, id_document):
         sql = f'select `id_estudiant` from `estudiant_examen` where `id_document` = {id_document}'
         return self.importar_llista_sql(sql)
 
-    def importar_estudiants_examen(self, id_document):
-        sql = f'select `id_estudiant` from `estudiant_examen` where `id_document` = {id_document}'
-        return self.importar_llista_sql(sql)
-
+    # def importar_estudiants_examen(self, id_document: object) -> object:
+    #     sql = f'select `id_estudiant` from `estudiant_examen` where `id_document` = {id_document}'
+    #     return self.importar_llista_sql(sql)
 
     def importar_estudiants_professor(self, professor):
         sql = f'select id from `usuari` where `id` in (select id_estudiant from estudiants_professor ' \
@@ -220,9 +218,9 @@ class MySqlBloc:
               f'where `id_estudiant` = "{usuari.id}")'
         return self.importar_llista_sql(sql)
 
-    def importar_examens_estudiants(self, usuari):
+    def importar_examens_professor(self, professor):
         sql = f'select `id_document`, `id_professor`, `data_examen`, `data_inici`, `data_final`, `pdf` ' \
-              f'from `examen` where `id_professor` = "{usuari.id}"'
+              f'from `examen` where `id_professor` = "{professor.id}"'
         return self.importar_llista_enter_sql(sql)
 
     def importar_respostes(self, id_document):
@@ -289,7 +287,6 @@ class MySqlBloc:
     def esborrar_transaccio(self, id_transac):
         self.esborrar_dada("transaccio", "id_transaccio", id_transac)
 
-
     def tancar(self):
         try:
             self._cursor.close()
@@ -319,18 +316,27 @@ class MySqlBloc:
     def existeix_examen(self, id_document):
         return self.existeix(self.schema, 'examen', 'id_document', id_document)
 
-    def existeix_transaccio(self, id_transac):
-        return self.existeix(self.schema, 'transaccio', 'id_transaccio', id_transac)
+    def existeix_examen_alumne(self, id_document, id_estudiant):
+        sql = f"select `id_estudiant` from `estudiant_examen` where `id_document` = '{id_document}' " \
+              f"and `id_estudiant` = '{id_estudiant}' LIMIT 1"
+        self.select_sql(sql)
+        return self._cursor.fetchone() is not None
+
+    def existeix_alumnes_examen(self, id_usuari):
+        return self.existeix(self.schema, 'usuari', 'id', id_usuari)
+    #
+    # def existeix_transaccio(self, id_transac):
+    #     return self.existeix(self.schema, 'transaccio', 'id_transaccio', id_transac)
 
     def existeix_alguna_transaccio(self):
         num = self.seguent_id('transaccio', 'id_transaccio')
-        return num != 0
+        return num != 1
 
     def seguent_id(self, taula, columna):
         sql = f"select Max(`{columna}`) from `{taula}`"
         num_maxim = self.importar_sql(sql)[0]
         if num_maxim is None:
-            id_document = 0
+            id_document = 1
         else:
             id_document = num_maxim + 1
         return id_document
@@ -415,20 +421,30 @@ class MySqlBloc:
         save_pdf = examen.pdf
         estudiants = examen.estudiants
 
+        sql_update = 'UPDATE examen SET id_document = %s, id_professor=%s, data_examen=%s, data_inici=%s, data_final=%s, pdf=%s  WHERE `id_document` = %s'
+        dades_update = (id_document, id_usuari, data_examen, data_inici, data_final, save_pdf, id_document)
+
         sql = "INSERT INTO examen(id_document, id_professor, data_examen, data_inici, data_final, pdf) " \
               "VALUES (%s, %s, %s, %s, %s, %s)"
         dades = (id_document, id_usuari, data_examen, data_inici, data_final, save_pdf)
-        self.exportar_sql(sql, dades)
+
+        if self.existeix_examen(id_document):
+            self.exportar_sql(sql_update, dades_update)
+        else:
+            self.exportar_sql(sql, dades)
 
         for estudiant in estudiants:
-            sql = "INSERT INTO estudiant_examen(id_document, id_estudiant) VALUES (%s, %s)"
-            dades = (id_document, estudiant.id)
-            self.exportar_sql(sql, dades)
+            if not self.existeix_examen_alumne(id_document, estudiant.id):
+                sql = "INSERT INTO estudiant_examen(id_document, id_estudiant) VALUES (%s, %s)"
+                dades = (id_document, estudiant.id)
+                self.exportar_sql(sql, dades)
 
     def guardar_pdf(self, classe_pdf):
         sql = "INSERT INTO pdf(id_pdf, data_creacio, id_usuari, nom_fitxer, pdf) " \
               "VALUES (%s, %s, %s, %s, %s)"
-        dades = (classe_pdf.id_document, classe_pdf.data_creacio, classe_pdf.usuari.id, classe_pdf.nom_fitxer, classe_pdf.pdf)
+        dades = (
+            classe_pdf.id_document, classe_pdf.data_creacio, classe_pdf.usuari.id, classe_pdf.nom_fitxer,
+            classe_pdf.pdf)
         self.exportar_sql(sql, dades)
 
     def guardar_resposta_examen(self, resposta):
@@ -443,5 +459,3 @@ class MySqlBloc:
         dades = (transaccio.emissor.id, transaccio.receptor.id, transaccio.document,
                  transaccio.id_document, transaccio.data_creacio,)
         self.exportar_sql(sql, dades)
-
-

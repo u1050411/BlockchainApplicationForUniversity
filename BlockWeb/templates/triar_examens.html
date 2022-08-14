@@ -13,7 +13,13 @@
     </div>
     <div class="column_dreta">
         <b><p>Tria un examen per veure-ho</p></b>
-        <form action="{{ url_for('veure_examen') }}" autocomplete="off" enctype="multipart/form-data" method="POST">
+        {% if tipus == 'professor' %}
+               <form action="{{ url_for('veure_examen_professor') }}" autocomplete="off" enctype="multipart/form-data"
+                     method="POST">
+        {% elif tipus == 'estudiant' %}
+                          <form action="{{ url_for('veure_examen') }}" autocomplete="off" enctype="multipart/form-data" method="POST">
+        {% endif %}
+
             <select id="examens" name="examen">
                 {% for id_examen, nomProfessor, cognom, data_inici, data_fi in llista %}
                 <option value={{id_examen}}>{{id_examen}} Professor:{{nom}} {{cognom}} Data Inici:{{data_inici}} Data Final:{{data_fi}}</option>

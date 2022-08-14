@@ -17,7 +17,7 @@
         <li><a href="{{ url_for('pujar_pdf')}}">Puja Resposta</a></li>
         {% else %}
         <li><a href="{{ url_for('pujar_pdf')}}">Respota Incorrecte "{{missatge}}"</a></li>
-        <input name="prova" value="{{fitxer}}">
+        <input name ="prova" value="{{fitxer}}">
         {% endif %}
     </ul>
 </div>
@@ -30,9 +30,14 @@
         padding: 8px;
     }
 </style>
-<p class="centrado">{{missatge}}{{hora}}</p>
-<embed height="600px" src={{fitxer}} type="application/pdf" width="100%"/>
+<!--<p class="centrado">{{missatge}}{{hora}}</p>-->
+    <div class="column_dreta">
+        <embed height="600px" src={{fitxer}} type="application/pdf" width="100%"/>
+                <embed height="600px" src={{fitxer_examen}} type="application/pdf" width="100%"/>
+    </div>
+    <div class="columna_esquerra">
+        <p>Aquest son els teus examens </p>
+                <embed height="600px" src={{fitxer_resposta}} type="application/pdf" width="100%"/>
+    </div>
 
 {% endblock %}
-
-

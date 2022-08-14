@@ -277,20 +277,8 @@ class Usuari:
             llista_pdfs.append(classe_pdf)
         return llista_pdfs
 
-    # @staticmethod
-    # def create_json(usuari_json):
-    #     usuari = json.loads(usuari_json)
-    #     id_usuari = usuari_json['id']
-    #     nif = usuari_json['nif']
-    #     nom = usuari_json['nom']
-    #     cognom = usuari_json['cognom']
-    #     tipus = usuari_json['tipus']
-    #     public_key = RSA.importKey(usuari_json['public_key'])
-    #     if tipus == ESTUDIANT:
-    #         usuari = Estudiant(id_usuari, nif, nom, cognom, public_key)
-    #     if tipus == PROFESSOR:
-    #         usuari = Professor(id_usuari, nif, nom, cognom, public_key)
-    #     return usuari
+    def importar_examens(self, my_db):
+        pass
 
     def to_json(self):
         rest = self.to_dict()
@@ -324,6 +312,9 @@ class Professor(Usuari):
             llista_examens.append(x)
         return llista_examens
 
+    def importar_examens(self, my_db):
+        return my_db.importar_examens_professor(self)
+
 
 class Estudiant(Usuari):
     def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None, contrasenya=None, email=None):
@@ -331,7 +322,6 @@ class Estudiant(Usuari):
         self.tipus = ESTUDIANT
 
     def importar_examens(self, my_db):
-        llista = my_db.importar_examens_estudiant(self)
         return my_db.importar_examens_estudiant(self)
 
 
@@ -385,6 +375,17 @@ class Pdf(Document):
         if classe_pdf:
             classe_pdf.data_creacio = data_creacio
         return classe_pdf
+
+    @classmethod
+    def crear_json(cls, dades_json=None):
+        dades = json.loads(dades_json)
+        id_examen = dades['id_document']
+        data_creacio = dades['data_creacio']
+        data_inicial = dades['data_inicial']
+        data_final = dades['data_final']
+        professor = Usuari.crear_json(dades['professor'])
+        pdf = ast.literal_eval(dades['pdf'])
+        return cls(id_examen, professor, pdf, data_inicial, data_final, data_creacio)
 
 
 class Examen(Document):
@@ -454,6 +455,20 @@ class RespostaExamen(Document):
             'estudiant': Factoria.to_json(self.usuari),
             'pdf': self.pdf
         })
+
+    @classmethod
+    def crear_json(cls, dades_json=None):
+        dades = json.loads(dades_json)
+        id_resposta = dades['id_resposta']
+        id_examen = dades['id_examen']
+        data_creacio = dades['data_creacio']
+        id_tipus = dades['id_tipus']
+        estudiant = Usuari.crear_json(dades['estudiant'])
+        pdf = ast.literal_eval(dades['pdf'])
+        resposta = cls(id_resposta, id_examen, estudiant, pdf)
+        resposta.data_creacio = data_creacio
+        resposta.tipus = id_tipus
+        return resposta
 
 
 class EvaluacioExamen(Document):

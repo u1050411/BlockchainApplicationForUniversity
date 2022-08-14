@@ -1,24 +1,38 @@
 {% extends 'layout.html' %}
 {% block navegacio1 %}
 [
-     <ul>
-        <li><a href="{{ url_for('seleccionar_alumnes') }}">Enviar Examens</a></li>
-        <li><a href="professor">Veure Examens</a></li>
-        <li><a href="alumne">Enviar Correcció Examens</a></li>
-    </ul>
+<ul>
+    <li><a href="{{ url_for('triar_examens')}}">Enviar Examens</a></li>
+    <li><a href="afegir_examen">Veure Examens</a></li>
+    <li><a href="correccio">Enviar Correcció Examens</a></li>
+</ul>
 {% endblock %}
 {% block content %}
-<div class="container">
-  <!-- Header -->
-<section class="intro">
-    <div class="column">
-     <p>Benvingut a Blockchain Professor</p>
-    </div>
-   <div class="column">
-       <ul>
-           <p>Tria l'opció que vulguis</p>
-       </ul>
-      </div>
-  </section>
+
+<div class="columna_esquerra">
+    {% if tipus == "professor" %}
+    <p>Hola Professor {{nom}} </p>
+    {% endif %}
+    {% if tipus == "estudiant" %}
+    <p>{{nom}} </p>
+    {% endif %}
 </div>
+<div class="column_dreta">
+    <form action="{{ url_for('pujar_pdf') }}" autocomplete="off" enctype="multipart/form-data" method="POST">
+        {% if missatge != "No" %}
+        <p>{{missatge}}</p>
+        {% endif %}
+        {% if tipus == "professor" %}
+        <p>Tria l'avualació del examen </p>
+        {% elif tipus == "estudiant" %}
+        <p>Tria la resposta del examen</p>
+        {% endif %}
+        <input name="path_fitxer" type="file" value=""/>
+        <!--            <embed src="files/Brochure.pdf" type="application/pdf" width="100%" height="600px" />-->
+        <p></p>
+        <input class="button-1" type="submit" value="enviar">
+    </form>
+</div>
+
 {% endblock %}
+

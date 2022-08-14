@@ -36,6 +36,16 @@ class CreacioTaulaTest:
         self.crear_universitat()
         self.crear_genesis_bloc()
 
+    def crear_schema_inicial(self):
+        self.my_db.esborrar_schema(self.schema)
+        self.my_db.crear_schema(self.schema)
+        self.my_db.afegir_schema(self.schema)
+        self.my_db.crear_taules_inicials()
+        self.crear_universitat()
+        self.crear_usuaris()
+        self.crear_pdf()
+        self.crear_genesis_bloc()
+
     def crear_universitat(self):
         private_key = RSA.generate(1024)
         public_key = private_key.publickey()
@@ -638,8 +648,22 @@ class TestBlockchainUniversity(unittest.TestCase):
             bloc_chain.crear_genesis_bloc()
         self.assertIsNotNone(self.my_db.ultim_bloc())
 
+    def test_minat(self):
+        self.test_crear_genesis_bloc()
+        bloc_chain = BlockchainUniversity(self.my_db)
+        bloc_chain.minat()
 
-        # bloc_genesis = Factoria.build_bloc_from_db(self.my_db, 1)
+
+class TestInicial(unittest.TestCase):
+
+
+    def test_inicial(self):
+        self.my_db = MySqlBloc('localhost', 'root', 'root')
+        self.schema = SCHEMA
+        self.test = CreacioTaulaTest(self.my_db, self.schema)
+        self.test.crear_schema_inicial()
+
+    # bloc_genesis = Factoria.build_bloc_from_db(self.my_db, 1)
         #
         # self.assertEqual(bloc_genesis.index, 0)
         # self.assertEqual(bloc_genesis.hash_bloc_anterior, "asfassdfsadfsa")
