@@ -2,35 +2,34 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="x-ua-compatible" content="ie=edge, Chrome = 1">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <meta content="ie=edge, Chrome = 1" http-equiv="x-ua-compatible">
     <!-- Custom Css -->
     <link href="https://fonts.googleapis.com/css?family=Faster+One" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="{{url_for('static',filename='css/main.css')}}">
+    <link href="style.css" rel="stylesheet">
+    <link href="{{url_for('static',filename='css/main.css')}}" rel="stylesheet">
     <title>Pagina Inicial</title>
 </head>
 <body>
 <header class="header">
-        <div >
-             <a href="http://www.udg.edu/" title="www.udg.edu">
-        <img img="logo_img" src="../static/img/logo_udg_inv.png" >
+    <div>
+        <a href="http://www.udg.edu/" title="www.udg.edu">
+            <img img="logo_img" src="../static/img/logo_udg_inv.png">
         </a>
-            {% if session %}
-            <ul class="logout">
+        {% if session %}
+        <ul class="logout">
             <li><p>{{session['nom']}}</p></li>
             <li><a href="logout">logout</a></li>
-            </ul>
-            {% endif %}
+        </ul>
+        {% endif %}
 
-            <ul>
-{% block navegacio1 %}
-{% endblock %}
-    </ul>
-        </div>
+        <ul>
+            {% block navegacio1 %}
+            {% endblock %}
+        </ul>
+    </div>
 
 </header>
-
 {% block navegacio2 %}
 {% endblock %}
 <!-- Aqui posarem el codi de la pagina -->

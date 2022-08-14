@@ -102,11 +102,17 @@ class MySqlBloc:
                 "`nota` INT NULL,"
                 "PRIMARY KEY (`id_document`, `id_estudiant`))",
 
-                "CREATE TABLE if not exists `estudiants_professor` ("
-                "`id_professor`  varchar(8) NOT NULL,"
+                "CREATE TABLE if not exists `assignatura` ("
+                "`id_assignatura` INT NOT NULL AUTO_INCREMENT,"
+                "`nom`  varchar(50) NOT NULL,"
+                "`id_professor` varchar(8) NOT NULL,"
+                "PRIMARY KEY (`id_assignatura`))",
+
+                "CREATE TABLE if not exists `estudiants_assignatura` ("
+                "`id_assignatura`  varchar(8) NOT NULL,"
                 "`id_estudiant`  varchar(8) NOT NULL,"
                 "`nota` INT NULL,"
-                "PRIMARY KEY (`id_professor`, `id_estudiant`))",
+                "PRIMARY KEY (`id_assignatura`, `id_estudiant`))",
 
                 "CREATE TABLE if not exists `resposta_examen` ("
                 "`id_resposta` INT NOT NULL AUTO_INCREMENT,"
@@ -119,9 +125,6 @@ class MySqlBloc:
                 "CREATE TABLE if not exists `bloc` ("
                 "`id_bloc` INT NOT NULL AUTO_INCREMENT,"
                 "`data_bloc` DATETIME NOT NULL,"
-                # "`id_emissor` INT NOT NULL,"
-                # "`id_receptor` INT NOT NULL,"
-                # "`id_document` INT NOT NULL,"
                 "`transaccio` JSON  NOT NULL,"
                 "`hash_bloc_anterior` LONGBLOB  NOT NULL,"
                 "PRIMARY KEY (`id_bloc`))",
@@ -208,8 +211,8 @@ class MySqlBloc:
     #     return self.importar_llista_sql(sql)
 
     def importar_estudiants_professor(self, professor):
-        sql = f'select id from `usuari` where `id` in (select id_estudiant from estudiants_professor ' \
-              f'where id_professor = "{professor.id}");'
+        sql = f'select id_estudiant from `estudiants_assignatura` where `id_assignatura` in (select id_assignatura from assignatura ' \
+              f'where id_professor = "{professor.id}")'
         return self.importar_llista_enter_sql(sql)
 
     def importar_examens_estudiant(self, usuari):
@@ -269,6 +272,10 @@ class MySqlBloc:
         sql = f'select * from universitat LIMIT 1'
         return self.importar_sql(sql)
 
+    def importar_assignatura(self, id_assign):
+        sql = f'select * from assignatura where `id_assignatura` = {id_assign} LIMIT 1'
+        return self.importar_sql(sql)
+
     def importar_bloc(self, id_bloc):
         sql = f'select id_bloc, data_bloc, transaccio, hash_bloc_anterior ' \
               f'from `bloc` where `id_bloc` = {id_bloc} LIMIT 1'
@@ -315,6 +322,16 @@ class MySqlBloc:
 
     def existeix_examen(self, id_document):
         return self.existeix(self.schema, 'examen', 'id_document', id_document)
+
+    def existeix_resposta(self, id_resposta):
+        return self.existeix(self.schema, 'resposta_examen', 'id_resposta', id_resposta)
+
+    def existeix_resposta_alumne(self, id_examen, id_usuari):
+        sql = f"select `id_usuari` from `resposta_examen` where `id_examen` = '{id_examen}' " \
+              f"and `id_usuari` = '{id_usuari}' LIMIT 1"
+        self.select_sql(sql)
+        return self._cursor.fetchone() is not None
+
 
     def existeix_examen_alumne(self, id_document, id_estudiant):
         sql = f"select `id_estudiant` from `estudiant_examen` where `id_document` = '{id_document}' " \
@@ -372,6 +389,12 @@ class MySqlBloc:
         dades = (nom, public, private)
         self.exportar_sql(sql, dades)
 
+    def guardar_assignatura(self, assignatura):
+        sql = "INSERT INTO assignatura(nom, id_professor) " \
+              "VALUES (%s, %s)"
+        dades = (assignatura.nom, assignatura.professor.id)
+        self.exportar_sql(sql, dades)
+
     def guardar_usuari(self, usuari):
         sql = "INSERT INTO usuari(id, tipus, nif, nom, cognom, public_key, contrasenya, email) " \
               "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
@@ -379,9 +402,9 @@ class MySqlBloc:
                  usuari.contrasenya, usuari.email)
         self.exportar_sql(sql, dades)
 
-    def guardar_estudiants_professor(self, professor, estudiant):
-        sql = "INSERT INTO estudiants_professor(id_professor, id_estudiant) VALUES (%s, %s)"
-        dades = (professor.id, estudiant.id)
+    def guardar_estudiants_assignatura(self, assignatura, estudiant):
+        sql = "INSERT INTO estudiants_assignatura(id_assignatura, id_estudiant) VALUES (%s, %s)"
+        dades = (assignatura.id, estudiant.id)
         self.exportar_sql(sql, dades)
 
     def guardar_bloc_dades(self, bloc):
@@ -448,10 +471,20 @@ class MySqlBloc:
         self.exportar_sql(sql, dades)
 
     def guardar_resposta_examen(self, resposta):
+        sql_update = 'UPDATE resposta_examen SET id_examen = %s, data_creacio=%s, id_usuari=%s, ' \
+                     'pdf=%s  WHERE  id_examen=%s and id_usuari=%s'
+        dades_update = (resposta.id_examen, resposta.data_creacio, resposta.usuari.id,
+                        resposta.pdf, resposta.id_examen, resposta.usuari.id)
+
         sql = "INSERT INTO resposta_examen(id_examen, id_resposta, data_creacio, id_usuari, pdf) " \
               "VALUES (%s, %s, %s, %s, %s)"
         dades = (resposta.id_examen, resposta.id_document, resposta.data_creacio, resposta.usuari.id, resposta.pdf)
-        self.exportar_sql(sql, dades)
+
+        if self.existeix_resposta_alumne(resposta.id_examen, resposta.usuari.id):
+            self.exportar_sql(sql_update, dades_update)
+        else:
+            self.exportar_sql(sql, dades)
+
 
     def guardar_transaccio(self, transaccio):
         sql = "INSERT INTO transaccio(id_emissor, id_receptor, document, id_document, data_creacio) " \

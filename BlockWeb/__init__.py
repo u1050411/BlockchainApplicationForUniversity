@@ -134,7 +134,7 @@ def alumne():  # put application's code here
 
 
 @app.route('/triar_examens')
-@es_usuari(tipus=BOTH)
+@es_usuari(tipus=ESTUDIANT)
 def triar_examens():
     user = Factoria.build_usuari_from_db(my_db, session['id'])
     llista = user.importar_examens(my_db)
@@ -205,11 +205,6 @@ def entregar_resposta():
     transaccio = Transaccio(user, profe, resposta)
     my_db.guardar_transaccio(transaccio)
     main.minat()
-
-    id_examen = session['id_examen']
-    examen = Factoria.build_examen_from_db(my_db, id_examen, True)
-    id_resposta = session['id_resposta']
-    resposta = Factoria.build_resposta_examen_from_db(my_db, id_examen, id_resposta)
     pdf_examen = examen.pdf
     pdf_resposta = resposta.pdf
     nom_total_examen = join(PATH_TOTAL, 'veure_examen.pdf')

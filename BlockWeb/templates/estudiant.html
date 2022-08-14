@@ -2,43 +2,22 @@
 {% block navegacio1 %}
 
 <ul>
-    <li><a href="triar_examens">Veure Examens</a></li>
-    <li><a href="pujar_pdf">Veure Examens</a></li>
+    <li><a href="{{ url_for('triar_examens')}}">Enviar Examens</a></li>
+    <li><a href="afegir_examen">Veure Blocks</a></li>
     <li><a href="correccio">Enviar Correcció Examens</a></li>
 </ul>
 
 {% endblock %}
-
-{% block navegacio2 %}
-<!--    <div class="nav_opcions">-->
-<!--    <ul>-->
-<!--        <li><a href="professor">Veure Examens</a></li>-->
-<!--        <li><a href="alumne">Enviar Correcció Examens</a></li>-->
-<!--    </ul>-->
-<!--    </div>-->
-{% endblock %}
 {% block content %}
- <section class="intro">
-    <div class="columna_esquerra">
-     <p>Tria els alumne als que vols enviar l'examen </p>
-    </div>
-   <div class="column_dreta">
-<form action="/usuaris_triats" method="post">
-  <select data-placeholder="Begin typing a name to filter..." multiple class="chosen-select" name="test">
-    <option value=""></option>
-    <option>American Black Bear</option>
-    <option>Asiatic Black Bear</option>
-    <option>Brown Bear</option>
-    <option>Giant Panda</option>
-    <option>Sloth Bear</option>
-    <option>Sun Bear</option>
-    <option>Polar Bear</option>
-    <option>Spectacled Bear</option>
-  </select>
-  <input type="submit">
-</form>
-      </div>
-  </section>
+<div class="slider">
+  <ul>
+        <li><img src="../static/img/uni0.jpg"/></li>
+      <li><img src="../static/img/uni1.jpg"/></li>
+        <li><img src="../static/img/uni2.jpg"/></li>
+        <li><img src="../static/img/uni3.jpg"/></li>
+<!--      <li><img src="../static/img/uni4.jpg"/></li>-->
+  </ul>
+</div>
 {% endblock %}
 
 

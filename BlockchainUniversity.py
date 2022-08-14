@@ -55,6 +55,16 @@ class Factoria:
         return None
 
     @staticmethod
+    def build_assignatura_from_db(my_db, id_assignatura):
+        assignatura_db = my_db.importar_assignatura(id_assignatura)
+        if assignatura_db is not None:
+            id_assignatura, nom, id_professor = assignatura_db
+            professor = Factoria.build_usuari_from_db(my_db, id_professor)
+            return Assignatura(id_assignatura, nom, professor)
+
+        return None
+
+    @staticmethod
     def build_usuari_from_db(my_db, id_usuari):
         if my_db.existeix_usuari(id_usuari):
             usuari_db = my_db.importar_usuari(id_usuari)
@@ -226,6 +236,18 @@ class Encriptador:
         return dada_desencriptada
 
 
+
+class Assignatura:
+    def __init__(self, id_assignatura=0, nom=None, professor=None):
+        self.id = id_assignatura
+        self.nom = nom
+        self.professor = professor
+        self.alumnes = list()
+
+    def afegir_alumnes(self, alumne):
+        self.alumnes.append(alumne)
+
+
 class Usuari:
 
     def __init__(self, id_usuari=None, nif=None, nom=None, cognom=None, public_key=None, contrasenya=None, email=None):
@@ -237,6 +259,7 @@ class Usuari:
         self.email = email
         self.tipus = USUARI
         self.public_key = public_key
+
 
     def to_dict(self):
         return collections.OrderedDict({
@@ -286,10 +309,6 @@ class Usuari:
 
     def str_publickey(self):
         return self.public_key.exportKey('PEM').decode('ascii')
-
-    # def sign(self, data):
-    #     h = SHA1.new(data)
-    #     return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
 
 
 class Professor(Usuari):
@@ -391,13 +410,14 @@ class Pdf(Document):
 class Examen(Document):
 
     def __init__(self, id_document=None, professor=None, pdf=None, data_inicial=None, data_final=None,
-                 data_creacio=None):
+                 data_creacio=None, assignatura=None):
         super(Examen, self).__init__(id_document, 1, professor, pdf, data_creacio)
         self.data_inicial = data_inicial
         self.data_final = data_final
         self.evaluacioExamen = None
         self.estudiants = []
         self.respostes = []
+        self.assignatura = assignatura
 
     @classmethod
     def crear_json(cls, dades_json=None):

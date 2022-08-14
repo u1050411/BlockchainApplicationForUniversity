@@ -6,7 +6,7 @@ from Crypto.PublicKey import RSA
 from fontTools.misc.dictTools import hashdict
 
 from BlockchainUniversity import Estudiant, Transaccio, Professor, Examen, Factoria, RespostaExamen, EvaluacioExamen, \
-    Bloc, Universitat, Encriptador, Document, BlockchainUniversity, Pdf
+    Bloc, Universitat, Encriptador, Document, BlockchainUniversity, Pdf, Assignatura
 from CreateMysql import MySqlBloc
 
 UTF_8 = 'utf8'
@@ -28,6 +28,7 @@ class CreacioTaulaTest:
         self.my_db.crear_taules_inicials()
         self.crear_universitat()
         self.crear_usuaris()
+        self.crear_assignatures()
         self.crear_pdf()
         self.crear_examens()
         self.crear_respostes()
@@ -43,6 +44,7 @@ class CreacioTaulaTest:
         self.my_db.crear_taules_inicials()
         self.crear_universitat()
         self.crear_usuaris()
+        self.crear_assignatures()
         self.crear_pdf()
         self.crear_genesis_bloc()
 
@@ -76,16 +78,26 @@ class CreacioTaulaTest:
                 usuari = Professor(id_usuari, nif, nom, cognom, public_key, contrasenya, email)
             self.my_db.guardar_usuari(usuari)
 
-        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 'u2000256'),
-                                                Factoria.build_usuari_from_db(self.my_db, 'u1050411'))
-        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 'u2000256'),
-                                                Factoria.build_usuari_from_db(self.my_db, 'u1050402'))
-        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 'u2000256'),
-                                                Factoria.build_usuari_from_db(self.my_db, 'u1050404'))
-        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 'u2050404'),
-                                                Factoria.build_usuari_from_db(self.my_db, 'u1050403'))
-        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 'u2050404'),
-                                                Factoria.build_usuari_from_db(self.my_db, 'u1050411'))
+    def crear_assignatures(self):
+
+        assignatures = [['Sistemes operatius', 'u2000256'], ['Computadors', 'u2050404']]
+
+        for nom, id_professor in assignatures:
+            professor = Factoria.build_usuari_from_db(self.my_db, id_professor)
+            assignatura = Assignatura(0, nom, professor)
+            self.my_db.guardar_assignatura(assignatura)
+
+        self.my_db.guardar_estudiants_assignatura(Factoria.build_assignatura_from_db(self.my_db, 1),
+                                                  Factoria.build_usuari_from_db(self.my_db, 'u1050411'))
+        self.my_db.guardar_estudiants_assignatura(Factoria.build_assignatura_from_db(self.my_db, 1),
+                                                  Factoria.build_usuari_from_db(self.my_db, 'u1050402'))
+        self.my_db.guardar_estudiants_assignatura(Factoria.build_assignatura_from_db(self.my_db, 1),
+                                                  Factoria.build_usuari_from_db(self.my_db, 'u1050404'))
+        self.my_db.guardar_estudiants_assignatura(Factoria.build_assignatura_from_db(self.my_db, 2),
+                                                  Factoria.build_usuari_from_db(self.my_db, 'u1050403'))
+        self.my_db.guardar_estudiants_assignatura(Factoria.build_assignatura_from_db(self.my_db, 2),
+                                                  Factoria.build_usuari_from_db(self.my_db, 'u1050411'))
+
 
     def crear_pdf(self):
         pdfs = [[1, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
@@ -272,11 +284,6 @@ class TestMysql(unittest.TestCase):
         self.my_db.crear_taules_inicials()
         self.test.crear_usuaris()
         self.assertEqual(self.my_db.existeix(self.schema, 'usuari', 'id', 'u1050403'), True)
-
-    def test_afegir_alumne_professor(self):
-        self.test.crear_schema_dades()
-        self.my_db.guardar_estudiants_professor(Factoria.build_usuari_from_db(self.my_db, 'u2000256'),
-                                                Factoria.build_usuari_from_db(self.my_db, 'u1050403'))
 
     def test_llista_estudiant_professor(self):
         self.test.crear_schema_dades()
