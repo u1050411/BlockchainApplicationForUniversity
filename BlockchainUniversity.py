@@ -89,9 +89,10 @@ class Factoria:
     @staticmethod
     def build_examen_from_db(my_db, id_document, per_estudiant=None):
         if my_db.existeix_examen(id_document):
-            id_document, id_professor, data_examen, data_inicial, data_final, pdf = my_db.importar_examen(id_document)
+            id_document, id_professor, data_examen, data_inicial, data_final, pdf, id_assignatura = my_db.importar_examen(id_document)
             professor = Factoria.build_usuari_from_db(my_db, id_professor)
-            examen = Examen(id_document, professor, pdf, data_inicial, data_final)
+            assignatura = Factoria.build_assignatura_from_db(my_db, id_assignatura)
+            examen = Examen(id_document, professor, pdf, data_inicial, data_final, assignatura)
             if per_estudiant is None:
                 estudiants = my_db.importar_estudiants_examen(id_document)
                 if estudiants is not None:
@@ -333,6 +334,11 @@ class Professor(Usuari):
 
     def importar_examens(self, my_db):
         return my_db.importar_examens_professor(self)
+
+    def get_assignatura(self, my_db):
+        id_assignatura = my_db.importar_assignatura_professor(self)
+        assignatura = Factoria.build_assignatura_from_db(my_db, id_assignatura[0])
+        return assignatura
 
 
 class Estudiant(Usuari):

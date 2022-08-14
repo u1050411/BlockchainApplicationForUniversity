@@ -84,6 +84,7 @@ class MySqlBloc:
                 "CREATE TABLE if not exists `examen` ("
                 "`id_document` INT NOT NULL AUTO_INCREMENT,"
                 "`id_professor`  varchar(8) NOT NULL,"
+                "`id_assignatura`  INT NOT NULL,"
                 "`data_examen` DATETIME NOT NULL,"
                 "`data_inici` DATETIME NULL,"
                 "`data_final` DATETIME NULL,"
@@ -259,7 +260,7 @@ class MySqlBloc:
         return self.importar_sql(sql)
 
     def importar_examen(self, id_document):
-        sql = f'select `id_document`, `id_professor`, `data_examen`, `data_inici`, `data_final`, `pdf` ' \
+        sql = f'select `id_document`, `id_professor`, `data_examen`, `data_inici`, `data_final`, `pdf`, `id_assignatura` ' \
               f'from `examen` where `id_document` = {id_document} LIMIT 1'
         return self.importar_sql(sql)
 
@@ -274,6 +275,10 @@ class MySqlBloc:
 
     def importar_assignatura(self, id_assign):
         sql = f'select * from assignatura where `id_assignatura` = {id_assign} LIMIT 1'
+        return self.importar_sql(sql)
+
+    def importar_assignatura_professor(self, professor):
+        sql = f'select * from assignatura where `id_professor` = "{professor.id}" LIMIT 1'
         return self.importar_sql(sql)
 
     def importar_bloc(self, id_bloc):
@@ -443,13 +448,15 @@ class MySqlBloc:
         data_final = examen.data_final
         save_pdf = examen.pdf
         estudiants = examen.estudiants
+        id_assignatura = examen.assignatura.id
 
-        sql_update = 'UPDATE examen SET id_document = %s, id_professor=%s, data_examen=%s, data_inici=%s, data_final=%s, pdf=%s  WHERE `id_document` = %s'
-        dades_update = (id_document, id_usuari, data_examen, data_inici, data_final, save_pdf, id_document)
+        sql_update = 'UPDATE examen SET id_document = %s, id_professor=%s, data_examen=%s, data_inici=%s, data_final=%s' \
+                     ', pdf=%s , id_assignatura=%s WHERE `id_document` = %s'
+        dades_update = (id_document, id_usuari, data_examen, data_inici, data_final, save_pdf, id_assignatura, id_document)
 
-        sql = "INSERT INTO examen(id_document, id_professor, data_examen, data_inici, data_final, pdf) " \
-              "VALUES (%s, %s, %s, %s, %s, %s)"
-        dades = (id_document, id_usuari, data_examen, data_inici, data_final, save_pdf)
+        sql = "INSERT INTO examen(id_document, id_professor, data_examen, data_inici, data_final, pdf, id_assignatura) " \
+              "VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        dades = (id_document, id_usuari, data_examen, data_inici, data_final, save_pdf, id_assignatura)
 
         if self.existeix_examen(id_document):
             self.exportar_sql(sql_update, dades_update)

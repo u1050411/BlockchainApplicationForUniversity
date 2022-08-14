@@ -114,7 +114,8 @@ def enviar_examen():  # put application's code here
         dataf = request.form.get('data_entrega')
         id_examen = my_db.seguent_id_examen()
         profe = Factoria.build_usuari_from_db(my_db, session['id'])
-        examen = Examen(id_examen, profe, pdf.pdf, datai, dataf, datetime.today())
+        assignatura = profe.get_assignatura(my_db)
+        examen = Examen(id_examen, profe, pdf.pdf, datai, dataf, datetime.today(), assignatura)
         for val in request.form.getlist("select_usuaris"):
             alumn = Factoria.build_usuari_from_db(my_db, val)
             examen.afegir_estudiants(alumn)
@@ -143,8 +144,8 @@ def triar_examens():
     llista_examens = list()
     for x in llista:
         (id_document, id_professor, data_inici, data_final) = x
-        profe = Factoria.build_usuari_from_db(my_db, id_professor)
-        valors = [id_document, profe.nom, profe.cognom, data_inici, data_final]
+        examen = Factoria.build_examen_from_db(my_db, id_document, True)
+        valors = [id_document, examen.assignatura.nom, data_inici, data_final]
         llista_examens.append(valors)
     return render_template('triar_examens.html', llista=llista_examens, tipus=session['tipus'])
 
