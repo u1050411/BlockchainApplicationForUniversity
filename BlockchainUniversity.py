@@ -105,8 +105,8 @@ class Factoria:
                         id_resposta, data_creacio, id_usuari, pdf = sql_resposta
                         usuari = Factoria.build_usuari_from_db(my_db, id_usuari)
                         if usuari.tipus == PROFESSOR:
-                            examen.evaluacioExamen = EvaluacioExamen(id_resposta, id_document, usuari, pdf)
-                            examen.evaluacioExamen.data_creacio = data_creacio
+                            examen.avaluacioExamen = AvaluacioExamen(id_resposta, id_document, usuari, pdf)
+                            examen.avaluacioExamen.data_creacio = data_creacio
                         elif usuari.tipus == ESTUDIANT:
                             resposta = RespostaExamen(id_resposta, id_document, usuari, pdf)
                             resposta.data_creacio = data_creacio
@@ -150,7 +150,7 @@ class Factoria:
     #         if usuari.tipus == ESTUDIANT:
     #             resposta = RespostaExamen(id_resposta, id_document, usuari, pdf, nota)
     #         if usuari.tipus == PROFESSOR:
-    #             resposta = EvaluacioExamen(id_resposta, id_document, usuari, pdf, nota)
+    #             resposta = avaluacioExamen(id_resposta, id_document, usuari, pdf, nota)
     #         return resposta
     #
     @staticmethod
@@ -169,10 +169,10 @@ class Factoria:
 
 
 @staticmethod
-def build_evaluacio_examen_from_db(my_db, id_examen, id_resposta):
+def build_avaluacio_examen_from_db(my_db, id_examen, id_resposta):
     resposta = Factoria.build_resposta_examen_from_db(my_db, id_examen, id_resposta)
     if resposta.usuari.tipus != PROFESSOR:
-        raise ValueError('Amb aquest id no hi ha una evaluacio')
+        raise ValueError('Amb aquest id no hi ha una avaluacio')
     return resposta
 
 
@@ -434,7 +434,7 @@ class Examen(Document):
         super(Examen, self).__init__(id_document, 1, professor, pdf, data_creacio)
         self.data_inicial = data_inicial
         self.data_final = data_final
-        self.evaluacioExamen = None
+        self.avaluacioExamen = None
         self.estudiants = []
         self.respostes = []
         self.assignatura = assignatura
@@ -510,15 +510,15 @@ class RespostaExamen(Document):
         return resposta
 
 
-class EvaluacioExamen(Document):
+class AvaluacioExamen(Document):
 
-    def __init__(self, id_evaluacio, id_resposta=None, professor=None, estudiant=None, pdf=None, nota=None):
+    def __init__(self, id_resposta=None, professor=None, estudiant=None, pdf=None, nota=None, id_avaluacio=0):
         try:
             if professor.tipus != PROFESSOR:
-                raise ValueError('Solament els professors poden crear evaluacion')
+                raise ValueError('Solament els professors poden crear avaluacion')
         except ValueError:
             print(ValueError)
-        super(EvaluacioExamen, self).__init__(id_evaluacio, 3, professor, pdf)
+        super(AvaluacioExamen, self).__init__(id_avaluacio, 3, professor, pdf)
         self.id_resposta = id_resposta
         self.estudiant = estudiant
         if nota is None:
@@ -528,7 +528,7 @@ class EvaluacioExamen(Document):
 
     def to_dict(self):
         return collections.OrderedDict({
-            'id_evaluacio': self.id_evaluacio,
+            'id_avaluacio': self.id_avaluacio,
             'id_resposta': self.id_resposta,
             'id_tipus': self.tipus,
             'data_creacio': self.data_creacio,
@@ -544,7 +544,7 @@ class EvaluacioExamen(Document):
 
     def to_dict(self):
         return collections.OrderedDict({
-            'id_evaluacio': self.id_document,
+            'id_avaluacio': self.id_document,
             'id_resposta': self.id_examen,
             'id_tipus': self.tipus,
             'data_creacio': self.data_creacio,
@@ -557,7 +557,7 @@ class EvaluacioExamen(Document):
     @classmethod
     def crear_json(cls, dades_json=None):
         dades = json.loads(dades_json)
-        id_evaluacio = dades['id_evaluacio']
+        id_avaluacio = dades['id_avaluacio']
         id_resposta = dades['id_resposta']
         tipus = dades['tipus'],
         data_creacio = dades['data_creacio']
@@ -565,9 +565,9 @@ class EvaluacioExamen(Document):
         estudiant = Usuari.crear_json(dades['estudiant'])
         pdf = ast.literal_eval(dades['pdf'])
         nota = ast.literal_eval(dades['nota'])
-        evaluacio = cls(id_evaluacio, id_resposta, professor, estudiant, pdf, nota)
-        evaluacio.data_creacio = data_creacio
-        return evaluacio
+        avaluacio = cls(id_avaluacio, id_resposta, professor, estudiant, pdf, nota)
+        avaluacio.data_creacio = data_creacio
+        return avaluacio
 
 
 class Universitat:

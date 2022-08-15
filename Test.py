@@ -5,7 +5,7 @@ import ast
 from Crypto.PublicKey import RSA
 from fontTools.misc.dictTools import hashdict
 
-from BlockchainUniversity import Estudiant, Transaccio, Professor, Examen, Factoria, RespostaExamen, EvaluacioExamen, \
+from BlockchainUniversity import Estudiant, Transaccio, Professor, Examen, Factoria, RespostaExamen, AvaluacioExamen, \
     Bloc, Universitat, Encriptador, Document, BlockchainUniversity, Pdf, Assignatura
 from CreateMysql import MySqlBloc
 
@@ -32,7 +32,7 @@ class CreacioTaulaTest:
         self.crear_pdf()
         self.crear_examens()
         self.crear_respostes()
-        self.crear_evaluacio()
+        self.crear_avaluacio()
         self.crear_transaccions()
         self.crear_universitat()
         self.crear_genesis_bloc()
@@ -152,7 +152,7 @@ class CreacioTaulaTest:
             resposta = RespostaExamen(id_resposta, id_examen, estudiant, pdf)
             self.my_db.guardar_resposta_examen(resposta)
 
-    def crear_evaluacio(self):
+    def crear_avaluacio(self):
 
         respostes = [[3, 1, 'u2000256', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
                                         f'Examen_2021_20_10_01_primer_parcial-solucio.pdf'],
@@ -162,7 +162,7 @@ class CreacioTaulaTest:
         for id_resposta, id_examen, id_usuari, nom_fitxer in respostes:
             pdf = Factoria.recuperar_fitxer(nom_fitxer)
             professor = Factoria.build_usuari_from_db(self.my_db, id_usuari)
-            resposta = EvaluacioExamen(id_resposta, id_examen, professor, pdf)
+            resposta = AvaluacioExamen(id_resposta, id_examen, professor, pdf)
             self.my_db.guardar_resposta_examen(resposta)
 
     def crear_transaccions(self):
@@ -413,8 +413,8 @@ class TestFactoria(unittest.TestCase):
         self.assertEqual(resposta.usuari.id, 'u1050402')
         self.assertEqual(resposta.usuari.tipus, ESTUDIANT)
 
-    def test_evaluacio(self):
-        resposta = Factoria.build_evaluacio_examen_from_db(self.my_db, 1, 3)
+    def test_avaluacio(self):
+        resposta = Factoria.build_avaluacio_examen_from_db(self.my_db, 1, 3)
         self.assertEqual(resposta.id_document, 3)
         self.assertEqual(resposta.id_examen, 1)
         self.assertEqual(resposta.usuari.id, 'u2000256')
@@ -511,7 +511,7 @@ class TestRespostaExamen(unittest.TestCase):
         self.assertIsNotNone(num_document)
 
 
-class TestEvaluacioExamen(unittest.TestCase):
+class TestavaluacioExamen(unittest.TestCase):
 
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
@@ -524,18 +524,18 @@ class TestEvaluacioExamen(unittest.TestCase):
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
         pdf = Factoria.recuperar_fitxer(nom_fitxer)
         estudiant = Factoria.build_usuari_from_db(self.my_db, 'u1050411')
-        resposta = EvaluacioExamen(1, 1, estudiant, pdf)
+        resposta = AvaluacioExamen(1, 1, estudiant, pdf)
         self.assertEqual(resposta.id_document, 1)
         self.assertEqual(resposta.id_examen, 1)
         self.assertEqual(resposta.usuari, estudiant)
         self.assertEqual(resposta.pdf, pdf)
 
     def test_to_json(self):
-        evaluacio = Factoria.build_evaluacio_examen_from_db(self.my_db, 1, 3)
-        evaluacio_print = evaluacio.to_dict()
-        print(evaluacio_print)
-        evaluacio_json = Factoria.to_json(evaluacio)
-        print(evaluacio_json)
+        avaluacio = Factoria.build_avaluacio_examen_from_db(self.my_db, 1, 3)
+        avaluacio_print = avaluacio.to_dict()
+        print(avaluacio_print)
+        avaluacio_json = Factoria.to_json(avaluacio)
+        print(avaluacio_json)
 
 
 class TestEncriptador(unittest.TestCase):
@@ -584,7 +584,7 @@ class TestTransaction(unittest.TestCase):
         self.test.crear_usuaris()
         self.test.crear_examens()
         self.test.crear_respostes()
-        self.test.crear_evaluacio()
+        self.test.crear_avaluacio()
 
     @property
     def crear_transaccio(self):

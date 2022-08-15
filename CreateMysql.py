@@ -124,11 +124,11 @@ class MySqlBloc:
                 "`nota` INT NULL,"
                 "PRIMARY KEY (`id_resposta`))",
 
-                "CREATE TABLE if not exists `evaluacio_examen` ("
+                "CREATE TABLE if not exists avaluacio_examen ("
                 "`id_evaluacio` INT NOT NULL AUTO_INCREMENT,"
                 "`id_resposta` INT NOT NULL,"
                 "`id_professor` varchar(8) NOT NULL,"
-                "`id_usuari` varchar(8) NOT NULL,"
+                "`id_estudiant` varchar(8) NOT NULL,"
                 "`pdf` LONGBLOB  NULL,"
                 "`nota` INT NULL,"
                 "PRIMARY KEY (`id_evaluacio`))",
@@ -352,6 +352,9 @@ class MySqlBloc:
     def existeix_resposta(self, id_resposta):
         return self.existeix(self.schema, 'resposta_examen', 'id_resposta', id_resposta)
 
+    def existeix_avaluacio(self, id_avaluacio):
+        return self.existeix(self.schema, 'avaluacio_examen', 'id_avaluacio', id_avaluacio)
+
     def existeix_resposta_alumne(self, id_examen, id_usuari):
         sql = f"select `id_usuari` from `resposta_examen` where `id_examen` = '{id_examen}' " \
               f"and `id_usuari` = '{id_usuari}' LIMIT 1"
@@ -513,6 +516,23 @@ class MySqlBloc:
             self.exportar_sql(sql_update, dades_update)
         else:
             self.exportar_sql(sql, dades)
+
+    def guardar_avaluacio_examen(self, avaluacio):
+        sql_update = 'UPDATE resposta_examen SET id_avaluacio = %s, id_resposta=%s, id_professor=%s, id_estudiant=%s, ' \
+                     'pdf=%s, nota=%s  WHERE  id_avaluacio=%s'
+        dades_update = (avaluacio.id_avaluacio, avaluacio.id_resposta, avaluacio.avaluacio.usuari.id, avaluacio.estudiant.id,
+                        avaluacio.pdf, avaluacio.nota, avaluacio.id_avaluacio)
+
+        sql = "INSERT INTO resposta_examen(id_resposta, id_professor, id_estudiant, pdf, nota) " \
+              "VALUES (%s, %s, %s, %s, %s)"
+        dades = (avaluacio.id_resposta, avaluacio.avaluacio.usuari.id, avaluacio.estudiant.id,
+                        avaluacio.pdf, avaluacio.nota)
+
+        if self.existeix_avaluacio(avaluacio.id_avaluacio):
+            self.exportar_sql(sql_update, dades_update)
+        else:
+            self.exportar_sql(sql, dades)
+
 
     def guardar_transaccio(self, transaccio):
         sql = "INSERT INTO transaccio(id_emissor, id_receptor, document, id_document, data_creacio) " \

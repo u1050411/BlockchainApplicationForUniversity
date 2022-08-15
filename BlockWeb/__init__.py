@@ -5,7 +5,7 @@ from datetime import datetime
 from requests import request
 from werkzeug.utils import secure_filename
 
-from BlockchainUniversity import Factoria, Examen, Transaccio, BlockchainUniversity, RespostaExamen
+from BlockchainUniversity import Factoria, Examen, Transaccio, BlockchainUniversity, RespostaExamen, AvaluacioExamen
 from BlockWeb import auth
 from CreateMysql import MySqlBloc
 from flask import Flask, request, render_template, session, redirect, url_for, jsonify
@@ -156,15 +156,15 @@ def veure_resposta():
     return render_template('veure_resposta.html', fitxer=nom_relatiu, missatge=missatge, opcio=1)
 
 
-@app.route('/pujar_evaluacio', methods=["GET", "POST"])
+@app.route('/pujar_avaluacio', methods=["GET", "POST"])
 @es_usuari(tipus=PROFESSOR)
-def pujar_evaluacio():
+def pujar_avaluacio():
     missatge = "Aquesta es la Resposta del alumne : "
     user = Factoria.build_usuari_from_db(my_db, session['id'])
     nom = user.nom+" "+user.cognom
     tipus = session['tipus']
     if request.method == 'POST':
-        missatge = "Pots triar un altre evaluacio o entregar aquesta : "
+        missatge = "Pots triar un altre avaluacio o entregar aquesta : "
         # Mira si el request es correcte
         if 'path_fitxer' not in request.files:
             missatge = "No ha anat be, torna-ho a intentar"
@@ -174,36 +174,37 @@ def pujar_evaluacio():
             missatge = "No has triat un fitxer, torna-ho a intentar"
         # pdf_nom = secure_filename(pdf.filename)
         os.makedirs(PATH_TOTAL, exist_ok=True)
-        pdf.save(join(PATH_TOTAL, 'pdf_pujat.pdf'))
-        nom_relatu = join(PATH_RELATIU, 'pdf_pujat.pdf')
+        pdf.save(join(PATH_TOTAL, 'avaluacio.pdf'))
+        nom_relatu = join(PATH_RELATIU, 'avaluacio.pdf')
         return render_template('veure_resposta.html', fitxer=nom_relatu, hora="", missatge=missatge, opcio=2)
-    return render_template('pujar_evaluacio.html', nom=nom, tipus=tipus, missatge=missatge)
+    return render_template('pujar_avaluacio.html', nom=nom, tipus=tipus, missatge=missatge)
 
 
-@app.route('/entregar_evaluacio', methods=["GET", "POST"])
+@app.route('/entregar_avaluacio', methods=["GET", "POST"])
 @es_usuari(tipus=PROFESSOR)
-def entregar_evaluacio():
-    # def __init__(self, id_evaluacio, id_resposta=None, professor=None, estudiant=None, pdf=None, nota=None):
+def entregar_avaluacio():
+    nota = request.form.get('nota')
     profe = Factoria.build_usuari_from_db(my_db, session['id'])
-    id_evalucio = session['id_evalucio']
-    evaluacio = Factoria.build_id_resposta_alumne_from_db(my_db, id_evalucio)
-    # nom_fitxer = join(PATH_TOTAL, 'pdf_pujat.pdf')
-    # pdf = Factoria.recuperar_fitxer(nom_fitxer)
-    # evaluacio = RespostaExamen(id_evalucio, examen.id_document, user, pdf)
-    # session['id_resposta'] = id_evalucio
-    # my_db.guardar_resposta_examen(resposta)
-    # transaccio = Transaccio(user, profe, resposta)
-    # my_db.guardar_transaccio(transaccio)
-    # main.minat()
-    # pdf_examen = evaluacio.pdf
-    # pdf_resposta = evaluacio.pdf
-    nom_total_examen = join(PATH_TOTAL, 'veure_examen.pdf')
-    nom_relatiu_examen = join(PATH_RELATIU, 'veure_examen.pdf')
+    id_avaluacio = session['id_avaluacio']
+    resposta = Factoria.build_id_resposta_alumne_from_db(my_db, id_avaluacio)
+    nom_fitxer = join(PATH_TOTAL, 'avaluacio.pdf')
+    pdf = Factoria.recuperar_fitxer(nom_fitxer)
+    estudiant = resposta.usuari
+    avaluacio = AvaluacioExamen(resposta.id_document, profe, resposta.usuari, pdf, nota)
+    my_db.guardar_avaluacio_examen(avaluacio)
+    transaccio = Transaccio(profe, estudiant, avaluacio)
+    my_db.guardar_transaccio(transaccio)
+    main.minat()
+    pdf_examen = avaluacio.pdf
+    pdf_resposta = avaluacio.pdf
+    nom_total_avaluacio = join(PATH_TOTAL, 'avaluacio.pdf')
+    nom_relatiu_avaluacio = join(PATH_RELATIU, 'avaluacio.pdf')
     nom_total_resposta = join(PATH_TOTAL, 'veure_resposta.pdf')
     nom_relatiu_resposta = join(PATH_RELATIU, 'veure_resposta.pdf')
-    Factoria.guardar_fitxer(nom_total_examen, pdf_examen)
+    Factoria.guardar_fitxer(nom_total_avaluacio, pdf_examen)
     Factoria.guardar_fitxer(nom_total_resposta, pdf_resposta)
-    return render_template('veure_resposta.html', fitxer_examen=nom_relatiu_examen, fitxer_resposta=nom_relatiu_resposta)
+    return render_template('examen_resposta.html', fitxer_avaluacio=nom_relatiu_avaluacio, fitxer_resposta=nom_relatiu_resposta)
+
 
 @app.route('/pujar_pdf', methods=["GET", "POST"])
 @es_usuari(tipus=ESTUDIANT)
