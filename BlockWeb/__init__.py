@@ -104,30 +104,6 @@ def seleccionar_alumnes():
 
 
 
-@app.route('/enviar_examens', methods=["GET", "POST"])
-@es_usuari(tipus=BOTH)
-def enviar_examen():  # put application's code here
-    if request.method == "POST":
-        id_pdf = request.form.get('path_fitxer')
-        pdf = Factoria.build_pdf_from_db(my_db, id_pdf)
-        datai = request.form.get('data_inici')
-        dataf = request.form.get('data_entrega')
-        id_examen = my_db.seguent_id_examen()
-        profe = Factoria.build_usuari_from_db(my_db, session['id'])
-        assignatura = profe.get_assignatura(my_db)
-        examen = Examen(id_examen, profe, pdf.pdf, datai, dataf, datetime.today(), assignatura)
-        for val in request.form.getlist("select_usuaris"):
-            alumn = Factoria.build_usuari_from_db(my_db, val)
-            examen.afegir_estudiants(alumn)
-        my_db.guardar_examen(examen)
-        for alumn in examen.estudiants:
-            transaccio = Transaccio(profe, alumn, examen)
-            my_db.guardar_transaccio(transaccio)
-        # uni = Factoria.build_universitat_from_db(my_db)
-        main.minat()
-    return render_template("examens_enviats.html")
-
-
 @app.route('/alumne', methods=["GET", "POST"])
 @es_usuari(tipus=ESTUDIANT)
 def alumne():  # put application's code here
@@ -139,33 +115,95 @@ def alumne():  # put application's code here
 def triar_examens():
     user = Factoria.build_usuari_from_db(my_db, session['id'])
     llista = user.importar_examens(my_db)
-    if llista is None:
-        render_template('error404.html')
     llista_examens = list()
     for x in llista:
         (id_document, id_professor, data_inici, data_final) = x
-        examen = Factoria.build_examen_from_db(my_db, id_document, True)
-        valors = [id_document, examen.assignatura.nom, data_inici, data_final]
+        profe = Factoria.build_usuari_from_db(my_db, id_professor)
+        valors = [id_document, profe.nom, profe.cognom, data_inici, data_final]
         llista_examens.append(valors)
     return render_template('triar_examens.html', llista=llista_examens, tipus=session['tipus'])
 
 
-@app.route('/veure_examen', methods=["GET", "POST"])
-@es_usuari(tipus=BOTH)
-def veure_examen():
-    id_examen = request.form.get('examen')
-    examen = Factoria.build_examen_from_db(my_db, id_examen, True)
-    if examen is None:
-        redirect('error404.html')
-    session['id_examen'] = id_examen
-    hora_limit = examen.data_final
-    pdf = examen.pdf
-    nom_total = join(PATH_TOTAL, 'veure_examen.pdf')
-    nom_relatu = join(PATH_RELATIU, 'veure_examen.pdf')
-    Factoria.guardar_fitxer(nom_total, pdf)
-    missatge = "L'hora limit per entregar l'examen es : "
-    return render_template('veure_examen.html', fitxer=nom_relatu, hora=hora_limit, missatge=missatge)
+@app.route('/triar_resposta')
+@es_usuari(tipus=PROFESSOR)
+def triar_resposta():
+    user = Factoria.build_usuari_from_db(my_db, session['id'])
+    llista = user.importar_examens(my_db)
+    llista_examens = list()
+    for x in llista:
+        # if x.nota is None or x.nota == 0:
+            nom_assignatura = Factoria.build_examen_from_db(my_db, x.id_examen).assignatura.nom
+            estudiant = Factoria.build_usuari_from_db(my_db, x.usuari.id)
+            valors = [x.id_document, nom_assignatura, estudiant.nom, estudiant.cognom, x.data_creacio]
+            llista_examens.append(valors)
+    return render_template('triar_resposta.html', llista=llista_examens, tipus=session['tipus'])
 
+
+@app.route('/veure_resposta', methods=["GET", "POST"])
+@es_usuari(tipus=PROFESSOR)
+def veure_resposta():
+    id_resposta = request.form.get('resposta')
+    resposta = Factoria.build_id_resposta_alumne_from_db(my_db, id_resposta)
+    if resposta is None:
+        redirect('error404.html')
+    session['id_resposta'] = id_resposta
+    pdf = resposta.pdf
+    nom_total = join(PATH_TOTAL, 'veure_resposta.pdf')
+    nom_relatiu = join(PATH_RELATIU, 'veure_resposta.pdf')
+    Factoria.guardar_fitxer(nom_total, pdf)
+    estudiant = Factoria.build_usuari_from_db(my_db, resposta.usuari.id)
+    missatge = "Aquest es la resposta del alumne"+" "+resposta.usuari.nom+" "+resposta.usuari.cognom
+    return render_template('veure_resposta.html', fitxer=nom_relatiu, missatge=missatge, opcio=1)
+
+
+@app.route('/pujar_evaluacio', methods=["GET", "POST"])
+@es_usuari(tipus=PROFESSOR)
+def pujar_evaluacio():
+    missatge = "Aquesta es la Resposta del alumne : "
+    user = Factoria.build_usuari_from_db(my_db, session['id'])
+    nom = user.nom+" "+user.cognom
+    tipus = session['tipus']
+    if request.method == 'POST':
+        missatge = "Pots triar un altre evaluacio o entregar aquesta : "
+        # Mira si el request es correcte
+        if 'path_fitxer' not in request.files:
+            missatge = "No ha anat be, torna-ho a intentar"
+        pdf = request.files['path_fitxer']
+        # Mira si el usari ha triat un fitxer
+        if pdf.filename == '':
+            missatge = "No has triat un fitxer, torna-ho a intentar"
+        # pdf_nom = secure_filename(pdf.filename)
+        os.makedirs(PATH_TOTAL, exist_ok=True)
+        pdf.save(join(PATH_TOTAL, 'pdf_pujat.pdf'))
+        nom_relatu = join(PATH_RELATIU, 'pdf_pujat.pdf')
+        return render_template('veure_resposta.html', fitxer=nom_relatu, hora="", missatge=missatge, opcio=2)
+    return render_template('pujar_evaluacio.html', nom=nom, tipus=tipus, missatge=missatge)
+
+
+@app.route('/entregar_evaluacio', methods=["GET", "POST"])
+@es_usuari(tipus=PROFESSOR)
+def entregar_evaluacio():
+    # def __init__(self, id_evaluacio, id_resposta=None, professor=None, estudiant=None, pdf=None, nota=None):
+    profe = Factoria.build_usuari_from_db(my_db, session['id'])
+    id_evalucio = session['id_evalucio']
+    evaluacio = Factoria.build_id_resposta_alumne_from_db(my_db, id_evalucio)
+    # nom_fitxer = join(PATH_TOTAL, 'pdf_pujat.pdf')
+    # pdf = Factoria.recuperar_fitxer(nom_fitxer)
+    # evaluacio = RespostaExamen(id_evalucio, examen.id_document, user, pdf)
+    # session['id_resposta'] = id_evalucio
+    # my_db.guardar_resposta_examen(resposta)
+    # transaccio = Transaccio(user, profe, resposta)
+    # my_db.guardar_transaccio(transaccio)
+    # main.minat()
+    # pdf_examen = evaluacio.pdf
+    # pdf_resposta = evaluacio.pdf
+    nom_total_examen = join(PATH_TOTAL, 'veure_examen.pdf')
+    nom_relatiu_examen = join(PATH_RELATIU, 'veure_examen.pdf')
+    nom_total_resposta = join(PATH_TOTAL, 'veure_resposta.pdf')
+    nom_relatiu_resposta = join(PATH_RELATIU, 'veure_resposta.pdf')
+    Factoria.guardar_fitxer(nom_total_examen, pdf_examen)
+    Factoria.guardar_fitxer(nom_total_resposta, pdf_resposta)
+    return render_template('veure_resposta.html', fitxer_examen=nom_relatiu_examen, fitxer_resposta=nom_relatiu_resposta)
 
 @app.route('/pujar_pdf', methods=["GET", "POST"])
 @es_usuari(tipus=ESTUDIANT)
@@ -192,6 +230,7 @@ def pujar_pdf():
 
 
 @app.route('/entregar_resposta', methods=["GET", "POST"])
+@es_usuari(tipus=ESTUDIANT)
 def entregar_resposta():
     user = Factoria.build_usuari_from_db(my_db, session['id'])
     id_examen = session['id_examen']
@@ -216,6 +255,46 @@ def entregar_resposta():
     Factoria.guardar_fitxer(nom_total_resposta, pdf_resposta)
     return render_template('examen_resposta.html', fitxer_examen=nom_relatiu_examen, fitxer_resposta=nom_relatiu_resposta)
 
+
+@app.route('/veure_examen', methods=["GET", "POST"])
+@es_usuari(tipus=ESTUDIANT)
+def veure_examen():
+    id_examen = request.form.get('examen')
+    examen = Factoria.build_examen_from_db(my_db, id_examen, True)
+    if examen is None:
+        redirect('error404.html')
+    session['id_examen'] = id_examen
+    hora_limit = examen.data_final
+    pdf = examen.pdf
+    nom_total = join(PATH_TOTAL, 'veure_examen.pdf')
+    nom_relatu = join(PATH_RELATIU, 'veure_examen.pdf')
+    Factoria.guardar_fitxer(nom_total, pdf)
+    missatge = "L'hora limit per entregar l'examen es : "
+    return render_template('veure_examen.html', fitxer=nom_relatu, hora=hora_limit, missatge=missatge)
+
+
+@app.route('/enviar_examens', methods=["GET", "POST"])
+@es_usuari(tipus=BOTH)
+def enviar_examen():  # put application's code here
+    if request.method == "POST":
+        id_pdf = request.form.get('path_fitxer')
+        pdf = Factoria.build_pdf_from_db(my_db, id_pdf)
+        datai = request.form.get('data_inici')
+        dataf = request.form.get('data_entrega')
+        id_examen = my_db.seguent_id_examen()
+        profe = Factoria.build_usuari_from_db(my_db, session['id'])
+        assignatura = profe.get_assignatura(my_db)
+        examen = Examen(id_examen, profe, pdf.pdf, datai, dataf, datetime.today(), assignatura)
+        for val in request.form.getlist("select_usuaris"):
+            alumn = Factoria.build_usuari_from_db(my_db, val)
+            examen.afegir_estudiants(alumn)
+        my_db.guardar_examen(examen)
+        for alumn in examen.estudiants:
+            transaccio = Transaccio(profe, alumn, examen)
+            my_db.guardar_transaccio(transaccio)
+        # uni = Factoria.build_universitat_from_db(my_db)
+        main.minat()
+    return render_template("examens_enviats.html")
 
 # @app.route('enviar_json', methods=["GET", "POST"])
 # def enviar_json():

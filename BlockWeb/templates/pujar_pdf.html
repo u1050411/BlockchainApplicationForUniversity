@@ -2,7 +2,7 @@
 {% block navegacio1 %}
 [
 <ul>
-    <li><a href="{{ url_for('triar_examens')}}">Enviar Examens</a></li>
+    <li><a href="{{ url_for('triar_examens')}}">Enviar Resposta</a></li>
     <li><a href="afegir_examen">Veure Examens</a></li>
     <li><a href="correccio">Enviar Correcció Examens</a></li>
 </ul>
@@ -10,12 +10,7 @@
 {% block content %}
 
 <div class="columna_esquerra">
-    {% if tipus == "professor" %}
-    <p>Hola Professor {{nom}} </p>
-    {% endif %}
-    {% if tipus == "estudiant" %}
     <p>{{nom}} </p>
-    {% endif %}
 </div>
 <div class="column_dreta">
     <form action="{{ url_for('pujar_pdf') }}" autocomplete="off" enctype="multipart/form-data" method="POST">

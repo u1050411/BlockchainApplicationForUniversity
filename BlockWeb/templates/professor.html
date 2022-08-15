@@ -2,8 +2,7 @@
 {% block navegacio1 %}
      <ul>
         <li><a href="{{ url_for('seleccionar_alumnes') }}">Enviar Examens</a></li>
-        <li><a href="professor">Veure Examens</a></li>
-        <li><a href="alumne">Enviar Correcció Examens</a></li>
+             <li><a href="{{ url_for('triar_resposta')}}">Evaluar Examens</a></li>
     </ul>
 {% endblock %}
 {% block content %}

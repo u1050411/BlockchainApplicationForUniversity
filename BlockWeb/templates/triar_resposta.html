@@ -1,0 +1,29 @@
+{% extends 'layout.html' %}
+{% block navegacio1 %}
+<ul>
+       <li><a href="{{ url_for('seleccionar_alumnes') }}">Enviar Examens</a></li>
+             <li><a href="{{ url_for('triar_resposta')}}">Evaluar Examens</a></li>
+    <li><a href="correccio">Enviar Correcció Examens</a></li>
+</ul>
+{% endblock %}
+{% block content %}
+<section class="intro">
+    <div class="columna_esquerra">
+        <p>Aquest son les respostes que has de evaluar </p>
+    </div>
+    <div class="column_dreta">
+        <b><p>Tria la resposta per veure-ho</p></b>
+        <form action="{{ url_for('veure_resposta') }}" autocomplete="off"  method="POST">
+                <select id="examens" name="resposta">
+                         {% for id_resposta, nom_assignatura, estudiant_nom, estudiant_cognom, data_creacio in llista %}
+            <option value={{id_resposta}}>{{nom_assignatura}}|| {{estudiant_nom}} {{estudiant_cognom}}||
+                {{data_creacio}}
+            </option>
+                        {% endfor %}
+            </select>
+            <p></p>
+            <input class="button-1" type="submit" value="Veure-ho">
+        </form>
+    </div>
+</section>
+{% endblock %}

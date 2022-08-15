@@ -89,10 +89,11 @@ class Factoria:
     @staticmethod
     def build_examen_from_db(my_db, id_document, per_estudiant=None):
         if my_db.existeix_examen(id_document):
-            id_document, id_professor, data_examen, data_inicial, data_final, pdf, id_assignatura = my_db.importar_examen(id_document)
+            id_document, id_professor, data_examen, data_inicial, data_final, pdf, id_assignatura = my_db.importar_examen(
+                id_document)
             professor = Factoria.build_usuari_from_db(my_db, id_professor)
             assignatura = Factoria.build_assignatura_from_db(my_db, id_assignatura)
-            examen = Examen(id_document, professor, pdf, data_inicial, data_final, assignatura)
+            examen = Examen(id_document, professor, pdf, data_inicial, data_final, data_examen, assignatura)
             if per_estudiant is None:
                 estudiants = my_db.importar_estudiants_examen(id_document)
                 if estudiants is not None:
@@ -140,30 +141,39 @@ class Factoria:
         transaccio = Transaccio.crear_mysql(id_trans, emissor, receptor, dada, id_document, data_creacio)
         return transaccio
 
-    @staticmethod
-    def build_resposta_examen_from_db(my_db, id_document, id_resposta):
-        resposta_importar = my_db.importar_resposta(id_document, id_resposta)
-        (id_resposta, time, id_usuari, pdf) = resposta_importar[0]
-        usuari = Factoria.build_usuari_from_db(my_db, id_usuari)
-        if usuari.tipus == ESTUDIANT:
-            resposta = RespostaExamen(id_resposta, id_document, usuari, pdf)
-        if usuari.tipus == PROFESSOR:
-            resposta = EvaluacioExamen(id_resposta, id_document, usuari, pdf)
-        return resposta
-
+    # # Revisar aquest codi
+    #     @staticmethod
+    #     def build_resposta_examen_from_db(my_db, id_document, id_resposta):
+    #         resposta_importar = my_db.importar_resposta(id_document, id_resposta)
+    #         (id_resposta, time, id_usuari, pdf, nota) = resposta_importar[0]
+    #         usuari = Factoria.build_usuari_from_db(my_db, id_usuari)
+    #         if usuari.tipus == ESTUDIANT:
+    #             resposta = RespostaExamen(id_resposta, id_document, usuari, pdf, nota)
+    #         if usuari.tipus == PROFESSOR:
+    #             resposta = EvaluacioExamen(id_resposta, id_document, usuari, pdf, nota)
+    #         return resposta
+    #
     @staticmethod
     def build_resposta_alumne_from_db(my_db, id_document, id_resposta):
-        resposta = Factoria.build_resposta_examen_from_db(my_db, id_document, id_resposta)
-        if resposta.usuari.tipus != ESTUDIANT:
-            raise ValueError('Amb aquest id no hi ha una resposta')
-        return resposta
+        resposta_importar = my_db.importar_resposta(id_document, id_resposta)
+        (id_resposta, time, id_usuari, pdf, nota) = resposta_importar[0]
+        usuari = Factoria.build_usuari_from_db(my_db, id_usuari)
+        return RespostaExamen(id_resposta, id_document, usuari, pdf, nota)
 
     @staticmethod
-    def build_evaluacio_examen_from_db(my_db, id_examen, id_resposta):
-        resposta = Factoria.build_resposta_examen_from_db(my_db, id_examen, id_resposta)
-        if resposta.usuari.tipus != PROFESSOR:
-            raise ValueError('Amb aquest id no hi ha una evaluacio')
-        return resposta
+    def build_id_resposta_alumne_from_db(my_db, id_resposta):
+        resposta_importar = my_db.importar_resposta(id_resposta)
+        (id_resposta, id_document, time, id_usuari, pdf, nota) = resposta_importar[0]
+        usuari = Factoria.build_usuari_from_db(my_db, id_usuari)
+        return RespostaExamen(id_resposta, id_document, usuari, pdf, nota)
+
+
+@staticmethod
+def build_evaluacio_examen_from_db(my_db, id_examen, id_resposta):
+    resposta = Factoria.build_resposta_examen_from_db(my_db, id_examen, id_resposta)
+    if resposta.usuari.tipus != PROFESSOR:
+        raise ValueError('Amb aquest id no hi ha una evaluacio')
+    return resposta
 
 
 class Encriptador:
@@ -237,7 +247,6 @@ class Encriptador:
         return dada_desencriptada
 
 
-
 class Assignatura:
     def __init__(self, id_assignatura=0, nom=None, professor=None):
         self.id = id_assignatura
@@ -260,7 +269,6 @@ class Usuari:
         self.email = email
         self.tipus = USUARI
         self.public_key = public_key
-
 
     def to_dict(self):
         return collections.OrderedDict({
@@ -332,8 +340,15 @@ class Professor(Usuari):
             llista_examens.append(x)
         return llista_examens
 
+    #Importa les respostes que han enviat els alumnes de la seva asignatura
     def importar_examens(self, my_db):
-        return my_db.importar_examens_professor(self)
+        llista_id = my_db.importar_id_respostes_professor(self)
+        llista = list()
+        for x in llista_id:
+            resposta = Factoria.build_id_resposta_alumne_from_db(my_db, x)
+            llista.append(resposta)
+        return llista
+
 
     def get_assignatura(self, my_db):
         id_assignatura = my_db.importar_assignatura_professor(self)
@@ -381,7 +396,6 @@ class Document:
             return Examen.crear_json(dades_json)
         if (trans_json['id_tipus']) == 2:
             return RespostaExamen.crear_json(dades_json)
-
 
 
 class Pdf(Document):
@@ -462,11 +476,10 @@ class Examen(Document):
 
 class RespostaExamen(Document):
 
-    def __init__(self, id_resposta, id_examen=None, estudiant=None, pdf=None):
-        if estudiant.tipus != ESTUDIANT:
-            raise ValueError('Solament els estudiants poden crear respostes')
+    def __init__(self, id_resposta, id_examen=None, estudiant=None, pdf=None, nota=0):
         super(RespostaExamen, self).__init__(id_resposta, 2, estudiant, pdf)
         self.id_examen = id_examen
+        self.nota = nota
 
     @property
     def id_document_blockchain(self):
@@ -499,24 +512,62 @@ class RespostaExamen(Document):
 
 class EvaluacioExamen(Document):
 
-    def __init__(self, id_resposta, id_examen=None, professor=None, pdf=None):
+    def __init__(self, id_evaluacio, id_resposta=None, professor=None, estudiant=None, pdf=None, nota=None):
         try:
             if professor.tipus != PROFESSOR:
                 raise ValueError('Solament els professors poden crear evaluacion')
         except ValueError:
             print(ValueError)
-        super(EvaluacioExamen, self).__init__(id_resposta, 3, professor, pdf)
-        self.id_examen = id_examen
+        super(EvaluacioExamen, self).__init__(id_evaluacio, 3, professor, pdf)
+        self.id_resposta = id_resposta
+        self.estudiant = estudiant
+        if nota is None:
+            self.nota = 0
+        else:
+            self.nota = nota
 
     def to_dict(self):
         return collections.OrderedDict({
-            'id_resposta': self.id_document,
-            'id_examen': self.id_examen,
-            'data_creacio': self.data_creacio,
+            'id_evaluacio': self.id_evaluacio,
+            'id_resposta': self.id_resposta,
             'id_tipus': self.tipus,
-            'professor': Factoria.to_json(self.usuari),
-            'pdf': self.pdf
+            'data_creacio': self.data_creacio,
+            'professor': Factoria.to_json(self.professor),
+            'estudiant': Factoria.to_json(self.estudiant),
+            'pdf': self.pdf,
+            'nota': self.nota
         })
+
+    @property
+    def id_document_blockchain(self):
+        return str(self.id_document) + "0003"
+
+    def to_dict(self):
+        return collections.OrderedDict({
+            'id_evaluacio': self.id_document,
+            'id_resposta': self.id_examen,
+            'id_tipus': self.tipus,
+            'data_creacio': self.data_creacio,
+            'professor': Factoria.to_json(self.professor),
+            'estudiant': Factoria.to_json(self.estudiant),
+            'pdf': self.pdf,
+            'nota': self.nota
+        })
+
+    @classmethod
+    def crear_json(cls, dades_json=None):
+        dades = json.loads(dades_json)
+        id_evaluacio = dades['id_evaluacio']
+        id_resposta = dades['id_resposta']
+        tipus = dades['tipus'],
+        data_creacio = dades['data_creacio']
+        professor = Usuari.crear_json(dades['professor'])
+        estudiant = Usuari.crear_json(dades['estudiant'])
+        pdf = ast.literal_eval(dades['pdf'])
+        nota = ast.literal_eval(dades['nota'])
+        evaluacio = cls(id_evaluacio, id_resposta, professor, estudiant, pdf, nota)
+        evaluacio.data_creacio = data_creacio
+        return evaluacio
 
 
 class Universitat:
@@ -617,7 +668,7 @@ class Bloc:
 
     @classmethod
     def crear_msql(cls, id_bloc, data_bloc, transaccio, hash_anterior):
-        new_bloc= cls()
+        new_bloc = cls()
         new_bloc.id = id_bloc
         new_bloc.data_bloc = data_bloc
         new_bloc.transaccio = transaccio
@@ -628,9 +679,8 @@ class Bloc:
         return collections.OrderedDict({
             'id': self.id,
             'transaccions': self.transaccio,
-            'data_bloc':  self.data_bloc,
+            'data_bloc': self.data_bloc,
             'hash_bloc_anterior': self.hash_bloc_anterior})
-
 
     def calcular_hash(self):
         # Converteix el bloc en una cadena json i retorna el hash
@@ -676,7 +726,6 @@ class BlockchainUniversity:
     def afegir_nova_transaccio(self, transaccio):
         self.transaccio_noconfirmades.append(transaccio)
 
-
     def minat(self):
         """
     Aquesta funció serveix com a interfície per afegir la transacció pendent a la cadena de blocs afegint-les al bloc
@@ -694,8 +743,3 @@ class BlockchainUniversity:
                 self.my_db.guardar_bloc(new_bloc, emissor)
                 self.my_db.esborrar_transaccio(transaccio.id_transaccio)
                 return self.minat()
-
-
-
-
-

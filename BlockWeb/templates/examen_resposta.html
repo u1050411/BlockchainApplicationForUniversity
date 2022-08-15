@@ -8,18 +8,6 @@
 {% endblock %}
 
 {% block navegacio2 %}
-<!--<div class="nav_opcions">-->
-<!--    <ul>-->
-<!--        {% if missatge == "Pots triar agafar un altre resposta o entregar aquesta : " %}-->
-<!--        <li><a href="{{ url_for('pujar_pdf')}}">Agafar un altre</a></li>-->
-<!--        <li><a href="{{ url_for('entregar_resposta')}}">Entregar</a></li>-->
-<!--        {% elif missatge == "L'hora limit per entregar l'examen es : " %}-->
-<!--        <li><a href="{{ url_for('pujar_pdf')}}">Puja Resposta</a></li>-->
-<!--        {% else %}-->
-<!--        <li><a href="{{ url_for('pujar_pdf')}}">Respota Incorrecte "{{missatge}}"</a></li>-->
-<!--        {% endif %}-->
-<!--    </ul>-->
-<!--</div>-->
 {% endblock %}
 {% block content %}
 <style>
@@ -29,14 +17,13 @@
         padding: 8px;
     }
 </style>
-<!--<p class="centrado">{{missatge}}{{hora}}</p>-->
-    <div class="">
+    <div class="centrado">
         <p>D'aquest examen </p>
-                <embed height="300px" src={{fitxer_resposta}} type="application/pdf" width="100%"/>
-    </div>
-    <div class="">
-         <p>Aquesta es la resposta que has pujat  </p>
                 <embed height="300px" src={{fitxer_examen}} type="application/pdf" width="100%"/>
+    </div>
+    <div class="centrado">
+         <p>Aquesta es la resposta que has pujat  </p>
+                <embed height="300px" src={{fitxer_resposta}} type="application/pdf" width="100%"/>
     </div>
 
 

@@ -98,14 +98,19 @@ class CreacioTaulaTest:
         self.my_db.guardar_estudiants_assignatura(Factoria.build_assignatura_from_db(self.my_db, 2),
                                                   Factoria.build_usuari_from_db(self.my_db, 'u1050411'))
 
-
     def crear_pdf(self):
         pdfs = [[1, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
-                       f'pdf_minimo.pdf', 'pdf_minimo.pdf', 'u2000256', '2022-10-01T13:00'],
-                   [2, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
-                       f'/pdf/Examen_2020-21-_26-03_primer_parcial.pdf', 'Examen_2020-21-_26-03_primer_parcial.pdf',
-                    'u2000256', '2022-10-01T12:00']
-                   ]
+                    f'Examen_2021_20_10_01_primer_parcial-solucio.pdf', 'Examen_2021_20_10_01_primer_parcial-solucio.pdf',
+                 'u2000256', '2022-10-01T13:00'],
+                [2, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
+                    f'/pdf/Examen_2020-21-_26-03_primer_parcial.pdf', 'Examen_2020-21-_26-03_primer_parcial.pdf',
+                 'u2000256', '2022-10-01T12:00'],
+                [3, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
+                    f'Examen_2021_20_10_01_primer_parcial-solucio.pdf',
+                 'Examen_2021_20_10_01_primer_parcial-solucio.pdf', 'u2050404', '2022-10-01T13:00'],
+                [4, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
+                    f'/pdf/Examen_2020-21-_26-03_primer_parcial.pdf', 'Examen_2020-21-_26-03_primer_parcial.pdf',
+                 'u2050404', '2022-10-01T12:00']]
 
         for id_pdf, path_fitxer, nom_fitxer, id_usuari, data_creacio in pdfs:
             pdf = Factoria.recuperar_fitxer(path_fitxer)
@@ -137,9 +142,9 @@ class CreacioTaulaTest:
     def crear_respostes(self):
 
         respostes = [[1, 1, 'u1050402', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
-                                     f'Examen_2021_20_10_01_primer_parcial-solucio.pdf'],
+                                        f'Examen_2021_20_10_01_primer_parcial-solucio.pdf'],
                      [2, 2, 'u1050403', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
-                                     f'Examen_2020-21-_26-03_primer_parcial.pdf']]
+                                        f'Examen_2020-21-_26-03_primer_parcial.pdf']]
 
         for id_resposta, id_examen, id_usuari, nom_fitxer in respostes:
             pdf = Factoria.recuperar_fitxer(nom_fitxer)
@@ -150,9 +155,9 @@ class CreacioTaulaTest:
     def crear_evaluacio(self):
 
         respostes = [[3, 1, 'u2000256', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
-                                     f'Examen_2021_20_10_01_primer_parcial-solucio.pdf'],
+                                        f'Examen_2021_20_10_01_primer_parcial-solucio.pdf'],
                      [4, 2, 'u2050404', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
-                                     f'Examen_2020-21-_26-03_primer_parcial.pdf']]
+                                        f'Examen_2020-21-_26-03_primer_parcial.pdf']]
 
         for id_resposta, id_examen, id_usuari, nom_fitxer in respostes:
             pdf = Factoria.recuperar_fitxer(nom_fitxer)
@@ -216,10 +221,9 @@ class TestProfessors(unittest.TestCase):
         llista_alumnes = professor.llista_alumnes(self.my_db)
         print(llista_alumnes)
 
-    def test_llista_examens(self):
-        professor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
-        llista_alumnes = professor.llista_examens(self.my_db)
-        print(llista_alumnes)
+    # def test_importar_respostes(self):
+    #     professor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
+    #     llista = professor.importar_examens(self.my_db)
 
 
 class TestUniversitat(unittest.TestCase):
@@ -360,7 +364,6 @@ class TestMysql(unittest.TestCase):
         self.my_db.guardar_bloc(new_bloc, emissor)
 
 
-
 class TestFactoria(unittest.TestCase):
 
     def setUp(self):
@@ -379,8 +382,8 @@ class TestFactoria(unittest.TestCase):
 
     def test_pdf(self):
         path_fitxer = f'C:/Users/u1050/PycharmProjects/' \
-                     f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
-        nom_fitxer ='GEINF DOC1 full de TFG_V2.pdf'
+                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
+        nom_fitxer = 'GEINF DOC1 full de TFG_V2.pdf'
         pdf = Factoria.recuperar_fitxer(path_fitxer)
         professor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
         id = 10
@@ -439,11 +442,11 @@ class TestPdf(unittest.TestCase):
 
     def test_creacio_pdf(self):
         path_fitxer = f'C:/Users/u1050/PycharmProjects/' \
-                     f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
-        nom_fitxer ='GEINF DOC1 full de TFG_V2.pdf'
+                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
+        nom_fitxer = 'GEINF DOC1 full de TFG_V2.pdf'
         pdf = Factoria.recuperar_fitxer(path_fitxer)
         professor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
-        id = self.my_db.seguent_id_pdf() +1
+        id = self.my_db.seguent_id_pdf() + 1
         pdfs = Pdf(id, nom_fitxer, professor, pdf)
         self.my_db.guardar_pdf(pdfs)
         self.assertEqual(pdfs.id_document, id)
@@ -567,9 +570,6 @@ class TestEncriptador(unittest.TestCase):
         self.assertEqual(examen.data_creacio, examen_final.data_creacio)
 
 
-
-
-
 class TestTransaction(unittest.TestCase):
 
     def setUp(self):
@@ -622,7 +622,6 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(transaccio_inicial.id_document, transaccio_final.id_document)
 
 
-
 class TestBloc(unittest.TestCase):
 
     def setUp(self):
@@ -663,19 +662,11 @@ class TestBlockchainUniversity(unittest.TestCase):
 
 class TestInicial(unittest.TestCase):
 
-
     def test_inicial(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
         self.schema = SCHEMA
         self.test = CreacioTaulaTest(self.my_db, self.schema)
         self.test.crear_schema_inicial()
-
-    # bloc_genesis = Factoria.build_bloc_from_db(self.my_db, 1)
-        #
-        # self.assertEqual(bloc_genesis.index, 0)
-        # self.assertEqual(bloc_genesis.hash_bloc_anterior, "asfassdfsadfsa")
-        # self.assertEqual(bloc_genesis.id_document, '00000')
-
 
 # class TestConexions(unittest.TestCase):
 #

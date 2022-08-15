@@ -1,0 +1,21 @@
+{% extends 'layout.html' %}
+{% block navegacio1 %}
+[
+<ul>
+        <li><a href="{{ url_for('seleccionar_alumnes') }}">Enviar Examens</a></li>
+             <li><a href="{{ url_for('triar_resposta')}}">Evaluar Examens</a></li>
+</ul>
+{% endblock %}
+{% block content %}
+<div class="columna_esquerra">
+    <p>Hola Professor {{nom}} </p>
+</div>
+<div class="column_dreta">
+    <form action="{{ url_for('pujar_evaluacio') }}" autocomplete="off" enctype="multipart/form-data" method="POST">
+        <p>Tria l'avualació del examen </p>
+        <input name="path_fitxer" type="file" value=""/>
+        <p></p>
+        <input class="button-1" type="submit" value="enviar">
+    </form>
+</div>
+{% endblock %}
