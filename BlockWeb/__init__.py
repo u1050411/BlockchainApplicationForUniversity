@@ -131,7 +131,7 @@ def triar_resposta():
     llista = user.importar_examens(my_db)
     llista_examens = list()
     for x in llista:
-        # if x.nota is None or x.nota == 0:
+        if x.nota is None or x.nota == 0:
             nom_assignatura = Factoria.build_examen_from_db(my_db, x.id_examen).assignatura.nom
             estudiant = Factoria.build_usuari_from_db(my_db, x.usuari.id)
             valors = [x.id_document, nom_assignatura, estudiant.nom, estudiant.cognom, x.data_creacio]
@@ -185,25 +185,28 @@ def pujar_avaluacio():
 def entregar_avaluacio():
     nota = request.form.get('nota')
     profe = Factoria.build_usuari_from_db(my_db, session['id'])
-    id_avaluacio = session['id_avaluacio']
-    resposta = Factoria.build_id_resposta_alumne_from_db(my_db, id_avaluacio)
-    nom_fitxer = join(PATH_TOTAL, 'avaluacio.pdf')
-    pdf = Factoria.recuperar_fitxer(nom_fitxer)
+    id_resposta = session['id_resposta']
+    resposta = Factoria.build_id_resposta_alumne_from_db(my_db, id_resposta)
+    nom_fitxer_avaluacio = join(PATH_TOTAL, 'avaluacio.pdf')
+    pdf = Factoria.recuperar_fitxer(nom_fitxer_avaluacio)
     estudiant = resposta.usuari
-    avaluacio = AvaluacioExamen(resposta.id_document, profe, resposta.usuari, pdf, nota)
+    id_avaluacio = my_db.seguent_id_avaluacio()
+    avaluacio = AvaluacioExamen(resposta, profe, resposta.usuari, pdf, nota)
+    avaluacio.id_document = id_avaluacio
     my_db.guardar_avaluacio_examen(avaluacio)
+    avaluacio = Factoria.build_avaluacio_from_db(my_db, id_avaluacio)
     transaccio = Transaccio(profe, estudiant, avaluacio)
     my_db.guardar_transaccio(transaccio)
     main.minat()
-    pdf_examen = avaluacio.pdf
-    pdf_resposta = avaluacio.pdf
+    pdf_avaluacio = avaluacio.pdf
+    pdf_resposta = resposta.pdf
     nom_total_avaluacio = join(PATH_TOTAL, 'avaluacio.pdf')
     nom_relatiu_avaluacio = join(PATH_RELATIU, 'avaluacio.pdf')
     nom_total_resposta = join(PATH_TOTAL, 'veure_resposta.pdf')
     nom_relatiu_resposta = join(PATH_RELATIU, 'veure_resposta.pdf')
-    Factoria.guardar_fitxer(nom_total_avaluacio, pdf_examen)
+    Factoria.guardar_fitxer(nom_total_avaluacio, pdf_avaluacio)
     Factoria.guardar_fitxer(nom_total_resposta, pdf_resposta)
-    return render_template('examen_resposta.html', fitxer_avaluacio=nom_relatiu_avaluacio, fitxer_resposta=nom_relatiu_resposta)
+    return render_template('resposta_evaluacio.html', fitxer_avaluacio=nom_relatiu_avaluacio, fitxer_resposta=nom_relatiu_resposta, nota=nota)
 
 
 @app.route('/pujar_pdf', methods=["GET", "POST"])

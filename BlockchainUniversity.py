@@ -167,6 +167,15 @@ class Factoria:
         usuari = Factoria.build_usuari_from_db(my_db, id_usuari)
         return RespostaExamen(id_resposta, id_document, usuari, pdf, nota)
 
+    @staticmethod
+    def build_avaluacio_from_db(my_db, id_avaluacio):
+        avaluacio_importar = my_db.importar_avaluacio(id_avaluacio)
+        (id_avaluacio, id_resposta, id_professor, id_estudiant, pdf, nota) = avaluacio_importar[0]
+        resposta = Factoria.build_id_resposta_alumne_from_db(my_db, id_resposta)
+        professor = Factoria.build_usuari_from_db(my_db, id_professor)
+        estudiant = Factoria.build_usuari_from_db(my_db, id_estudiant)
+        return AvaluacioExamen(resposta, professor, estudiant, pdf, nota, id_avaluacio)
+
 
 @staticmethod
 def build_avaluacio_examen_from_db(my_db, id_examen, id_resposta):
@@ -396,6 +405,8 @@ class Document:
             return Examen.crear_json(dades_json)
         if (trans_json['id_tipus']) == 2:
             return RespostaExamen.crear_json(dades_json)
+        if (trans_json['id_tipus']) == 3:
+            return AvaluacioExamen.crear_json(dades_json)
 
 
 class Pdf(Document):
@@ -512,14 +523,9 @@ class RespostaExamen(Document):
 
 class AvaluacioExamen(Document):
 
-    def __init__(self, id_resposta=None, professor=None, estudiant=None, pdf=None, nota=None, id_avaluacio=0):
-        try:
-            if professor.tipus != PROFESSOR:
-                raise ValueError('Solament els professors poden crear avaluacion')
-        except ValueError:
-            print(ValueError)
+    def __init__(self, resposta=None, professor=None, estudiant=None, pdf=None, nota=None, id_avaluacio=0):
         super(AvaluacioExamen, self).__init__(id_avaluacio, 3, professor, pdf)
-        self.id_resposta = id_resposta
+        self.resposta = resposta
         self.estudiant = estudiant
         if nota is None:
             self.nota = 0
@@ -528,11 +534,11 @@ class AvaluacioExamen(Document):
 
     def to_dict(self):
         return collections.OrderedDict({
-            'id_avaluacio': self.id_avaluacio,
-            'id_resposta': self.id_resposta,
+            'id_avaluacio': self.id_document,
+            'resposta': Factoria.to_json(self.resposta),
             'id_tipus': self.tipus,
             'data_creacio': self.data_creacio,
-            'professor': Factoria.to_json(self.professor),
+            'professor': Factoria.to_json(self.usuari),
             'estudiant': Factoria.to_json(self.estudiant),
             'pdf': self.pdf,
             'nota': self.nota
@@ -542,31 +548,21 @@ class AvaluacioExamen(Document):
     def id_document_blockchain(self):
         return str(self.id_document) + "0003"
 
-    def to_dict(self):
-        return collections.OrderedDict({
-            'id_avaluacio': self.id_document,
-            'id_resposta': self.id_examen,
-            'id_tipus': self.tipus,
-            'data_creacio': self.data_creacio,
-            'professor': Factoria.to_json(self.professor),
-            'estudiant': Factoria.to_json(self.estudiant),
-            'pdf': self.pdf,
-            'nota': self.nota
-        })
 
     @classmethod
     def crear_json(cls, dades_json=None):
         dades = json.loads(dades_json)
         id_avaluacio = dades['id_avaluacio']
-        id_resposta = dades['id_resposta']
-        tipus = dades['tipus'],
+        resposta = RespostaExamen.crear_json(dades['resposta'])
+        id_tipus = dades['id_tipus']
         data_creacio = dades['data_creacio']
         professor = Usuari.crear_json(dades['professor'])
         estudiant = Usuari.crear_json(dades['estudiant'])
         pdf = ast.literal_eval(dades['pdf'])
-        nota = ast.literal_eval(dades['nota'])
-        avaluacio = cls(id_avaluacio, id_resposta, professor, estudiant, pdf, nota)
+        nota = dades['nota']
+        avaluacio = cls(resposta, professor, estudiant, pdf, nota, id_avaluacio)
         avaluacio.data_creacio = data_creacio
+        avaluacio.tipus = id_tipus
         return avaluacio
 
 

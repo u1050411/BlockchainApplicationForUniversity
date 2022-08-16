@@ -1,0 +1,29 @@
+{% extends 'layout.html' %}
+{% block navegacio1 %}
+     <ul>
+        <li><a href="{{ url_for('seleccionar_alumnes') }}">Enviar Examens</a></li>
+             <li><a href="{{ url_for('triar_resposta')}}">Evaluar Examens</a></li>
+    </ul>
+{% endblock %}
+
+{% block navegacio2 %}
+{% endblock %}
+{% block content %}
+<style>
+    .centrado {
+        text-align: center;
+        border: 0px dotted #000;
+        padding: 8px;
+    }
+</style>
+    <div class="centrado">
+        <p>D'aquesta resposta </p>
+                <embed height="300px" src={{fitxer_avaluacio}} type="application/pdf" width="100%"/>
+    </div>
+    <div class="centrado">
+         <p>Has fet aquesta correcció i posat la nota: {{nota}}  </p>
+                <embed height="300px" src={{fitxer_resposta}} type="application/pdf" width="100%"/>
+    </div>
+
+
+{% endblock %}

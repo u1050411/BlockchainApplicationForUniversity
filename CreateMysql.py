@@ -100,7 +100,7 @@ class MySqlBloc:
                 "CREATE TABLE if not exists `estudiant_examen` ("
                 "`id_document` INT NOT NULL,"
                 "`id_estudiant`  varchar(8) NOT NULL,"
-                "`nota` INT NULL,"
+                "`nota` float(4,2) NULL,"
                 "PRIMARY KEY (`id_document`, `id_estudiant`))",
 
                 "CREATE TABLE if not exists `assignatura` ("
@@ -112,7 +112,7 @@ class MySqlBloc:
                 "CREATE TABLE if not exists `estudiants_assignatura` ("
                 "`id_assignatura`  varchar(8) NOT NULL,"
                 "`id_estudiant`  varchar(8) NOT NULL,"
-                "`nota` INT NULL,"
+                "`nota` float(4,2) NULL,"
                 "PRIMARY KEY (`id_assignatura`, `id_estudiant`))",
 
                 "CREATE TABLE if not exists `resposta_examen` ("
@@ -125,13 +125,13 @@ class MySqlBloc:
                 "PRIMARY KEY (`id_resposta`))",
 
                 "CREATE TABLE if not exists avaluacio_examen ("
-                "`id_evaluacio` INT NOT NULL AUTO_INCREMENT,"
+                "`id_avaluacio` INT NOT NULL AUTO_INCREMENT,"
                 "`id_resposta` INT NOT NULL,"
                 "`id_professor` varchar(8) NOT NULL,"
                 "`id_estudiant` varchar(8) NOT NULL,"
                 "`pdf` LONGBLOB  NULL,"
-                "`nota` INT NULL,"
-                "PRIMARY KEY (`id_evaluacio`))",
+                "`nota` float(4,2) NULL,"
+                "PRIMARY KEY (`id_avaluacio`))",
 
                 "CREATE TABLE if not exists `bloc` ("
                 "`id_bloc` INT NOT NULL AUTO_INCREMENT,"
@@ -267,6 +267,11 @@ class MySqlBloc:
               f'where `id_resposta` = {id_resposta}'
         return self.importar_llista_sql(sql)
 
+    def importar_avaluacio(self, id_avaluacio):
+        sql = f'select id_avaluacio, id_resposta, id_professor, id_estudiant, pdf, nota  from `avaluacio_examen` ' \
+              f'where `id_avaluacio` = {id_avaluacio}'
+        return self.importar_llista_sql(sql)
+
     def importar_sql(self, sql):
         try:
             self._cursor.execute(sql)
@@ -393,6 +398,9 @@ class MySqlBloc:
     def seguent_id_resposta(self):
         return self.seguent_id("resposta_examen", "id_resposta")
 
+    def seguent_id_avaluacio(self):
+        return self.seguent_id("avaluacio_examen", "id_avaluacio")
+
     def seguent_id_bloc(self):
         return self.seguent_id("bloc", "id_bloc")
 
@@ -518,20 +526,28 @@ class MySqlBloc:
             self.exportar_sql(sql, dades)
 
     def guardar_avaluacio_examen(self, avaluacio):
-        sql_update = 'UPDATE resposta_examen SET id_avaluacio = %s, id_resposta=%s, id_professor=%s, id_estudiant=%s, ' \
+        sql_update = 'UPDATE avaluacio_examen SET id_avaluacio = %s, id_resposta=%s, id_professor=%s, id_estudiant=%s, ' \
                      'pdf=%s, nota=%s  WHERE  id_avaluacio=%s'
-        dades_update = (avaluacio.id_avaluacio, avaluacio.id_resposta, avaluacio.avaluacio.usuari.id, avaluacio.estudiant.id,
-                        avaluacio.pdf, avaluacio.nota, avaluacio.id_avaluacio)
+        dades_update = (avaluacio.id_document, avaluacio.resposta.id_document, avaluacio.usuari.id, avaluacio.estudiant.id,
+                        avaluacio.pdf, avaluacio.nota, avaluacio.id_document)
 
-        sql = "INSERT INTO resposta_examen(id_resposta, id_professor, id_estudiant, pdf, nota) " \
+        sql = "INSERT INTO avaluacio_examen(id_resposta, id_professor, id_estudiant, pdf, nota) " \
               "VALUES (%s, %s, %s, %s, %s)"
-        dades = (avaluacio.id_resposta, avaluacio.avaluacio.usuari.id, avaluacio.estudiant.id,
+        dades = (avaluacio.resposta.id_document, avaluacio.usuari.id, avaluacio.estudiant.id,
                         avaluacio.pdf, avaluacio.nota)
-
-        if self.existeix_avaluacio(avaluacio.id_avaluacio):
+        if self.existeix_avaluacio(avaluacio.id_document):
             self.exportar_sql(sql_update, dades_update)
         else:
             self.exportar_sql(sql, dades)
+
+        sql_update_resposata = 'UPDATE resposta_examen SET nota=%s WHERE  id_examen=%s'
+        dades_update_resposta = (avaluacio.nota, avaluacio.resposta.id_document)
+        self.exportar_sql(sql_update_resposata, dades_update_resposta)
+
+        sql_update_resposata = 'UPDATE estudiant_examen SET nota=%s WHERE  id_document=%s and id_estudiant=%s'
+        dades_update_resposta = (avaluacio.nota, avaluacio.resposta.id_examen, avaluacio.estudiant.id)
+        self.exportar_sql(sql_update_resposata, dades_update_resposta)
+
 
 
     def guardar_transaccio(self, transaccio):
