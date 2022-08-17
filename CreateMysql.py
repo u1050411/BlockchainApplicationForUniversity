@@ -513,14 +513,14 @@ class MySqlBloc:
     def guardar_resposta_examen(self, resposta):
         sql_update = 'UPDATE resposta_examen SET id_examen = %s, data_creacio=%s, id_usuari=%s, ' \
                      'pdf=%s  WHERE  id_examen=%s and id_usuari=%s'
-        dades_update = (resposta.id_examen, resposta.data_creacio, resposta.usuari.id,
-                        resposta.pdf, resposta.id_examen, resposta.usuari.id)
+        dades_update = (resposta.examen, resposta.data_creacio, resposta.usuari.id,
+                        resposta.pdf, resposta.examen, resposta.usuari.id)
 
         sql = "INSERT INTO resposta_examen(id_examen, id_resposta, data_creacio, id_usuari, pdf) " \
               "VALUES (%s, %s, %s, %s, %s)"
-        dades = (resposta.id_examen, resposta.id_document, resposta.data_creacio, resposta.usuari.id, resposta.pdf)
+        dades = (resposta.examen, resposta.id_document, resposta.data_creacio, resposta.usuari.id, resposta.pdf)
 
-        if self.existeix_resposta_alumne(resposta.id_examen, resposta.usuari.id):
+        if self.existeix_resposta_alumne(resposta.examen, resposta.usuari.id):
             self.exportar_sql(sql_update, dades_update)
         else:
             self.exportar_sql(sql, dades)

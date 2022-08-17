@@ -2,14 +2,14 @@ import functools
 import os
 import secrets
 from datetime import datetime
-from requests import request
-from werkzeug.utils import secure_filename
-
-from BlockchainUniversity import Factoria, Examen, Transaccio, BlockchainUniversity, RespostaExamen, AvaluacioExamen
-from BlockWeb import auth
-from CreateMysql import MySqlBloc
-from flask import Flask, request, render_template, session, redirect, url_for, jsonify
 from os.path import abspath, dirname, join
+
+from flask import Flask, request, render_template, session, redirect, url_for
+from requests import request
+
+from BlockWeb import auth
+from BlockchainUniversity import Factoria, Examen, Transaccio, BlockchainUniversity, RespostaExamen, AvaluacioExamen
+from CreateMysql import MySqlBloc
 
 app = Flask(__name__)
 my_db = MySqlBloc('localhost', 'Pau', 'UsuariUdg2022', 'blockchainuniversity')
@@ -26,7 +26,6 @@ ESTUDIANT = "estudiant"
 BOTH = "both"
 
 
-
 def es_usuari(tipus):
     def decorator_es_usuari(func):
         # Comprovem que hem iniciat sessió
@@ -36,7 +35,9 @@ def es_usuari(tipus):
                 if session['tipus'] == tipus or tipus == BOTH:
                     return func(*args, **kwargs)
             return redirect(url_for("login"))
+
         return wrapper_sessio_iniciada
+
     return decorator_es_usuari
 
 
@@ -103,7 +104,6 @@ def seleccionar_alumnes():
     return render_template('selecionar_alumnes.html', llista_1=llista_dades, llista_2=llista_pdf, data_avui=avui_format)
 
 
-
 @app.route('/alumne', methods=["GET", "POST"])
 @es_usuari(tipus=ESTUDIANT)
 def alumne():  # put application's code here
@@ -152,7 +152,7 @@ def veure_resposta():
     nom_relatiu = join(PATH_RELATIU, 'veure_resposta.pdf')
     Factoria.guardar_fitxer(nom_total, pdf)
     estudiant = Factoria.build_usuari_from_db(my_db, resposta.usuari.id)
-    missatge = "Aquest es la resposta del alumne"+" "+resposta.usuari.nom+" "+resposta.usuari.cognom
+    missatge = "Aquest es la resposta del alumne" + " " + resposta.usuari.nom + " " + resposta.usuari.cognom
     return render_template('veure_resposta.html', fitxer=nom_relatiu, missatge=missatge, opcio=1)
 
 
@@ -161,7 +161,7 @@ def veure_resposta():
 def pujar_avaluacio():
     missatge = "Aquesta es la Resposta del alumne : "
     user = Factoria.build_usuari_from_db(my_db, session['id'])
-    nom = user.nom+" "+user.cognom
+    nom = user.nom + " " + user.cognom
     tipus = session['tipus']
     if request.method == 'POST':
         missatge = "Pots triar un altre avaluacio o entregar aquesta : "
@@ -206,7 +206,8 @@ def entregar_avaluacio():
     nom_relatiu_resposta = join(PATH_RELATIU, 'veure_resposta.pdf')
     Factoria.guardar_fitxer(nom_total_avaluacio, pdf_avaluacio)
     Factoria.guardar_fitxer(nom_total_resposta, pdf_resposta)
-    return render_template('resposta_evaluacio.html', fitxer_avaluacio=nom_relatiu_avaluacio, fitxer_resposta=nom_relatiu_resposta, nota=nota)
+    return render_template('resposta_evaluacio.html', fitxer_avaluacio=nom_relatiu_avaluacio,
+                           fitxer_resposta=nom_relatiu_resposta, nota=nota)
 
 
 @app.route('/pujar_pdf', methods=["GET", "POST"])
@@ -214,7 +215,7 @@ def entregar_avaluacio():
 def pujar_pdf():
     missatge = "L'hora limit per entregar l'examen es : "
     user = Factoria.build_usuari_from_db(my_db, session['id'])
-    nom = user.nom+" "+user.cognom
+    nom = user.nom + " " + user.cognom
     tipus = session['tipus']
     if request.method == 'POST':
         missatge = "Pots triar agafar un altre resposta o entregar aquesta : "
@@ -257,7 +258,8 @@ def entregar_resposta():
     nom_relatiu_resposta = join(PATH_RELATIU, 'veure_resposta.pdf')
     Factoria.guardar_fitxer(nom_total_examen, pdf_examen)
     Factoria.guardar_fitxer(nom_total_resposta, pdf_resposta)
-    return render_template('examen_resposta.html', fitxer_examen=nom_relatiu_examen, fitxer_resposta=nom_relatiu_resposta)
+    return render_template('examen_resposta.html', fitxer_examen=nom_relatiu_examen,
+                           fitxer_resposta=nom_relatiu_resposta)
 
 
 @app.route('/veure_examen', methods=["GET", "POST"])
@@ -296,26 +298,9 @@ def enviar_examen():  # put application's code here
         for alumn in examen.estudiants:
             transaccio = Transaccio(profe, alumn, examen)
             my_db.guardar_transaccio(transaccio)
-        # uni = Factoria.build_universitat_from_db(my_db)
         main.minat()
     return render_template("examens_enviats.html")
-
-# @app.route('enviar_json', methods=["GET", "POST"])
-# def enviar_json():
-#      id_examen = session['id_examen']
-#      return render_template('pujar_pdf.html')
-
-
-
-
 
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-# if fitxer.filename:
-#     image_name = secure_filename(fitxer.filename)
-#     images_dir = app.config['PDF_FILES']
-#     os.makedirs(images_dir, exist_ok=True)
-#     file_path = os.path.join(images_dir, image_name)
-#     fitxer.save(file_path)
