@@ -5,7 +5,6 @@ from datetime import datetime
 from os.path import abspath, dirname, join
 
 from flask import Flask, request, render_template, session, redirect, url_for
-from requests import request
 
 from BlockWeb import auth
 from BlockchainUniversity import Factoria, Examen, Transaccio, BlockchainUniversity, RespostaExamen, AvaluacioExamen
@@ -132,7 +131,7 @@ def triar_resposta():
     llista_examens = list()
     for x in llista:
         if x.nota is None or x.nota == 0:
-            nom_assignatura = Factoria.build_examen_from_db(my_db, x.id_examen).assignatura.nom
+            nom_assignatura = Factoria.build_examen_from_db(my_db, x.examen.id_document).assignatura.nom
             estudiant = Factoria.build_usuari_from_db(my_db, x.usuari.id)
             valors = [x.id_document, nom_assignatura, estudiant.nom, estudiant.cognom, x.data_creacio]
             llista_examens.append(valors)
@@ -238,13 +237,13 @@ def pujar_pdf():
 @es_usuari(tipus=ESTUDIANT)
 def entregar_resposta():
     user = Factoria.build_usuari_from_db(my_db, session['id'])
-    id_examen = session['id_examen']
+    id_examen = session['examen']
     examen = Factoria.build_examen_from_db(my_db, id_examen, True)
     profe = examen.usuari
     nom_fitxer = join(PATH_TOTAL, 'pdf_pujat.pdf')
     pdf = Factoria.recuperar_fitxer(nom_fitxer)
     id_resposta = my_db.seguent_id_resposta()
-    resposta = RespostaExamen(id_resposta, examen.id_document, user, pdf)
+    resposta = RespostaExamen(id_resposta, examen, user, pdf)
     session['id_resposta'] = id_resposta
     my_db.guardar_resposta_examen(resposta)
     transaccio = Transaccio(user, profe, resposta)
@@ -269,7 +268,7 @@ def veure_examen():
     examen = Factoria.build_examen_from_db(my_db, id_examen, True)
     if examen is None:
         redirect('error404.html')
-    session['id_examen'] = id_examen
+    session['examen'] = id_examen
     hora_limit = examen.data_final
     pdf = examen.pdf
     nom_total = join(PATH_TOTAL, 'veure_examen.pdf')

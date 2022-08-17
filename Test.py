@@ -121,21 +121,22 @@ class CreacioTaulaTest:
 
     def crear_examens(self):
         examens = [[1, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
-                       f'pdf_minimo.pdf', 'u2050404', '2022-10-01T13:00', '2022-10-01T14:00'],
+                       f'pdf_minimo.pdf', 'u2050404', '2022-10-01T13:00', '2022-10-01T14:00', 2],
                    [2, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
                        f'/pdf/Examen_2020-21-_26-03_primer_parcial.pdf', 'u2000256', '2022-10-01T12:00'
-                       , '2022-10-01T13:00'],
+                       , '2022-10-01T13:00', 1],
                    [3, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
-                       f'pdf_minimo.pdf', 'u2000256', '2022-10-01T13:00', '2022-10-01T14:00'],
+                       f'pdf_minimo.pdf', 'u2000256', '2022-10-01T13:00', '2022-10-01T14:00', 1],
                    [4, f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity'
                        f'/pdf/Examen_2020-21-_26-03_primer_parcial.pdf', 'u2050404', '2022-10-01T12:00'
-                       , '2022-10-01T13:00']
+                       , '2022-10-01T13:00', 2]
                    ]
 
-        for id_document, nom_fitxer, id_professor, data_inicial, data_final in examens:
+        for id_document, nom_fitxer, id_professor, data_inicial, data_final, id_assignatura in examens:
             pdf = Factoria.recuperar_fitxer(nom_fitxer)
             professor = Factoria.build_usuari_from_db(self.my_db, id_professor)
-            examen = Examen(id_document, professor, pdf, data_inicial, data_final)
+            assignatura = Factoria.build_assignatura_from_db(self.my_db, id_assignatura)
+            examen = Examen(id_document, professor, pdf, data_inicial, data_final, None, assignatura)
             estudiant = Factoria.build_usuari_from_db(self.my_db, 'u1050402')
             examen.afegir_estudiants(estudiant)
             self.my_db.guardar_examen(examen)
@@ -150,21 +151,24 @@ class CreacioTaulaTest:
         for id_resposta, id_examen, id_usuari, nom_fitxer in respostes:
             pdf = Factoria.recuperar_fitxer(nom_fitxer)
             estudiant = Factoria.build_usuari_from_db(self.my_db, id_usuari)
-            resposta = RespostaExamen(id_resposta, id_examen, estudiant, pdf)
+            examen = Factoria.build_examen_from_db(self.my_db, id_examen, True)
+            resposta = RespostaExamen(id_resposta, examen, estudiant, pdf)
             self.my_db.guardar_resposta_examen(resposta)
 
     def crear_avaluacio(self):
 
-        respostes = [[3, 1, 'u2000256', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
-                                        f'Examen_2021_20_10_01_primer_parcial-solucio.pdf'],
-                     [4, 2, 'u2050404', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
-                                        f'Examen_2020-21-_26-03_primer_parcial.pdf']]
+        respostes = [[1, 1, 'u2000256', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
+                                        f'Examen_2021_20_10_01_primer_parcial-solucio.pdf', 'u1050411',8],
+                     [2, 2, 'u2050404', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
+                                        f'Examen_2020-21-_26-03_primer_parcial.pdf', 'u1050402',4]]
 
-        for id_resposta, id_examen, id_usuari, nom_fitxer in respostes:
+        for id_resposta, id_examen, id_professor, nom_fitxer, estudiant, nota in respostes:
             pdf = Factoria.recuperar_fitxer(nom_fitxer)
-            professor = Factoria.build_usuari_from_db(self.my_db, id_usuari)
-            resposta = AvaluacioExamen(id_resposta, id_examen, professor, pdf)
-            self.my_db.guardar_resposta_examen(resposta)
+            professor = Factoria.build_usuari_from_db(self.my_db, id_professor)
+            resposta = Factoria.build_id_resposta_alumne_from_db(self.my_db, id_resposta)
+            estudiant = Factoria.build_usuari_from_db(self.my_db, estudiant)
+            avaluacio_examen = AvaluacioExamen(resposta, professor, estudiant, pdf)
+            self.my_db.guardar_avaluacio_examen(avaluacio_examen)
 
     def crear_transaccions(self):
         receptor = Factoria.build_usuari_from_db(self.my_db, 'u1050402')
@@ -177,7 +181,7 @@ class CreacioTaulaTest:
         nom_fitxer = f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf' \
                      f'/Examen_2021_20_10_01_primer_parcial-solucio.pdf'
         pdf = Factoria.recuperar_fitxer(nom_fitxer)
-        resposta = RespostaExamen(1, 1, emissor2, pdf)
+        resposta = RespostaExamen(1, examen, emissor2, pdf,7)
         transaccio2 = Transaccio(emissor2, receptor2, resposta)
         self.my_db.guardar_transaccio(transaccio2)
 
@@ -298,9 +302,15 @@ class TestMysql(unittest.TestCase):
         self.assertEqual(llista[2], 'u1050411')
 
     def test_crear_examens(self):
+        self.test = CreacioTaulaTest(self.my_db, self.schema)
         self.my_db.esborrar_schema(self.schema)
         self.my_db.crear_schema(self.schema)
-        self.test_crear_usuaris()
+        self.my_db.afegir_schema(self.schema)
+        self.my_db.crear_taules_inicials()
+        self.test.crear_universitat()
+        self.test.crear_usuaris()
+        self.test.crear_assignatures()
+        self.test.crear_pdf()
         self.test.crear_examens()
 
     def test_existeix(self):
@@ -351,7 +361,8 @@ class TestMysql(unittest.TestCase):
         pdf = Factoria.recuperar_fitxer(nom_fitxer)
         estudiant = Factoria.build_usuari_from_db(self.my_db, 'u1050411')
         id_resposta = self.my_db.seguent_id_resposta()
-        resposta = RespostaExamen(id_resposta, 1, estudiant, pdf)
+        examen = Factoria.build_examen_from_db(self.my_db, 1)
+        resposta = RespostaExamen(id_resposta, examen, estudiant, pdf, 9)
         self.my_db.guardar_resposta_examen(resposta)
 
     def test_guardar_bloc(self):
@@ -408,16 +419,16 @@ class TestFactoria(unittest.TestCase):
         print(examen_json)
 
     def test_resposta(self):
-        resposta = Factoria.build_resposta_alumne_from_db(self.my_db, 1, 1)
+        resposta = Factoria.build_id_resposta_alumne_from_db(self.my_db, 1)
         self.assertEqual(resposta.id_document, 1)
-        self.assertEqual(resposta.id_examen, 1)
+        self.assertEqual(resposta.examen.id_document, 1)
         self.assertEqual(resposta.usuari.id, 'u1050402')
         self.assertEqual(resposta.usuari.tipus, ESTUDIANT)
 
     def test_avaluacio(self):
-        resposta = Factoria.build_avaluacio_examen_from_db(self.my_db, 1, 3)
-        self.assertEqual(resposta.id_document, 3)
-        self.assertEqual(resposta.id_examen, 1)
+        resposta = Factoria.build_avaluacio_from_db(self.my_db, 1)
+        self.assertEqual(resposta.id_document, 1)
+        self.assertEqual(resposta.resposta.id_document, 1)
         self.assertEqual(resposta.usuari.id, 'u2000256')
         self.assertEqual(resposta.usuari.tipus, PROFESSOR)
 
@@ -501,9 +512,10 @@ class TestRespostaExamen(unittest.TestCase):
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
         pdf = Factoria.recuperar_fitxer(nom_fitxer)
         estudiant = Factoria.build_usuari_from_db(self.my_db, 'u1050411')
-        resposta = RespostaExamen(1, 1, estudiant, pdf)
+        examen = Factoria.build_examen_from_db(self.my_db, 1, True)
+        resposta = RespostaExamen(1, examen, estudiant, pdf)
         self.assertEqual(resposta.id_document, 1)
-        self.assertEqual(resposta.id_examen, 1)
+        self.assertEqual(resposta.examen.id_document, 1)
         self.assertEqual(resposta.usuari, estudiant)
         self.assertEqual(resposta.pdf, pdf)
 
@@ -532,11 +544,10 @@ class TestavaluacioExamen(unittest.TestCase):
         self.assertEqual(resposta.pdf, pdf)
 
     def test_to_json(self):
-        avaluacio = Factoria.build_avaluacio_examen_from_db(self.my_db, 1, 3)
-        avaluacio_print = avaluacio.to_dict()
-        print(avaluacio_print)
+        avaluacio = Factoria.build_avaluacio_from_db(self.my_db, 1)
         avaluacio_json = Factoria.to_json(avaluacio)
-        print(avaluacio_json)
+        avaluacio2 = AvaluacioExamen.crear_json(avaluacio_json)
+        self.assertEqual(avaluacio_json, avaluacio2)
 
 
 class TestEncriptador(unittest.TestCase):
@@ -555,7 +566,6 @@ class TestEncriptador(unittest.TestCase):
         self.assertEqual(examen.id_document, examen_final.id_document)
         self.assertEqual(examen.usuari.id, examen_final.usuari.id)
         self.assertEqual(examen.pdf, examen_final.pdf)
-        self.assertEqual(examen.data_creacio, examen_final.data_creacio)
 
     def test_signar_verificar(self):
         emissor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
@@ -568,24 +578,15 @@ class TestEncriptador(unittest.TestCase):
         self.assertEqual(examen.id_document, examen_final.id_document)
         self.assertEqual(examen.usuari.id, examen_final.usuari.id)
         self.assertEqual(examen.pdf, examen_final.pdf)
-        self.assertEqual(examen.data_creacio, examen_final.data_creacio)
 
 
 class TestTransaction(unittest.TestCase):
 
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.schema = SCHEMA
-        self.test = CreacioTaulaTest(self.my_db, self.schema)
-        self.my_db.esborrar_schema(self.schema)
-        self.my_db.crear_schema(self.schema)
-        self.my_db.afegir_schema(self.schema)
-        self.my_db.crear_taules_inicials()
-        self.test.crear_universitat()
-        self.test.crear_usuaris()
-        self.test.crear_examens()
-        self.test.crear_respostes()
-        self.test.crear_avaluacio()
+        self.my_db.esborrar_schema(SCHEMA)
+        self.test = CreacioTaulaTest(self.my_db, SCHEMA)
+        self.test.crear_schema_dades()
 
     @property
     def crear_transaccio(self):
@@ -595,12 +596,13 @@ class TestTransaction(unittest.TestCase):
         transaccio = Transaccio(emissor, receptor, examen)
         return receptor, emissor, examen, transaccio
 
-    def test_creation(self):
-        (receptor, emissor, examen, transaccio) = self.crear_transaccio
-        self.assertEqual(transaccio.emissor, emissor)
-        self.assertEqual(transaccio.receptor, receptor)
+    # def test_creation(self):
+    #     (receptor, emissor, examen, transaccio) = self.crear_transaccio
+    #     self.assertEqual(transaccio.emissor, emissor)
+    #     self.assertEqual(transaccio.receptor, receptor)
 
     def test_guardar(self):
+        self.my_db.esborrar_taula('transaccio')
         (receptor, emissor, examen, transaccio_inicial) = self.crear_transaccio
         self.my_db.guardar_transaccio(transaccio_inicial)
         transaccio = Factoria.build_transaccio_from_db(self.my_db)
@@ -669,41 +671,41 @@ class TestInicial(unittest.TestCase):
         self.test = CreacioTaulaTest(self.my_db, self.schema)
         self.test.crear_schema_inicial()
 
-class TestConexions(unittest.TestCase):
-
-    def setUp(self):
-        self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.schema = SCHEMA
-
-
-    def test_connexio_servidor(self):
-        connexio = Connexions()
-        connexio.test_server_socket()
-
-
-
-    def test_conexio_servidor(self):
-        HOST = ''  # Symbolic name meaning all available interfaces
-        PORT = 8080  # Arbitrary non-privileged port
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind((HOST, PORT))
-            s.listen(1)
-            conn, addr = s.accept()
-            with conn:
-                print('Connected by', addr)
-                while True:
-                    data = conn.recv(1024)
-                    if not data: break
-                    conn.sendall(data)
-
-    def test_conexio_client(self):
-        HOST = '192.168.50.26'  # The remote host
-        PORT = 50007  # The same port as used by the server
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((HOST, PORT))
-            s.sendall(b'Hello, world udg')
-            data = s.recv(1024)
-        print('Received', repr(data))
+# class TestConexions(unittest.TestCase):
+#
+#     def setUp(self):
+#         self.my_db = MySqlBloc('localhost', 'root', 'root')
+#         self.schema = SCHEMA
+#
+#
+#     def test_connexio_servidor(self):
+#         connexio = Connexions()
+#         connexio.test_server_socket()
+#
+#
+#
+#     def test_conexio_servidor(self):
+#         HOST = ''  # Symbolic name meaning all available interfaces
+#         PORT = 8080  # Arbitrary non-privileged port
+#         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+#             s.bind((HOST, PORT))
+#             s.listen(1)
+#             conn, addr = s.accept()
+#             with conn:
+#                 print('Connected by', addr)
+#                 while True:
+#                     data = conn.recv(1024)
+#                     if not data: break
+#                     conn.sendall(data)
+#
+#     def test_conexio_client(self):
+#         HOST = '192.168.50.26'  # The remote host
+#         PORT = 50007  # The same port as used by the server
+#         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+#             s.connect((HOST, PORT))
+#             s.sendall(b'Hello, world udg')
+#             data = s.recv(1024)
+#         print('Received', repr(data))
 
 # class TestConexions(unittest.TestCase):
 #

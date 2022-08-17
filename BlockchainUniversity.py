@@ -152,20 +152,21 @@ class Factoria:
     #         if usuari.tipus == PROFESSOR:
     #             resposta = avaluacioExamen(id_resposta, id_document, usuari, pdf, nota)
     #         return resposta
-    #
-    @staticmethod
-    def build_resposta_alumne_from_db(my_db, id_document, id_resposta):
-        resposta_importar = my_db.importar_resposta(id_document, id_resposta)
-        (id_resposta, time, id_usuari, pdf, nota) = resposta_importar[0]
-        usuari = Factoria.build_usuari_from_db(my_db, id_usuari)
-        return RespostaExamen(id_resposta, id_document, usuari, pdf, nota)
+    # #
+    # @staticmethod
+    # def build_resposta_alumne_from_db(my_db, id_document, id_resposta):
+    #     resposta_importar = my_db.importar_resposta( id_resposta)
+    #     (id_resposta, time, id_usuari, pdf, nota) = resposta_importar[0]
+    #     usuari = Factoria.build_usuari_from_db(my_db, id_usuari)
+    #     return RespostaExamen(id_resposta, id_document, usuari, pdf, nota)
 
     @staticmethod
     def build_id_resposta_alumne_from_db(my_db, id_resposta):
         resposta_importar = my_db.importar_resposta(id_resposta)
         (id_resposta, id_document, time, id_usuari, pdf, nota) = resposta_importar[0]
         usuari = Factoria.build_usuari_from_db(my_db, id_usuari)
-        return RespostaExamen(id_resposta, id_document, usuari, pdf, nota)
+        examen = Factoria.build_examen_from_db(my_db, id_document)
+        return RespostaExamen(id_resposta, examen, usuari, pdf, nota)
 
     @staticmethod
     def build_avaluacio_from_db(my_db, id_avaluacio):
@@ -430,9 +431,9 @@ class Pdf(Document):
     def crear_json(cls, dades_json=None):
         dades = json.loads(dades_json)
         id_examen = dades['id_document']
-        data_creacio = dades['data_creacio']
-        data_inicial = dades['data_inicial']
-        data_final = dades['data_final']
+        data_creacio = datetime.strptime(dades['data_creacio'], '%y-%m-%d %H:%M:%S')
+        data_inicial = datetime.strptime(dades['data_inicial'], '%Y-%m-%d %H:%M:%S')
+        data_final = datetime.strptime(dades['data_final'], '%Y-%m-%d %H:%M:%S')
         professor = Usuari.crear_json(dades['professor'])
         pdf = ast.literal_eval(dades['pdf'])
         return cls(id_examen, professor, pdf, data_inicial, data_final, data_creacio)
@@ -454,9 +455,9 @@ class Examen(Document):
     def crear_json(cls, dades_json=None):
         dades = json.loads(dades_json)
         id_examen = dades['id_document']
-        data_creacio = dades['data_creacio']
-        data_inicial = dades['data_inicial']
-        data_final = dades['data_final']
+        data_creacio = dades['data_creacio'],
+        data_inicial = dades['data_inicial'],
+        data_final = dades['data_inicial'],
         professor = Usuari.crear_json(dades['professor'])
         pdf = ast.literal_eval(dades['pdf'])
         return cls(id_examen, professor, pdf, data_inicial, data_final, data_creacio)
@@ -487,9 +488,9 @@ class Examen(Document):
 
 class RespostaExamen(Document):
 
-    def __init__(self, id_resposta, id_examen=None, estudiant=None, pdf=None, nota=0):
+    def __init__(self, id_resposta, examen=None, estudiant=None, pdf=None, nota=0):
         super(RespostaExamen, self).__init__(id_resposta, 2, estudiant, pdf)
-        self.id_examen = id_examen
+        self.examen = examen
         self.nota = nota
 
     @property
@@ -499,7 +500,7 @@ class RespostaExamen(Document):
     def to_dict(self):
         return collections.OrderedDict({
             'id_resposta': self.id_document,
-            'id_examen': self.id_examen,
+            'examen': Factoria.to_json(self.examen),
             'data_creacio': self.data_creacio,
             'id_tipus': self.tipus,
             'estudiant': Factoria.to_json(self.usuari),
@@ -510,8 +511,8 @@ class RespostaExamen(Document):
     def crear_json(cls, dades_json=None):
         dades = json.loads(dades_json)
         id_resposta = dades['id_resposta']
-        id_examen = dades['id_examen']
-        data_creacio = dades['data_creacio']
+        id_examen = Examen.crear_json(dades['examen'])
+        data_creacio = dades['data_creacio'],
         id_tipus = dades['id_tipus']
         estudiant = Usuari.crear_json(dades['estudiant'])
         pdf = ast.literal_eval(dades['pdf'])
@@ -555,7 +556,7 @@ class AvaluacioExamen(Document):
         id_avaluacio = dades['id_avaluacio']
         resposta = RespostaExamen.crear_json(dades['resposta'])
         id_tipus = dades['id_tipus']
-        data_creacio = dades['data_creacio']
+        data_creacio =dades['data_creacio']
         professor = Usuari.crear_json(dades['professor'])
         estudiant = Usuari.crear_json(dades['estudiant'])
         pdf = ast.literal_eval(dades['pdf'])
@@ -624,15 +625,6 @@ class Transaccio:
             'id_document': self.id_document,
             'document': self.document,
             'data_creacio': self.data_creacio})
-
-    # def to_json(self):
-    #     rest = self.to_dict()
-    #     return json.dumps(rest, default=str)
-
-    # def sign_transaction(self):
-    #     # return self.emissor.sign(str(self.to_dict()).encode('utf8'))
-    #     block_json = Factoria.to_json(self)
-    #     return self.emissor.sign(block_json.encode(UTF_8))
 
 
 class Bloc:

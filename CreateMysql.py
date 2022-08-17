@@ -117,7 +117,7 @@ class MySqlBloc:
 
                 "CREATE TABLE if not exists `resposta_examen` ("
                 "`id_resposta` INT NOT NULL AUTO_INCREMENT,"
-                "`id_examen` INT NOT NULL,"
+                "`examen` INT NOT NULL,"
                 "`data_creacio` DATETIME NOT NULL,"
                 "`id_usuari` varchar(8) NOT NULL,"
                 "`pdf` LONGBLOB  NULL,"
@@ -238,14 +238,14 @@ class MySqlBloc:
         return self.importar_llista_enter_sql(sql)
 
     def importar_id_respostes_professor(self, professor):
-        sql = f'SELECT id_resposta FROM blockchainuniversity.resposta_examen where  id_examen in ' \
+        sql = f'SELECT id_resposta FROM blockchainuniversity.resposta_examen where  examen in ' \
               f'(SELECT id_document FROM blockchainuniversity.examen where id_assignatura in ' \
               f'(SELECT id_assignatura FROM blockchainuniversity.assignatura where id_professor= "{professor.id}"))'
         return self.importar_llista_enter_sql(sql)
 
     def importar_respostes(self, id_document):
         sql = f'select id_resposta, data_creacio, id_usuari, pdf  ' \
-              f'from `resposta_examen` where `id_examen` = {id_document}'
+              f'from `resposta_examen` where `examen` = {id_document}'
         return self.importar_llista_sql(sql)
 
     def importar_pdf(self, id_pdf):
@@ -259,11 +259,11 @@ class MySqlBloc:
 
     def importar_resposta(self, id_document, id_resposta):
         sql = f'select id_resposta, data_creacio, id_usuari, pdf  from `resposta_examen` ' \
-              f'where `id_examen` = {id_document} and `id_resposta` = {id_resposta}'
+              f'where `examen` = {id_document} and `id_resposta` = {id_resposta}'
         return self.importar_llista_sql(sql)
 
     def importar_resposta(self, id_resposta):
-        sql = f'select id_resposta, id_examen, data_creacio, id_usuari, pdf, nota  from `resposta_examen` ' \
+        sql = f'select id_resposta, examen, data_creacio, id_usuari, pdf, nota  from `resposta_examen` ' \
               f'where `id_resposta` = {id_resposta}'
         return self.importar_llista_sql(sql)
 
@@ -317,6 +317,11 @@ class MySqlBloc:
             sql = f"DROP DATABASE `{schema}`"
             self.exportar_sql(sql)
 
+    def esborrar_taula(self, taula):
+        if self.existeix(self.schema, taula, None, None):
+            sql = f'TRUNCATE TABLE `{self.schema}`.{taula}'
+            self.exportar_sql(sql)
+
     def esborrar_dada(self, taula, columna, dada):
         if self.existeix(self.schema, taula, columna, dada):
             sql = f"DELETE FROM `{self.schema}`.`{taula}` WHERE `{columna}` = {dada}"
@@ -361,7 +366,7 @@ class MySqlBloc:
         return self.existeix(self.schema, 'avaluacio_examen', 'id_avaluacio', id_avaluacio)
 
     def existeix_resposta_alumne(self, id_examen, id_usuari):
-        sql = f"select `id_usuari` from `resposta_examen` where `id_examen` = '{id_examen}' " \
+        sql = f"select `id_usuari` from `resposta_examen` where `examen` = '{id_examen}' " \
               f"and `id_usuari` = '{id_usuari}' LIMIT 1"
         self.select_sql(sql)
         return self._cursor.fetchone() is not None
@@ -511,14 +516,14 @@ class MySqlBloc:
         self.exportar_sql(sql, dades)
 
     def guardar_resposta_examen(self, resposta):
-        sql_update = 'UPDATE resposta_examen SET id_examen = %s, data_creacio=%s, id_usuari=%s, ' \
-                     'pdf=%s  WHERE  id_examen=%s and id_usuari=%s'
-        dades_update = (resposta.examen, resposta.data_creacio, resposta.usuari.id,
+        sql_update = 'UPDATE resposta_examen SET examen = %s, data_creacio=%s, id_usuari=%s, ' \
+                     'pdf=%s  WHERE  examen=%s and id_usuari=%s'
+        dades_update = (resposta.examen.id_document, resposta.data_creacio, resposta.usuari.id,
                         resposta.pdf, resposta.examen, resposta.usuari.id)
 
-        sql = "INSERT INTO resposta_examen(id_examen, id_resposta, data_creacio, id_usuari, pdf) " \
+        sql = "INSERT INTO resposta_examen(examen, id_resposta, data_creacio, id_usuari, pdf) " \
               "VALUES (%s, %s, %s, %s, %s)"
-        dades = (resposta.examen, resposta.id_document, resposta.data_creacio, resposta.usuari.id, resposta.pdf)
+        dades = (resposta.examen.id_document, resposta.id_document, resposta.data_creacio, resposta.usuari.id, resposta.pdf)
 
         if self.existeix_resposta_alumne(resposta.examen, resposta.usuari.id):
             self.exportar_sql(sql_update, dades_update)
@@ -539,14 +544,14 @@ class MySqlBloc:
             self.exportar_sql(sql_update, dades_update)
         else:
             self.exportar_sql(sql, dades)
-
-        sql_update_resposata = 'UPDATE resposta_examen SET nota=%s WHERE  id_examen=%s'
-        dades_update_resposta = (avaluacio.nota, avaluacio.resposta.id_document)
-        self.exportar_sql(sql_update_resposata, dades_update_resposta)
-
-        sql_update_resposata = 'UPDATE estudiant_examen SET nota=%s WHERE  id_document=%s and id_estudiant=%s'
-        dades_update_resposta = (avaluacio.nota, avaluacio.resposta.id_examen, avaluacio.estudiant.id)
-        self.exportar_sql(sql_update_resposata, dades_update_resposta)
+        #
+        # sql_update_resposata = 'UPDATE resposta_examen SET nota=%s WHERE  examen=%s'
+        # dades_update_resposta = (avaluacio.nota, avaluacio.resposta.id_document)
+        # self.exportar_sql(sql_update_resposata, dades_update_resposta)
+        #
+        # sql_update_resposata = 'UPDATE estudiant_examen SET nota=%s WHERE  id_document=%s and id_estudiant=%s'
+        # dades_update_resposta = (avaluacio.nota, avaluacio.resposta.examen, avaluacio.estudiant.id)
+        # self.exportar_sql(sql_update_resposata, dades_update_resposta)
 
 
 
