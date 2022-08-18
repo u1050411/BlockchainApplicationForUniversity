@@ -34,9 +34,9 @@ class Connexions:
 
         self.test_server_socket()
 
-    def conexio_client(self, dada):
+    def conexio_client(self, dada, ip):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((dada, PORT))
+            s.connect((ip, PORT))
             s.sendall(dada)
             data = s.recv(1024)
         print('Received', repr(data))

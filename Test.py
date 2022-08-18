@@ -1,8 +1,10 @@
 import unittest
+from socket import socket
 
 from Crypto.PublicKey import RSA
 from BlockchainUniversity import Estudiant, Transaccio, Professor, Examen, Factoria, RespostaExamen, AvaluacioExamen, \
     Bloc, Universitat, Encriptador, BlockchainUniversity, Pdf, Assignatura
+from Connexions import Connexions
 from CreateMysql import MySqlBloc
 
 UTF_8 = 'utf8'
@@ -660,42 +662,24 @@ class TestInicial(unittest.TestCase):
         self.test = CreacioTaulaTest(self.my_db, self.schema)
         self.test.crear_schema_inicial()
 
-# class TestConexions(unittest.TestCase):
-#
-#     def setUp(self):
-#         self.my_db = MySqlBloc('localhost', 'root', 'root')
-#         self.schema = SCHEMA
-#
-#
-#     def test_connexio_servidor(self):
-#         connexio = Connexions()
-#         connexio.test_server_socket()
-#
-#
-#
-#     def test_conexio_servidor(self):
-#         HOST = ''  # Symbolic name meaning all available interfaces
-#         PORT = 8080  # Arbitrary non-privileged port
-#         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-#             s.bind((HOST, PORT))
-#             s.listen(1)
-#             conn, addr = s.accept()
-#             with conn:
-#                 print('Connected by', addr)
-#                 while True:
-#                     data = conn.recv(1024)
-#                     if not data: break
-#                     conn.sendall(data)
-#
-#     def test_conexio_client(self):
-#         HOST = '192.168.50.26'  # The remote host
-#         PORT = 50007  # The same port as used by the server
-#         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-#             s.connect((HOST, PORT))
-#             s.sendall(b'Hello, world udg')
-#             data = s.recv(1024)
-#         print('Received', repr(data))
+class TestConexions(unittest.TestCase):
 
+    def setUp(self):
+        self.my_db = MySqlBloc('localhost', 'root', 'root')
+        self.schema = SCHEMA
+        self.connexio = Connexions()
+
+
+    def test_connexio_servidor(self):
+        connexio = Connexions()
+        connexio.test_server_socket()
+
+    def test_conexio_client(self):
+        ip = '192.168.50.26'  # The remote host
+        usuari = Factoria.build_usuari_from_db(self.my_db, 'u1050411')
+        dada = Factoria.to_json(usuari)
+        self.connexio.conexio_client(dada, ip)
+#
 # class TestConexions(unittest.TestCase):
 #
 #     def test_conexio_servidor(self):
@@ -711,7 +695,7 @@ class TestInicial(unittest.TestCase):
 #                     data = conn.recv(1024)
 #                     if not data: break
 #                     conn.sendall(data)
-
+#
 # def test_conexio_client(self):
 #     HOST = '192.168.50.26'  # The remote host
 #     PORT = 50007  # The same port as used by the server
