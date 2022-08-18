@@ -1,14 +1,9 @@
-import socket
 import unittest
-import ast
 
 from Crypto.PublicKey import RSA
-from fontTools.misc.dictTools import hashdict
-
 from BlockchainUniversity import Estudiant, Transaccio, Professor, Examen, Factoria, RespostaExamen, AvaluacioExamen, \
-    Bloc, Universitat, Encriptador, Document, BlockchainUniversity, Pdf, Assignatura
+    Bloc, Universitat, Encriptador, BlockchainUniversity, Pdf, Assignatura
 from CreateMysql import MySqlBloc
-from Connexions import Connexions
 
 UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
@@ -225,10 +220,6 @@ class TestProfessors(unittest.TestCase):
         professor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
         llista_alumnes = professor.llista_alumnes(self.my_db)
         print(llista_alumnes)
-
-    # def test_importar_respostes(self):
-    #     professor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
-    #     llista = professor.importar_examens(self.my_db)
 
 
 class TestUniversitat(unittest.TestCase):
@@ -536,18 +527,25 @@ class TestavaluacioExamen(unittest.TestCase):
         nom_fitxer = f'C:/Users/u1050/PycharmProjects/' \
                      f'BlockchainApplicationForUniversity/pdf/GEINF DOC1 full de TFG_V2.pdf'
         pdf = Factoria.recuperar_fitxer(nom_fitxer)
+        professor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
         estudiant = Factoria.build_usuari_from_db(self.my_db, 'u1050411')
-        resposta = AvaluacioExamen(1, 1, estudiant, pdf)
-        self.assertEqual(resposta.id_document, 1)
-        self.assertEqual(resposta.id_examen, 1)
-        self.assertEqual(resposta.usuari, estudiant)
-        self.assertEqual(resposta.pdf, pdf)
+        resposta = Factoria.build_id_resposta_alumne_from_db(self.my_db, 1)
+        avaluacio = AvaluacioExamen(resposta, professor, estudiant, pdf, 7, 1)
+        self.assertEqual(avaluacio.id_document, 1)
+        self.assertEqual(avaluacio.resposta, resposta)
+        self.assertEqual(avaluacio.estudiant, estudiant)
+        self.assertEqual(avaluacio.usuari, professor)
+        self.assertEqual(avaluacio.pdf, pdf)
 
     def test_to_json(self):
         avaluacio = Factoria.build_avaluacio_from_db(self.my_db, 1)
         avaluacio_json = Factoria.to_json(avaluacio)
         avaluacio2 = AvaluacioExamen.crear_json(avaluacio_json)
-        self.assertEqual(avaluacio_json, avaluacio2)
+        self.assertEqual(avaluacio.id_document, avaluacio2.id_document)
+        self.assertEqual(avaluacio.resposta.id_document, avaluacio2.resposta.id_document)
+        self.assertEqual(avaluacio.estudiant.id,  avaluacio2.estudiant.id)
+        self.assertEqual(avaluacio.usuari.id, avaluacio2.usuari.id)
+        self.assertEqual(avaluacio.pdf, avaluacio2.pdf)
 
 
 class TestEncriptador(unittest.TestCase):
@@ -596,11 +594,6 @@ class TestTransaction(unittest.TestCase):
         transaccio = Transaccio(emissor, receptor, examen)
         return receptor, emissor, examen, transaccio
 
-    # def test_creation(self):
-    #     (receptor, emissor, examen, transaccio) = self.crear_transaccio
-    #     self.assertEqual(transaccio.emissor, emissor)
-    #     self.assertEqual(transaccio.receptor, receptor)
-
     def test_guardar(self):
         self.my_db.esborrar_taula('transaccio')
         (receptor, emissor, examen, transaccio_inicial) = self.crear_transaccio
@@ -610,10 +603,6 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(transaccio.receptor.id, receptor.id)
         self.assertEqual(transaccio.id_document, transaccio_inicial.id_document)
 
-    # def test_to_json(self):
-    #     (receptor, emissor, examen, transaccio) = self.crear_transaccio
-    #     trans_json = transaccio.to_json()
-    #     print(trans_json)
 
     def test_encriptar_desencriptar(self):
         (receptor, emissor, examen, transaccio_inicial) = self.crear_transaccio

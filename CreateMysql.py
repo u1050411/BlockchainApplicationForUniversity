@@ -1,12 +1,7 @@
-import base64
-from datetime import datetime
-
 import mysql.connector
 from Crypto.PublicKey import RSA
-from mysql.connector import errorcode, cursor
+from mysql.connector import errorcode
 
-# from BlockchainUniversity import Usuari
-from BlockchainUniversity import Factoria
 
 UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
@@ -544,16 +539,6 @@ class MySqlBloc:
             self.exportar_sql(sql_update, dades_update)
         else:
             self.exportar_sql(sql, dades)
-        #
-        # sql_update_resposata = 'UPDATE resposta_examen SET nota=%s WHERE  examen=%s'
-        # dades_update_resposta = (avaluacio.nota, avaluacio.resposta.id_document)
-        # self.exportar_sql(sql_update_resposata, dades_update_resposta)
-        #
-        # sql_update_resposata = 'UPDATE estudiant_examen SET nota=%s WHERE  id_document=%s and id_estudiant=%s'
-        # dades_update_resposta = (avaluacio.nota, avaluacio.resposta.examen, avaluacio.estudiant.id)
-        # self.exportar_sql(sql_update_resposata, dades_update_resposta)
-
-
 
     def guardar_transaccio(self, transaccio):
         sql = "INSERT INTO transaccio(id_emissor, id_receptor, document, id_document, data_creacio) " \

@@ -1,18 +1,15 @@
 import ast
 import base64
-import binascii
 import collections
 import hashlib
 import json
 from datetime import datetime
 
 from Crypto.Cipher import PKCS1_OAEP
-from Crypto.Hash import SHA1, SHA
+from Crypto.Hash import SHA
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_PSS
 from cryptography.fernet import Fernet
-from Crypto.Hash import SHA
-from cryptography.hazmat.primitives.hashes import SHA256
 
 UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
@@ -141,25 +138,6 @@ class Factoria:
         transaccio = Transaccio.crear_mysql(id_trans, emissor, receptor, dada, id_document, data_creacio)
         return transaccio
 
-    # # Revisar aquest codi
-    #     @staticmethod
-    #     def build_resposta_examen_from_db(my_db, id_document, id_resposta):
-    #         resposta_importar = my_db.importar_resposta(id_document, id_resposta)
-    #         (id_resposta, time, id_usuari, pdf, nota) = resposta_importar[0]
-    #         usuari = Factoria.build_usuari_from_db(my_db, id_usuari)
-    #         if usuari.tipus == ESTUDIANT:
-    #             resposta = RespostaExamen(id_resposta, id_document, usuari, pdf, nota)
-    #         if usuari.tipus == PROFESSOR:
-    #             resposta = avaluacioExamen(id_resposta, id_document, usuari, pdf, nota)
-    #         return resposta
-    # #
-    # @staticmethod
-    # def build_resposta_alumne_from_db(my_db, id_document, id_resposta):
-    #     resposta_importar = my_db.importar_resposta( id_resposta)
-    #     (id_resposta, time, id_usuari, pdf, nota) = resposta_importar[0]
-    #     usuari = Factoria.build_usuari_from_db(my_db, id_usuari)
-    #     return RespostaExamen(id_resposta, id_document, usuari, pdf, nota)
-
     @staticmethod
     def build_id_resposta_alumne_from_db(my_db, id_resposta):
         resposta_importar = my_db.importar_resposta(id_resposta)
@@ -214,23 +192,6 @@ class Encriptador:
         h = SHA.new(self.dada)
         verifier = PKCS1_PSS.new(public_key)
         return verifier.verify(h, self.sign)
-
-    # @staticmethod
-    # def crear_json(dada_json):
-    #     encript_json = json.loads(dada_json)
-    #     clau = encript_json['clau']
-    #     dada = encript_json['dada']
-    #     dada_encriptat = Encriptador()
-    #     dada_encriptat.dada = dada
-    #     dada_encriptat.clau = clau
-    #     return dada_encriptat
-
-    # def get_dada(self, private_key):
-    #     desencriptador = PKCS1_OAEP.new(private_key)
-    #     clau_simetrica = desencriptador.decrypt(self.clau)
-    #     key_simetric = Fernet(clau_simetrica)
-    #     dada_desencriptada = key_simetric.decrypt(self.dada).decode()
-    #     return dada_desencriptada
 
     def to_dict(self):
         return collections.OrderedDict({
