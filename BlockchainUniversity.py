@@ -114,12 +114,8 @@ class Factoria:
     @staticmethod
     def build_bloc_from_db(my_db, id_bloc):
         bloc_db = my_db.importar_bloc(id_bloc)
-        (id_bloc, data_transaccio, id_emissor, id_receptor, id_document, transaccio_encriptat, hash_bloc) = bloc_db
-        uni = Factoria.build_universitat_from_db(my_db)
-        transaccio_json = Encriptador.crear_json(transaccio_encriptat)
-        transaccio = Transaccio.crear_json(transaccio_json.desencriptar(uni.private_key))
-        bloc = Bloc(transaccio, "asfassdfsadfsa", uni.public_key)
-        bloc.id_bloc = id_bloc
+        (id_bloc, data_bloc, transaccio, hash_anterior) = bloc_db
+        bloc = Bloc.crear_msql(id_bloc, data_bloc, transaccio, hash_anterior)
         return bloc
 
     @staticmethod

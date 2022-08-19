@@ -63,7 +63,6 @@ def echo():
     print("hola")
     ws = simple_websocket.Server(request.environ)
     try:
-        while True:
             data = ws.receive()
             print(data)
     except simple_websocket.ConnectionClosed:

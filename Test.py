@@ -1,18 +1,15 @@
-import base64
 import unittest
-import socket
-import json
-from ast import literal_eval
+
 from Crypto.PublicKey import RSA
+
 from BlockchainUniversity import Estudiant, Transaccio, Professor, Examen, Factoria, RespostaExamen, AvaluacioExamen, \
     Bloc, Universitat, Encriptador, BlockchainUniversity, Pdf, Assignatura
-from Connexions import Connexions
 from CreateMysql import MySqlBloc
 
 UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
 PROFESSOR = 'professor'
-SCHEMA = 'blockchainuniversity'
+SCHEMA = 'blockchainuniversity2'
 
 
 class CreacioTaulaTest:
@@ -664,63 +661,63 @@ class TestInicial(unittest.TestCase):
         self.test = CreacioTaulaTest(self.my_db, self.schema)
         self.test.crear_schema_inicial()
 
-
-class TestConexions(unittest.TestCase):
-
-    def setUp(self):
-        self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.schema = SCHEMA
-
-    def test_conexio_servidor(self):
-        HOST = ''  # Symbolic name meaning all available interfaces
-        PORT = 50007  # Arbitrary non-privileged port
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind((HOST, PORT))
-            s.listen(1)
-            conn, addr = s.accept()
-            with conn:
-                print('Connected by', addr)
-                while True:
-                    data = conn.recv(1024)
-                    if not data: break
-                    conn.sendall(data)
-                    print(data)
-        self.test_conexio_servidor()
-
-    def test_conexio_client(self):
-        HOST = '192.168.50.26'  # The remote host
-        PORT = 50007  # The same port as used by the server
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((HOST, PORT))
-            s.sendall(b'Hello, world udg')
-            data = s.recv(1024)
-        print('Received', repr(data))
-
-
-    def test_connexio_client2(self):
-        bloc = Factoria.build_ultim_bloc_from_db(self.my_db)
-        HOST, PORT = "192.168.50.28", 50007
-        data = Factoria.to_json(bloc)
-
-        # Create a socket (SOCK_STREAM means a TCP socket)
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        try:
-            # Connect to server and send data
-            sock.connect((HOST, PORT))
-            print (bytes(data, 'UTF-8'))
-            sock.send(bytes(data, 'UTF-8'))
-            #
-        #     print("esperant missatge")
-        #     received = sock.recv(1024).decode('utf8')
-        #     # if received == data:
-        #     print(received)
-        #
-        #     print("missatge rebut")
-        # #
-        finally:
-            print("s'ha acabat ")
-            sock.close()
-
-        # print("Sent: {}".format(data))
-        # print("Received: {}".format(received))
+#
+# class TestConexions(unittest.TestCase):
+#
+#     def setUp(self):
+#         self.my_db = MySqlBloc('localhost', 'root', 'root')
+#         self.schema = SCHEMA
+#
+#     def test_conexio_servidor(self):
+#         HOST = ''  # Symbolic name meaning all available interfaces
+#         PORT = 50007  # Arbitrary non-privileged port
+#         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+#             s.bind((HOST, PORT))
+#             s.listen(1)
+#             conn, addr = s.accept()
+#             with conn:
+#                 print('Connected by', addr)
+#                 while True:
+#                     data = conn.recv(1024)
+#                     if not data: break
+#                     conn.sendall(data)
+#                     print(data)
+#         self.test_conexio_servidor()
+#
+#     def test_conexio_client(self):
+#         HOST = '192.168.50.26'  # The remote host
+#         PORT = 50007  # The same port as used by the server
+#         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+#             s.connect((HOST, PORT))
+#             s.sendall(b'Hello, world udg')
+#             data = s.recv(1024)
+#         print('Received', repr(data))
+#
+#
+#     def test_connexio_client2(self):
+#         bloc = Factoria.build_ultim_bloc_from_db(self.my_db)
+#         HOST, PORT = "192.168.50.28", 50007
+#         data = Factoria.to_json(bloc)
+#
+#         # Create a socket (SOCK_STREAM means a TCP socket)
+#         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#
+#         try:
+#             # Connect to server and send data
+#             sock.connect((HOST, PORT))
+#             print (bytes(data, 'UTF-8'))
+#             sock.send(bytes(data, 'UTF-8'))
+#             #
+#         #     print("esperant missatge")
+#         #     received = sock.recv(1024).decode('utf8')
+#         #     # if received == data:
+#         #     print(received)
+#         #
+#         #     print("missatge rebut")
+#         # #
+#         finally:
+#             print("s'ha acabat ")
+#             sock.close()
+#
+#         # print("Sent: {}".format(data))
+#         # print("Received: {}".format(received))
