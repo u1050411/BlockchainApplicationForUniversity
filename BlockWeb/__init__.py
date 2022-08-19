@@ -4,11 +4,14 @@ import secrets
 from datetime import datetime
 from os.path import abspath, dirname, join
 
+import simple_websocket
 from flask import Flask, request, render_template, session, redirect, url_for
+from flask_sock import Sock
 
 from BlockWeb import auth
 from BlockchainUniversity import Factoria, Examen, Transaccio, BlockchainUniversity, RespostaExamen, AvaluacioExamen
 from CreateMysql import MySqlBloc
+
 
 app = Flask(__name__)
 my_db = MySqlBloc('localhost', 'Pau', 'UsuariUdg2022', 'blockchainuniversity')
@@ -16,6 +19,8 @@ main = BlockchainUniversity(my_db)
 app.secret_key = secrets.token_urlsafe()
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
+# Configuració de la conexio
+sock = Sock(app)
 # Definim la carpeta on guardarem els pdf
 BASE_DIR = dirname(dirname(abspath(__file__)))
 PATH_RELATIU = join('static', 'fitxers')
@@ -51,6 +56,19 @@ def inici():  # put application's code here
             adreça = '/professor'
 
     return redirect(adreça)
+
+
+@app.route('/echo', websocket=True)
+def echo():
+    print("hola")
+    ws = simple_websocket.Server(request.environ)
+    try:
+        while True:
+            data = ws.receive()
+            print(data)
+    except simple_websocket.ConnectionClosed:
+        pass
+    return render_template('block_enviat.html', bloc=data)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -302,4 +320,4 @@ def enviar_examen():  # put application's code here
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5005)
