@@ -31,7 +31,7 @@ def alumne():  # put application's code here
 @app.route('/triar_examens')
 @Login.es_usuari(tipus=ESTUDIANT)
 def triar_examens():
-    user = Factoria.build_usuari_from_db(my_db, session['pas'])
+    user = Factoria.build_usuari_from_db(my_db, session['id'])
     llista = user.importar_examens(my_db)
     llista_examens = list()
     for x in llista:
@@ -46,7 +46,7 @@ def triar_examens():
 @Login.es_usuari(tipus=ESTUDIANT)
 def pujar_pdf():
     missatge = "L'hora limit per entregar l'examen es : "
-    user = Factoria.build_usuari_from_db(my_db, session['pas'])
+    user = Factoria.build_usuari_from_db(my_db, session['id'])
     nom = user.nom + " " + user.cognom
     tipus = session['tipus']
     if request.method == 'POST':
@@ -69,7 +69,7 @@ def pujar_pdf():
 @app.route('/entregar_resposta', methods=["GET", "POST"])
 @Login.es_usuari(tipus=ESTUDIANT)
 def entregar_resposta():
-    user = Factoria.build_usuari_from_db(my_db, session['pas'])
+    user = Factoria.build_usuari_from_db(my_db, session['id'])
     id_examen = session['examen']
     examen = Factoria.build_examen_from_db(my_db, id_examen, True)
     profe = examen.usuari
@@ -120,7 +120,7 @@ def enviar_examen():  # put application's code here
         datai = request.form.get('data_inici')
         dataf = request.form.get('data_entrega')
         id_examen = my_db.seguent_id_examen()
-        profe = Factoria.build_usuari_from_db(my_db, session['pas'])
+        profe = Factoria.build_usuari_from_db(my_db, session['id'])
         assignatura = profe.get_assignatura(my_db)
         examen = Examen(id_examen, profe, pdf.pdf, datai, dataf, datetime.today(), assignatura)
         for val in request.form.getlist("select_usuaris"):

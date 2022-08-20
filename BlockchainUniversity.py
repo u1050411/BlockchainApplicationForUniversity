@@ -690,3 +690,18 @@ class BlockchainUniversity:
                 self.my_db.esborrar_transaccio(transaccio.id_transaccio)
                 return self.minat()
 
+    #Mirem que la cadena sigui correcta
+    def comprovarCadena(self):
+        ultim_bloc = self.my_db.id_ultim_bloc()
+        bloc = Factoria.build_bloc_from_db(self.my_db, ultim_bloc)
+        ok = True
+        while ok and bloc.id > 1:
+            bloc_anterior = Factoria.build_bloc_from_db(self.my_db, (bloc.id - 1))
+            if bloc_anterior:
+                ok = (bloc.hash_bloc_anterior.decode() == bloc_anterior.calcular_hash())
+            else:
+                ok = False
+            bloc = bloc_anterior
+        return bloc.id == 1
+
+

@@ -680,9 +680,7 @@ class TestBlockchainUniversity(unittest.TestCase):
 
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.schema = SCHEMA
-        self.test = CreacioTaulaTest(self.my_db, self.schema)
-        self.test.crear_schema_dades()
+        self.my_db.afegir_schema(SCHEMA)
 
     def test_crear_genesis_bloc(self):
         if self.my_db.ultim_bloc() is None:
@@ -694,6 +692,10 @@ class TestBlockchainUniversity(unittest.TestCase):
         self.test_crear_genesis_bloc()
         bloc_chain = BlockchainUniversity(self.my_db)
         bloc_chain.minat()
+
+    def test_comprovar_cadena(self):
+        main = BlockchainUniversity(self.my_db)
+        self.assertEqual(main.comprovarCadena(), True)
 
 
 class TestInicial(unittest.TestCase):
