@@ -295,6 +295,10 @@ class MySqlBloc:
         sql = f'select * from universitat LIMIT 1'
         return self.importar_sql(sql)
 
+    def importar_universitats(self):
+        sql = f'select * from universitat'
+        return self.importar_llista_sql(sql)
+
     def importar_assignatura(self, id_assign):
         sql = f'select * from assignatura where `id_assignatura` = {id_assign} LIMIT 1'
         return self.importar_sql(sql)

@@ -19,7 +19,7 @@ def echo():
     ws = simple_websocket.Server(request.environ)
     try:
         print("##########1###########")
-        data = ws.receive()
+        data = ws.receive(15)
         data_json = json.loads(data)
         paquet = Paquet.crear_json(data_json)
         paquet.ws = ws
@@ -37,34 +37,27 @@ def proves():
     my_db = MySqlBloc('localhost', 'root', 'root', 'blockchainuniversity')
     bloc = Factoria.build_bloc_from_db(my_db, my_db.id_ultim_bloc())
     id_ultim_bloc = my_db.id_ultim_bloc()
-    try:
-        print("comenzar")
-        paquet = Paquet(1,id_ultim_bloc, id_ultim_bloc, bloc, ws)
-        resultat = paquet.repartiment()
-        print (resultat)
+    Paquet.confirmar_enviament(bloc.id,bloc.hash_bloc_anterior)
 
-    except (KeyboardInterrupt, EOFError, simple_websocket.ConnectionClosed):
-        ws.close()
-        return render_template("login.html")
 
-# def confirmar_enviament(id_bloc, hash):
-#     llista =
-#     confirmacions = list
-#     paquet = Paquet(id_bloc, id_bloc, hash, id_bloc)
-#
-#     paquet.repartiment()
+
+
+
+
+
+
 
 
 
 
 class Paquet:
 
-    def __init__(self, dada=None, num_blocs=None, hash=None, ws=None):
+    def __init__(self, dada=None, num_blocs=None, hash=None, ip=None):
         self.pas = 1
         self.num_blocs = num_blocs
         self.dada = dada
         self.hash = hash
-        self.ws = ws
+        self.ws = simple_websocket.Client(f'ws://"+{ip}+"/echo')
 
     def to_dict(self):
         return collections.OrderedDict({
@@ -83,7 +76,7 @@ class Paquet:
 
     def resposta(self):
         self.ws.send(Factoria.to_json(self))
-        data = self.ws.receive()
+        data = self.ws.receive(15)
         data_json = json.loads(data)
         paquet = Paquet.crear_json(data_json)
         self.pas = paquet.pas
@@ -119,3 +112,31 @@ class Paquet:
 
         except (KeyboardInterrupt, EOFError, simple_websocket.ConnectionClosed):
             self.ws.close()
+
+    @classmethod
+    def confirmar_enviament(self, id_bloc, hash):
+        llista = my_db.importar_universitats()
+        confirmacions = list
+
+        for universitat in llista():
+            ip_universitat = universitat.ip
+            paquet = Paquet(id_bloc, id_bloc, hash, id_bloc, ip_universitat)
+            paquet.repartiment()
+            confirmacions.append([universitat, paquet])
+        if confirmacions:
+            self.qui_es_mes_gran(confirmacions)
+
+    # Retorna qui es la cadena mes llarga correcte
+    def qui_es_mes_gran(self, confirmacions):
+        llista = list
+        for x in confirmacions:
+            if x.dada:
+                x = llista.pop(x.num_blocs)
+                if x is None:
+                    x = 1
+                else:
+                    x = x + 1
+            llista.insert(x.num_blocs, x)
+        llista.sort(reverse=True)
+        print(llista)
+
