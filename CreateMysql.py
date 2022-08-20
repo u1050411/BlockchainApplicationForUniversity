@@ -138,6 +138,7 @@ class MySqlBloc:
                 "CREATE TABLE if not exists `Universitat` ("
                 "`id` INT NOT NULL AUTO_INCREMENT,"
                 "`nom` TEXT NOT NULL,"
+                "`ip` TEXT NOT NULL,"
                 "`private_key` longtext NULL,"
                 "`public_key` longtext NULL,"
                 "PRIMARY KEY (`id`))",
@@ -426,8 +427,9 @@ class MySqlBloc:
             private = None
         public = universitat.public_key.exportKey('PEM').decode('ascii')
         nom = universitat.nom
-        sql = "INSERT INTO universitat(id, nom, public_key, private_key) VALUES (%s, %s, %s, %s)"
-        dades = (id, nom, public, private)
+        ip = universitat.ip
+        sql = "INSERT INTO universitat(id, nom, ip, public_key, private_key) VALUES (%s, %s, %s, %s, %s)"
+        dades = (id, nom, ip, public, private)
         self.exportar_sql(sql, dades)
 
     def guardar_assignatura(self, assignatura):

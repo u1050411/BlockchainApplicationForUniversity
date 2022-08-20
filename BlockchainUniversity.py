@@ -45,7 +45,7 @@ class Factoria:
     def build_universitat_from_db(my_db):
         universiat_db = my_db.importar_universitat()
         if universiat_db is not None:
-            id_universitat, nom, private_key_str, public_key_str = universiat_db
+            id_universitat, nom, id, private_key_str, public_key_str = universiat_db
             public_key = RSA.importKey(public_key_str)
             private_key = RSA.importKey(private_key_str)
             return Universitat(nom, private_key, public_key, id_universitat)
@@ -524,9 +524,10 @@ class AvaluacioExamen(Document):
 
 class Universitat:
 
-    def __init__(self, nom, private_key, public_key, id):
+    def __init__(self, nom=None, private_key=None, public_key=None, id=None, ip=None):
         self.id = id
         self.nom = nom
+        self.ip = ip
         self._private_key = private_key  # Creació de la clau privada
         self._public_key = public_key  # Creació de la clau pública que és part de la clau privada
 
