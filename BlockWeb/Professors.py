@@ -17,11 +17,11 @@ def professor():  # put application's code here
 @app.route('/seleccionar_alumnes')
 @Login.es_usuari(tipus=PROFESSOR)
 def seleccionar_alumnes():
-    user = Factoria.build_usuari_from_db(my_db, session['id_paquet'])
+    user = Factoria.build_usuari_from_db(my_db, session['id'])
     llista_alumnes = user.llista_alumnes(my_db)
     llista_dades = list()
     for x in llista_alumnes:
-        valors = [x.id_paquet, x.nif, x.nom, x.cognom]
+        valors = [x.id, x.nif, x.nom, x.cognom]
         llista_dades.append(valors)
     llista_fitxers = user.llista_pdf(my_db)
     llista_pdf = list()
@@ -38,13 +38,13 @@ def seleccionar_alumnes():
 @app.route('/triar_resposta')
 @Login.es_usuari(tipus=PROFESSOR)
 def triar_resposta():
-    user = Factoria.build_usuari_from_db(my_db, session['id_paquet'])
+    user = Factoria.build_usuari_from_db(my_db, session['id'])
     llista = user.importar_examens(my_db)
     llista_examens = list()
     for x in llista:
         if x.nota is None or x.nota == 0:
             nom_assignatura = Factoria.build_examen_from_db(my_db, x.examen.id_document).assignatura.nom
-            estudiant = Factoria.build_usuari_from_db(my_db, x.usuari.id_paquet)
+            estudiant = Factoria.build_usuari_from_db(my_db, x.usuari.id)
             valors = [x.id_document, nom_assignatura, estudiant.nom, estudiant.cognom, x.data_creacio]
             llista_examens.append(valors)
     return render_template('triar_resposta.html', llista=llista_examens, tipus=session['tipus'])
@@ -62,7 +62,7 @@ def veure_resposta():
     nom_total = join(PATH_TOTAL, 'veure_resposta.pdf')
     nom_relatiu = join(PATH_RELATIU, 'veure_resposta.pdf')
     Factoria.guardar_fitxer(nom_total, pdf)
-    estudiant = Factoria.build_usuari_from_db(my_db, resposta.usuari.id_paquet)
+    estudiant = Factoria.build_usuari_from_db(my_db, resposta.usuari.id)
     missatge = "Aquest es la resposta del alumne" + " " + resposta.usuari.nom + " " + resposta.usuari.cognom
     return render_template('veure_resposta.html', fitxer=nom_relatiu, missatge=missatge, opcio=1)
 
@@ -71,7 +71,7 @@ def veure_resposta():
 @Login.es_usuari(tipus=PROFESSOR)
 def pujar_avaluacio():
     missatge = "Aquesta es la Resposta del alumne : "
-    user = Factoria.build_usuari_from_db(my_db, session['id_paquet'])
+    user = Factoria.build_usuari_from_db(my_db, session['id'])
     nom = user.nom + " " + user.cognom
     tipus = session['tipus']
     if request.method == 'POST':
@@ -95,7 +95,7 @@ def pujar_avaluacio():
 @Login.es_usuari(tipus=PROFESSOR)
 def entregar_avaluacio():
     nota = request.form.get('nota')
-    profe = Factoria.build_usuari_from_db(my_db, session['id_paquet'])
+    profe = Factoria.build_usuari_from_db(my_db, session['id'])
     id_resposta = session['id_resposta']
     resposta = Factoria.build_id_resposta_alumne_from_db(my_db, id_resposta)
     nom_fitxer_avaluacio = join(PATH_TOTAL, 'avaluacio.pdf')

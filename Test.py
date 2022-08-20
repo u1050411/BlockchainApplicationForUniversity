@@ -1,16 +1,11 @@
-import random
-import unittest
-import ast
 import json
+import unittest
 
-from Crypto.Cipher import PKCS1_OAEP
 from Crypto.PublicKey import RSA
 
 from BlockchainUniversity import Estudiant, Transaccio, Professor, Examen, Factoria, RespostaExamen, AvaluacioExamen, \
     Bloc, Universitat, Encriptador, BlockchainUniversity, Pdf, Assignatura
 from CreateMysql import MySqlBloc
-
-
 
 UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
@@ -91,6 +86,7 @@ class CreacioTaulaTest:
             sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES("{id_usuari}", "{private_key}")'
             self.my_db.exportar_sql(sql)
             public_key = key.publickey()
+            usuari = None
             if tipus == ESTUDIANT:
                 usuari = Estudiant(id_usuari, nif, nom, cognom, public_key, contrasenya, email)
             elif tipus == PROFESSOR:
@@ -658,6 +654,7 @@ class TestBloc(unittest.TestCase):
         bloc = Factoria.build_bloc_from_db(self.my_db, 1)
         bloc_json = Factoria.to_json(bloc)
         bloc2 = Bloc.crear_json(bloc_json)
+        self.assertEqual(bloc.id, bloc2.id)
 
 
 class TestBlockchainUniversity(unittest.TestCase):
