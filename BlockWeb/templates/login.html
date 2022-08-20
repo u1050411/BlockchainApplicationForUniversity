@@ -1,5 +1,9 @@
 {% extends "layout.html" %}
-
+{% block navegacio1 %}
+     <ul>
+        <li><a href="{{ url_for('proves') }}">Enviar bloc</a></li>
+    </ul>
+{% endblock %}
 {% block content %}
 <form action="#" method="POST">
     <div id="login-box">
