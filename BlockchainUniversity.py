@@ -48,7 +48,7 @@ class Factoria:
             id_universitat, nom, private_key_str, public_key_str = universiat_db
             public_key = RSA.importKey(public_key_str)
             private_key = RSA.importKey(private_key_str)
-            return Universitat(nom, private_key, public_key)
+            return Universitat(nom, private_key, public_key, id_universitat)
         return None
 
     @staticmethod
@@ -526,7 +526,8 @@ class AvaluacioExamen(Document):
 
 class Universitat:
 
-    def __init__(self, nom, private_key, public_key):
+    def __init__(self, nom, private_key, public_key, id):
+        self.id = id
         self.nom = nom
         self._private_key = private_key  # Creació de la clau privada
         self._public_key = public_key  # Creació de la clau pública que és part de la clau privada
@@ -606,7 +607,7 @@ class Bloc:
     def crear_json(cls, bloc_json):
         new_bloc = cls()
         new_bloc.id = bloc_json['id']
-        new_bloc.data_bloc = ['data_bloc']
+        new_bloc.data_bloc = bloc_json['data_bloc']
         new_bloc.transaccio = bloc_json['transaccions']
         new_bloc.hash_bloc_anterior = bloc_json['hash_bloc_anterior']
         return new_bloc

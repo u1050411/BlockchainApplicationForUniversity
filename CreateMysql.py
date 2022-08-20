@@ -419,11 +419,15 @@ class MySqlBloc:
         self.exportar_sql(sql, dades)
 
     def guardar_universitat(self, universitat):
-        private = universitat.private_key.exportKey('PEM').decode('ascii')
+        id = universitat.id
+        if id == 1:
+            private = universitat.private_key.exportKey('PEM').decode('ascii')
+        else:
+            private = None
         public = universitat.public_key.exportKey('PEM').decode('ascii')
         nom = universitat.nom
-        sql = "INSERT INTO universitat(nom, public_key, private_key) VALUES (%s, %s, %s)"
-        dades = (nom, public, private)
+        sql = "INSERT INTO universitat(id, nom, public_key, private_key) VALUES (%s, %s, %s, %s)"
+        dades = (id, nom, public, private)
         self.exportar_sql(sql, dades)
 
     def guardar_assignatura(self, assignatura):

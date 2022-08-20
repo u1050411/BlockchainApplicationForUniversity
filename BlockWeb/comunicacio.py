@@ -6,6 +6,12 @@ from flask import json, request
 from CreateMysql import MySqlBloc
 
 
+class Comunicacio:
+
+    def __init__(self):
+        se
+
+
 def send():
     ws = simple_websocket.Client('ws://192.168.50.28:5005/echo')
     my_db = MySqlBloc('localhost', 'root', 'root', 'blockchainuniversity')

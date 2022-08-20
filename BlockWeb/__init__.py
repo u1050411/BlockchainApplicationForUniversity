@@ -67,7 +67,7 @@ def echo():
             print(data)
     except simple_websocket.ConnectionClosed:
         pass
-    return render_template('block_enviat.html', bloc=data)
+    return render_template("login.html")
 
 
 @app.route('/login', methods=['GET', 'POST'])

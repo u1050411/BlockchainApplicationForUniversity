@@ -1,15 +1,21 @@
+import random
 import unittest
+import ast
+import json
 
+from Crypto.Cipher import PKCS1_OAEP
 from Crypto.PublicKey import RSA
 
 from BlockchainUniversity import Estudiant, Transaccio, Professor, Examen, Factoria, RespostaExamen, AvaluacioExamen, \
     Bloc, Universitat, Encriptador, BlockchainUniversity, Pdf, Assignatura
 from CreateMysql import MySqlBloc
 
+
+
 UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
 PROFESSOR = 'professor'
-SCHEMA = 'blockchainuniversity2'
+SCHEMA = 'blockchainuniversity'
 
 
 class CreacioTaulaTest:
@@ -46,10 +52,27 @@ class CreacioTaulaTest:
         self.crear_genesis_bloc()
 
     def crear_universitat(self):
-        private_key = RSA.generate(1024)
-        public_key = private_key.publickey()
-        uni = Universitat("Universitat de Girona", private_key, public_key)
-        self.my_db.guardar_universitat(uni)
+        univ = [{"id": 1, "nom": "Universitat de Girona",
+          "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIICWwIBAAKBgQDWYgDCSOewWQPyr673t9bsMIiLjykjryY8qxz4QHHv+b5l2PeB\n5aZjziAcDEWrcaFnfgH7TrB09QRwdRCs7GWISM3+oTcdQ6nAw/SpWK1hRbeI/y+P\nhtOJBe2Z5bzIXjNU4BMCGtpvI8jKGR7cVEtOhlebl01ehSNO2JzEsAOQVwIDAQAB\nAoGAC1pyLUWMkLXWHUKHIuC5ql54MU9OlpUObg4Uqj9JwEXa6HWaEEKVpIctlZM/\nFwNmPmgip5aVGN7U8lqMLtDLRMZNNuS+r2cIqeCLlTPyKSmnw+/IkpBfRAkGHaUK\n7on/+cxB1ASy8yNqAPQxmAH4N1mdn9TW7aGQSyZsSxkN32ECQQDmcHqT+ss5CpGJ\nVWRpFy2hL25mOng+Rq77IsFOZeL41Fqfc+K2P297gl1SS0j3viBCjkDtOfmuQ8Uk\n3CZcNQVnAkEA7imVvGz7Dpbl+EnaSDLJSKR6mmUgvUL85hSRO4IAtpsmJ3G9aUv+\nGkQZxYLV75IBFVc241zl32HZ0OBBNL7XkQJAPaKOFrB41Lvv61Sss7MgYEFofO1c\npgOP39oO7CIyUC20Q3vigq566gUXYuCCFsmCpWqZERp1nte/jjlYBUelNwJAE0zd\nbJKsWcdSxac+gEFVXISvxtlRKOVH12FtT5Q+eI3kLqgiAGl/IyPHruDmc26ylccm\nlJBPtKWaYDn8LskUcQJAc0GeTF3/EiClAMrNTnCbM7FKr7we+fGtnyuQxbLABSkk\nsb2OnhzJLzm+BkOU9AoeZoxGsoa5iBrMapkYr517yw==\n-----END RSA PRIVATE KEY-----",
+          "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDWYgDCSOewWQPyr673t9bsMIiL\njykjryY8qxz4QHHv+b5l2PeB5aZjziAcDEWrcaFnfgH7TrB09QRwdRCs7GWISM3+\noTcdQ6nAw/SpWK1hRbeI/y+PhtOJBe2Z5bzIXjNU4BMCGtpvI8jKGR7cVEtOhleb\nl01ehSNO2JzEsAOQVwIDAQAB\n-----END PUBLIC KEY-----"},
+         {"id": 2, "nom": "Universitat Politecnica Catalunya",
+          "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIICWwIBAAKBgQCchauIJX8B/mlEc+HjYTz9TgymwPJ589ntbaoO44AIES7l1CT5\nL1mE44f5W8VBtIK6xE+y5E0mkNlnKt02nsHuxwjYj1olsZ66mTqjtrdizAPv/otA\nQtU93fX9sQLH0QoPRz554CmyjapbtobaYI6xcqRwxIu/FG04TJ0KRt4EZQIDAQAB\nAoGABFVFzReVcm8u59u50BGNkck629TxZ+nilkpkz+1OMPfIAuNo5wZMcqIMtINs\n+XQvWE9KxSRbDgT3JJfqfT9PSN6K4NxkjraGbj3Nsv9m1C1LxJNNxPhUoukv/5ZR\no7zJf+bmX/6UsQvewNFS/gVtLIvtEQbpvDFrTCxIv07nfUMCQQC5l2nApGbeXnOS\n8li4iwkwObr1AsLKeSEVG6aY0b4lxgm1dvV0AQlwpiPVw16hSdXoonMZk2k2U8/H\nE00XyLhDAkEA1+cN6tQuHT0JbdSz35CMjoUgx3L50pt2Bxr/EraKMcIY5n/zlpqj\naxLhYtfsLInYhP8wialRX3ZTF0dWe6/6NwJALI8tBeKzDBrTVum24YAIUbrap27l\nQ+W3SrEb278oDzuwIxCPuC1zjcdl/THuK31lzXgLeI2LCk8vKNX6gYZgrwJAQg1M\nMrWrTgKoadOTHCiK9+c+ugYw6//nwhC+TKlP6h0ppQssKL0ylcV28tiARrf9Z+Ly\npIsKfBwlG5AVo02ZTQJAWLk056zopXHRjy2wVSk+mrxrX9fmSGQndKo32x0Gq9dG\njzCvS/H2iyojw9GzB4jSxLVMTVYXcvlj4RSWMAXA1A==\n-----END RSA PRIVATE KEY-----",
+          "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCchauIJX8B/mlEc+HjYTz9Tgym\nwPJ589ntbaoO44AIES7l1CT5L1mE44f5W8VBtIK6xE+y5E0mkNlnKt02nsHuxwjY\nj1olsZ66mTqjtrdizAPv/otAQtU93fX9sQLH0QoPRz554CmyjapbtobaYI6xcqRw\nxIu/FG04TJ0KRt4EZQIDAQAB\n-----END PUBLIC KEY-----"},
+         {"id": 3, "nom": "Universitat Rovira i Virgili",
+          "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIICXAIBAAKBgQCWY6jFMVyA2FolRbB91q1EeUVwxX6Hma4sMXlyqgsLHJ5QU7Ke\nAXTU7IMzsOpTfn+xE6l86w0R+5ZWu1BsC1z6XxE8ZgWbMSzR9Bs6aMGd4rAHca4w\nJ8nMUWyCvjoehm+/WYtw3e8d5YvkQY9PMUCe4Vpfg2lRReDO/qwScS9+uwIDAQAB\nAoGAAxN5xcLLNhV2zpFc2U4VUDO80GAxxNtHXT8L0WUaAbmtoU389s9n0N0fl+ST\n/m41dW1GB7iVFVuUiSSesf8PgUV+oobVcFfKt2AzoGBQYKKDh1D4BovB+hQihzFu\n+no4XOmGk7KPWUhK2mThJ4OvPwg3HYUt7iKVlgQSMUoAMMkCQQDDSc3f4uemWaHg\nkNdK7jS4by9JbJqFZVj0FcFoUwnnqnk6GLJuNvhxEKhG1JyZ8Xi/xfZIuur7Ch0c\nG8hDVFyJAkEAxSSG+X15uo6YpmYWW0VWFqW1+TYfjwEUhmC3/DU0qnNSLOn218qC\nhxNPILlJG+P4r9OsfbjwRJb8biAemaoYIwJBAIJUCfIlgwVQgijVYOjfyg1gHkW5\nFfJ6bYAP2NBfwpd5/IdaHhJR20HRpQwILi7KqRQK8E8fd1xsJnswy1irv0kCQCvN\nFtQd5crmXdIywmra9+qmPM03EkHyqn3ExXwa0i3A25QxE3AUhXW/e4g4wp6YwytF\nq4Bvc6q5pTJOnp3jpeMCQDP2LV5cfP9WuPzMW5Fkc1nScFVme35PaVkgUQ4zO02B\nWgCMViwfHSnIrrtSICT1MoLHH4UqdtHavHAIcwZlGfM=\n-----END RSA PRIVATE KEY-----",
+          "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCWY6jFMVyA2FolRbB91q1EeUVw\nxX6Hma4sMXlyqgsLHJ5QU7KeAXTU7IMzsOpTfn+xE6l86w0R+5ZWu1BsC1z6XxE8\nZgWbMSzR9Bs6aMGd4rAHca4wJ8nMUWyCvjoehm+/WYtw3e8d5YvkQY9PMUCe4Vpf\ng2lRReDO/qwScS9+uwIDAQAB\n-----END PUBLIC KEY-----"}]
+
+        for y in univ:
+            x = json.dumps(y, indent=4, sort_keys=True, default=str)
+            id = json.loads(x)['id']
+            nom = json.loads(x)['nom']
+            if id == 1:
+                private = RSA.importKey(json.loads(x)['private_key'])
+            else:
+                private = None
+            public = RSA.importKey(json.loads(x)['public_key'])
+            uni = Universitat(nom, private, public, id)
+            self.my_db.guardar_universitat(uni)
 
     def crear_usuaris(self):
         usuaris = [['u1050411', '40373747T', ESTUDIANT, 'Pau', 'de Jesus Bras', 'password1', 'u1050411@campus.udg.edu'],
@@ -64,7 +87,7 @@ class CreacioTaulaTest:
                     'u1050411@campus.udg.edu']]
 
         for id_usuari, nif, tipus, nom, cognom, contrasenya, email in usuaris:
-            key = RSA.generate(1024)
+            key = RSA.generate(1024, randfunc=None, e=65537)
             private_key = key.exportKey('PEM').decode('ascii')
             sql = f'INSERT INTO private_key (`id_usuari`, `private_key`) VALUES("{id_usuari}", "{private_key}")'
             self.my_db.exportar_sql(sql)
@@ -195,7 +218,7 @@ class TestUsuaris(unittest.TestCase):
         self.test.crear_schema_dades()
 
     def test_creation(self):
-        public_key = RSA.generate(1024).publickey()
+        public_key = RSA.generate(1024, randfunc=None, e=65537).publickey()
         estudiant = Estudiant('u1050406', '40332505G', 'Marta', "Rodriguez", public_key, "password7")
         self.assertEqual(estudiant.id, 'u1050406')
         self.assertEqual(estudiant.nif, '40332505G')
@@ -325,7 +348,7 @@ class TestMysql(unittest.TestCase):
         cognom = 'Gutierrez'
         password = 'password9'
         email = 'u1050704@campus.udg.edu'
-        key = RSA.generate(1024)
+        key = RSA.generate(1024, randfunc=None, e=65537)
         public_key = key.publickey()
         estudiant = Estudiant(id_usuari, nif, nom, cognom, public_key, password)
         self.my_db.guardar_usuari(estudiant)
@@ -335,7 +358,7 @@ class TestMysql(unittest.TestCase):
     def test_clau(self):
         self.test.crear_schema_dades()
         id_usuari = 1050702
-        privat_key = RSA.generate(1024)
+        privat_key = RSA.generate(1024, randfunc=None, e=65537)
         public_key = privat_key.publickey()
         self.my_db.guardar_clau_privada(id_usuari, privat_key)
         privat_guardat = self.my_db.clau_privada(id_usuari)
