@@ -3,6 +3,7 @@ import unittest
 
 from Crypto.PublicKey import RSA
 
+from BlockWeb.Comunicacio import Paquet
 from BlockchainUniversity import Estudiant, Transaccio, Professor, Examen, Factoria, RespostaExamen, AvaluacioExamen, \
     Bloc, Universitat, Encriptador, BlockchainUniversity, Pdf, Assignatura
 from CreateMysql import MySqlBloc
@@ -657,6 +658,23 @@ class TestBloc(unittest.TestCase):
         self.assertEqual(bloc.id, bloc2.id)
 
 
+class TestPaquet(unittest.TestCase):
+
+    def setUp(self):
+        self.my_db = MySqlBloc('localhost', 'root', 'root')
+        self.schema = SCHEMA
+        self.test = CreacioTaulaTest(self.my_db, self.schema)
+        self.test.crear_schema_dades()
+
+    def test_to_json(self):
+        bloc = Factoria.build_bloc_from_db(self.my_db, self.my_db.id_ultim_bloc())
+        id_ultim_bloc = self.my_db.id_ultim_bloc()
+        paquet = Paquet(1, id_ultim_bloc, bloc, None)
+        paquet_json = Factoria.to_json(paquet)
+        paquet2 = Paquet.crear_json(paquet_json)
+        self.assertEqual(paquet.pas, paquet2.pas)
+
+
 class TestBlockchainUniversity(unittest.TestCase):
 
     def setUp(self):
@@ -719,9 +737,9 @@ class TestInicial(unittest.TestCase):
 #
 #
 #     def test_connexio_client2(self):
-#         bloc = Factoria.build_ultim_bloc_from_db(self.my_db)
+#         hash = Factoria.build_ultim_bloc_from_db(self.my_db)
 #         HOST, PORT = "192.168.50.28", 50007
-#         data = Factoria.to_json(bloc)
+#         data = Factoria.to_json(hash)
 #
 #         # Create a socket (SOCK_STREAM means a TCP socket)
 #         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

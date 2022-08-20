@@ -28,8 +28,8 @@ def es_usuari(tipus):
 #     ws = simple_websocket.Server(request.environ)
 #     try:
 #         data = json.loads(ws.receive())
-#         bloc = Bloc.crear_json(data)
-#         hash = bloc.hash_bloc_anterior
+#         hash = Bloc.crear_json(data)
+#         hash = hash.hash_bloc_anterior
 #         Comunicacio.send()
 #     except simple_websocket.ConnectionClosed:
 #         pass
@@ -43,7 +43,7 @@ def login():
         user = Factoria.build_usuari_from_db(my_db, usuari)
         if user is not None:
             if password == user.contrasenya.encode('utf-8'):
-                session['id_paquet'] = user.id_paquet
+                session['pas'] = user.pas
                 session['tipus'] = user.tipus
                 session['nom'] = user.nom + " " + user.cognom
                 return redirect('/')

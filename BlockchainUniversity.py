@@ -192,7 +192,7 @@ class Encriptador:
     def to_dict(self):
         return collections.OrderedDict({
             'clau': self.clau,
-            'dada': self.dada,
+            'resposta': self.dada,
             'sign': self.sign,
             'nom': self.nom
         })
@@ -201,7 +201,7 @@ class Encriptador:
     def crear_json(j_son):
         nou = Encriptador()
         nou.clau = ast.literal_eval(json.loads(j_son)['clau'])
-        nou.dada = ast.literal_eval(json.loads(j_son)['dada'])
+        nou.dada = ast.literal_eval(json.loads(j_son)['resposta'])
         nou.sign = ast.literal_eval(json.loads(j_son)['sign'])
         nou.nom = json.loads(j_son)['nom']
         return nou
@@ -584,7 +584,7 @@ class Transaccio:
 
 
 class Bloc:
-    # Classe creació del bloc
+    # Classe creació del hash
     def __init__(self, id=None, trans=None, hash_bloc_anterior=None, my_db=None):
         if trans:
             self.id = id
@@ -628,7 +628,7 @@ class Bloc:
             'hash_bloc_anterior': self.hash_bloc_anterior})
 
     def calcular_hash(self):
-        # Converteix el bloc en una cadena json i retorna el hash
+        # Converteix el hash en una cadena json i retorna el hash
         block_string = Factoria.to_json(self)
         return hashlib.sha256(block_string.encode()).hexdigest()
 
@@ -640,7 +640,7 @@ class BlockchainUniversity:
 
     def crear_genesis_bloc(self):
         """
-       Creacio del bloc Inicial.
+       Creacio del hash Inicial.
         """
         public_key = RSA.generate(1024).publickey()
         genesis = Estudiant('Genesis', 'Genesis', 'Genesis', "Genesis", public_key, "Genesis")
@@ -654,7 +654,7 @@ class BlockchainUniversity:
 
     def afegir_bloc_extern(self, bloc):
         """
-        Una funció que afegeix el bloc a la cadena després de la verificació.
+        Una funció que afegeix el hash a la cadena després de la verificació.
          La verificació inclou:
          * Block apunti al block anterior
          * Que vingui de una font valida
@@ -673,7 +673,7 @@ class BlockchainUniversity:
 
     def minat(self):
         """
-    Aquesta funció serveix com a interfície per afegir la transacció pendent a la cadena de blocs afegint-les al bloc
+    Aquesta funció serveix com a interfície per afegir la transacció pendent a la cadena de blocs afegint-les al hash
          i esbrinar el hash.
         """
         if self.my_db.existeix_alguna_transaccio():

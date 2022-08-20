@@ -128,7 +128,7 @@ class MySqlBloc:
                 "`nota` float(4,2) NULL,"
                 "PRIMARY KEY (`id_avaluacio`))",
 
-                "CREATE TABLE if not exists `bloc` ("
+                "CREATE TABLE if not exists `hash` ("
                 "`id_bloc` INT NOT NULL AUTO_INCREMENT,"
                 "`data_bloc` DATETIME NOT NULL,"
                 "`transaccio` JSON  NOT NULL,"
@@ -304,7 +304,7 @@ class MySqlBloc:
 
     def importar_bloc(self, id_bloc):
         sql = f'select id_bloc, data_bloc, transaccio, hash_bloc_anterior ' \
-              f'from `bloc` where `id_bloc` = {id_bloc} LIMIT 1'
+              f'from `hash` where `id_bloc` = {id_bloc} LIMIT 1'
         return self.importar_sql(sql)
 
     def esborrar_schema(self, schema):
@@ -333,7 +333,7 @@ class MySqlBloc:
             print(err)
             exit(1)
 
-    # Retorna si existeix la dada
+    # Retorna si existeix la resposta
     def existeix(self, schema, taula, columna, dada):
         if taula is None:
             sql = f"SHOW DATABASES like '{schema}'"
@@ -402,7 +402,7 @@ class MySqlBloc:
         return self.seguent_id("avaluacio_examen", "id_avaluacio")
 
     def seguent_id_bloc(self):
-        return self.seguent_id("bloc", "id_bloc")
+        return self.seguent_id("hash", "id_bloc")
 
     def seguent_id_pdf(self):
         return self.seguent_id("pdf", "id_pdf")
@@ -449,7 +449,7 @@ class MySqlBloc:
         self.exportar_sql(sql, dades)
 
     def guardar_bloc_dades(self, bloc):
-        sql = "INSERT INTO bloc (`id_bloc`,`transaccio`,`data_bloc`,`hash_bloc_anterior`) VALUES (%s, %s, %s, %s)"
+        sql = "INSERT INTO hash (`id_bloc`,`transaccio`,`data_bloc`,`hash_bloc_anterior`) VALUES (%s, %s, %s, %s)"
         dades = (bloc.id, bloc.transaccio, bloc.data_bloc, bloc.hash_bloc_anterior)
         self.exportar_sql(sql, dades)
 
@@ -466,7 +466,7 @@ class MySqlBloc:
         return self.importar_bloc(self.id_ultim_bloc())
 
     def id_ultim_bloc(self):
-        sql = "SELECT MAX(id_bloc) FROM bloc"
+        sql = "SELECT MAX(id_bloc) FROM hash"
         id_bloc = self.importar_sql(sql)[0]
         if id_bloc is None:
             return 0
