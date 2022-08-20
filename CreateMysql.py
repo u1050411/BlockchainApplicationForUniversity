@@ -463,11 +463,14 @@ class MySqlBloc:
         self.guardar_bloc_dades(bloc)
 
     def ultim_bloc(self):
+        return self.importar_bloc(self.id_ultim_bloc())
+
+    def id_ultim_bloc(self):
         sql = "SELECT MAX(id_bloc) FROM bloc"
         id_bloc = self.importar_sql(sql)[0]
         if id_bloc is None:
-            return None
-        return self.importar_bloc(id_bloc)
+            return 0
+        return id_bloc
 
     @staticmethod
     def dades_num(num_document):

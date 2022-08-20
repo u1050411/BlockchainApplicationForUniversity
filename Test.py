@@ -37,7 +37,6 @@ class CreacioTaulaTest:
         self.crear_respostes()
         self.crear_avaluacio()
         self.crear_transaccions()
-        self.crear_universitat()
         self.crear_genesis_bloc()
 
     def crear_schema_inicial(self):
@@ -654,6 +653,11 @@ class TestBloc(unittest.TestCase):
         transaccio_json = Encriptador_json.desencriptar(uni.private_key)
         transaccio_final = Transaccio.crear_json(transaccio_json)
         self.assertEqual(transaccio.emissor.id, transaccio_final.emissor.id)
+
+    def test_to_json(self):
+        bloc = Factoria.build_bloc_from_db(self.my_db, 1)
+        bloc_json = Factoria.to_json(bloc)
+        bloc2 = Bloc.crear_json(bloc_json)
 
 
 class TestBlockchainUniversity(unittest.TestCase):

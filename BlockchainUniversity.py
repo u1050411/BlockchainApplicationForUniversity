@@ -307,7 +307,7 @@ class Professor(Usuari):
             llista_examens.append(x)
         return llista_examens
 
-    #Importa les respostes que han enviat els alumnes de la seva asignatura
+    # Importa les respostes que han enviat els alumnes de la seva asignatura
     def importar_examens(self, my_db):
         llista_id = my_db.importar_id_respostes_professor(self)
         llista = list()
@@ -315,7 +315,6 @@ class Professor(Usuari):
             resposta = Factoria.build_id_resposta_alumne_from_db(my_db, x)
             llista.append(resposta)
         return llista
-
 
     def get_assignatura(self, my_db):
         id_assignatura = my_db.importar_assignatura_professor(self)
@@ -506,14 +505,13 @@ class AvaluacioExamen(Document):
     def id_document_blockchain(self):
         return str(self.id_document) + "0003"
 
-
     @classmethod
     def crear_json(cls, dades_json=None):
         dades = json.loads(dades_json)
         id_avaluacio = dades['id_avaluacio']
         resposta = RespostaExamen.crear_json(dades['resposta'])
         id_tipus = dades['id_tipus']
-        data_creacio =dades['data_creacio']
+        data_creacio = dades['data_creacio']
         professor = Usuari.crear_json(dades['professor'])
         estudiant = Usuari.crear_json(dades['estudiant'])
         pdf = ast.literal_eval(dades['pdf'])
@@ -604,10 +602,11 @@ class Bloc:
             self.hash_bloc_anterior = None
 
     @classmethod
-    def crear_json(cls, bloc_json):
+    def crear_json(cls, dada):
         new_bloc = cls()
+        bloc_json = json.loads(dada)
         new_bloc.id = bloc_json['id']
-        new_bloc.data_bloc = bloc_json['data_bloc']
+        new_bloc.data_bloc = ['data_bloc']
         new_bloc.transaccio = bloc_json['transaccions']
         new_bloc.hash_bloc_anterior = bloc_json['hash_bloc_anterior']
         return new_bloc
@@ -689,3 +688,4 @@ class BlockchainUniversity:
                 self.my_db.guardar_bloc(new_bloc, emissor)
                 self.my_db.esborrar_transaccio(transaccio.id_transaccio)
                 return self.minat()
+

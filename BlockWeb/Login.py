@@ -43,7 +43,7 @@ def login():
         user = Factoria.build_usuari_from_db(my_db, usuari)
         if user is not None:
             if password == user.contrasenya.encode('utf-8'):
-                session['id'] = user.id
+                session['id_paquet'] = user.id_paquet
                 session['tipus'] = user.tipus
                 session['nom'] = user.nom + " " + user.cognom
                 return redirect('/')
