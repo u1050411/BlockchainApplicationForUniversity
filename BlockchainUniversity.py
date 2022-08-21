@@ -58,7 +58,7 @@ class Factoria:
 
     @staticmethod
     def build_universitat_from_id_db(my_db, id):
-        universiat_db = my_db.importar_universitat_id(my_db, id)
+        universiat_db = my_db.importar_universitat_id(id)
         if universiat_db is not None:
             id_universitat, nom, id_universitat, private_key_str, public_key_str = universiat_db
             public_key = RSA.importKey(public_key_str)
@@ -600,7 +600,7 @@ class Transaccio:
 
 
 class Bloc:
-    # Classe creació del hash
+    # Classe creació del hash_anterior
     def __init__(self, id=None, trans=None, hash_bloc_anterior=None, my_db=None):
         if trans:
             self.id = id
@@ -644,7 +644,7 @@ class Bloc:
             'hash_bloc_anterior': self.hash_bloc_anterior})
 
     def calcular_hash(self):
-        # Converteix el hash en una cadena json i retorna el hash
+        # Converteix el hash_anterior en una cadena json i retorna el hash_anterior
         block_string = Factoria.to_json(self)
         return hashlib.sha256(block_string.encode()).hexdigest()
 
@@ -656,7 +656,7 @@ class BlockchainUniversity:
 
     def crear_genesis_bloc(self):
         """
-       Creacio del hash Inicial.
+       Creacio del hash_anterior Inicial.
         """
         public_key = RSA.generate(1024).publickey()
         genesis = Estudiant('Genesis', 'Genesis', 'Genesis', "Genesis", public_key, "Genesis")
@@ -670,7 +670,7 @@ class BlockchainUniversity:
 
     def afegir_bloc_extern(self, bloc):
         """
-        Una funció que afegeix el hash a la cadena després de la verificació.
+        Una funció que afegeix el hash_anterior a la cadena després de la verificació.
          La verificació inclou:
          * Block apunti al block anterior
          * Que vingui de una font valida
@@ -689,8 +689,8 @@ class BlockchainUniversity:
 
     def minat(self):
         """
-    Aquesta funció serveix com a interfície per afegir la transacció pendent a la cadena de blocs afegint-les al hash
-         i esbrinar el hash.
+    Aquesta funció serveix com a interfície per afegir la transacció pendent a la cadena de blocs afegint-les al hash_anterior
+         i esbrinar el hash_anterior.
         """
         if self.my_db.existeix_alguna_transaccio():
             transaccio = Factoria.build_transaccio_from_db(self.my_db)

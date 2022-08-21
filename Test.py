@@ -670,7 +670,7 @@ class TestPaquet(unittest.TestCase):
     def test_to_json(self):
         bloc = Factoria.build_bloc_from_db(self.my_db, self.my_db.id_ultim_bloc())
         id_ultim_bloc = self.my_db.id_ultim_bloc()
-        paquet = Paquet(1, id_ultim_bloc, bloc, None)
+        paquet = Paquet(bloc, '192.168.50.27:5005')
         paquet_json = Factoria.to_json(paquet)
         paquet2 = Paquet.crear_json(paquet_json)
         self.assertEqual(paquet.pas, paquet2.pas)
@@ -740,9 +740,9 @@ class TestInicial(unittest.TestCase):
 #
 #
 #     def test_connexio_client2(self):
-#         hash = Factoria.build_ultim_bloc_from_db(self.my_db)
+#         hash_anterior = Factoria.build_ultim_bloc_from_db(self.my_db)
 #         HOST, PORT = "192.168.50.28", 50007
-#         data = Factoria.to_json(hash)
+#         data = Factoria.to_json(hash_anterior)
 #
 #         # Create a socket (SOCK_STREAM means a TCP socket)
 #         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

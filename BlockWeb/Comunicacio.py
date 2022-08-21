@@ -37,7 +37,7 @@ def proves():
     my_db = MySqlBloc('localhost', 'root', 'root', 'blockchainuniversity')
     bloc = Factoria.build_bloc_from_db(my_db, my_db.id_ultim_bloc())
     id_ultim_bloc = my_db.id_ultim_bloc()
-    Paquet.confirmar_enviament(bloc.id,bloc.hash_bloc_anterior)
+    Paquet.confirmar_enviament(bloc)
 
 
 
@@ -52,11 +52,13 @@ def proves():
 
 class Paquet:
 
-    def __init__(self, dada=None, num_blocs=None, hash=None, ip=None):
+    def __init__(self, bloc, ip=None):
         self.pas = 1
-        self.num_blocs = num_blocs
-        self.dada = dada
-        self.hash = hash
+        self.num_blocs = bloc.id
+        self.dada = bloc.id
+        self.hash = bloc.hash_bloc_anterior
+        url = f'ws://"+{ip}+"/echo'
+        self.ws = simple_websocket.Client(url)
         self.ws = simple_websocket.Client(f'ws://"+{ip}+"/echo')
 
     def to_dict(self):
@@ -64,14 +66,14 @@ class Paquet:
             'pas': self.pas,
             'num_blocs': self.num_blocs,
             'dada': self.dada,
-            'hash': Factoria.to_json(self.hash)})
+            'hash_anterior': Factoria.to_json(self.hash)})
 
     @classmethod
     def crear_json(cls, paquet_json):
         id_paquet = paquet_json['pas']
         num_blocs = paquet_json['num_blocs']
         dada = paquet_json['dada']
-        bloc = Bloc.crear_json(paquet_json['hash'])
+        bloc = Bloc.crear_json(paquet_json['hash_anterior'])
         return cls(id_paquet, dada, bloc, num_blocs)
 
     def resposta(self):
@@ -114,15 +116,15 @@ class Paquet:
             self.ws.close()
 
     @classmethod
-    def confirmar_enviament(self):
-        llista = Factoria.build_universitats_from_id_db(my_db)
+    def confirmar_enviament(self, bloc):
+        llista = Factoria.build_all_universitat_from_db(my_db)
         confirmacions = list
 
         for universitat in llista:
             id_bloc = universitat.id
             ip_universitat = universitat.ip
             has_anterior = universitat.calcular_hash()
-            paquet = Paquet(id_bloc, id_bloc, has_anterior, ip_universitat)
+            paquet = Paquet(bloc, ip_universitat)
             paquet.repartiment()
             confirmacions.append([universitat, paquet])
         if confirmacions:

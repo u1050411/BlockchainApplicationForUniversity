@@ -29,7 +29,7 @@ def es_usuari(tipus):
 #     try:
 #         data = json.loads(ws.receive())
 #         bloc = Bloc.crear_json(data)
-#         hash = bloc.hash_bloc_anterior
+#         hash_anterior = bloc.hash_bloc_anterior
 #         Comunicacio.send()
 #     except simple_websocket.ConnectionClosed:
 #         pass
