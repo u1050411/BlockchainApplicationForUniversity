@@ -4,12 +4,14 @@ import collections
 import hashlib
 import json
 from datetime import datetime
+import simple_websocket
 
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_PSS
 from cryptography.fernet import Fernet
+from collections import Counter
 
 UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
@@ -623,7 +625,7 @@ class Bloc:
         new_bloc = cls()
         bloc_json = json.loads(dada)
         new_bloc.id = bloc_json['id']
-        new_bloc.data_bloc = ['data_bloc']
+        new_bloc.data_bloc = bloc_json['data_bloc']
         new_bloc.transaccio = bloc_json['transaccions']
         new_bloc.hash_bloc_anterior = bloc_json['hash_bloc_anterior']
         return new_bloc
@@ -669,20 +671,26 @@ class BlockchainUniversity:
         genesis_bloc.data_bloc = datetime.now().isoformat()
         self.my_db.guardar_bloc_dades(genesis_bloc)
 
-    def afegir_bloc_extern(self, bloc):
+    @staticmethod
+    def afegir_bloc_extern(my_db, bloc_json=None):
         """
         Una funció que afegeix el hash_anterior a la cadena després de la verificació.
          La verificació inclou:
          * Block apunti al block anterior
          * Que vingui de una font valida
         """
-        bloc = bloc.crear_json(bloc)
-        ultim_bloc = self.my_db.ultim_bloc()
-        if bloc.transaccio.verificar:
-            if bloc.hash_bloc_anterior == ultim_bloc.calcular_hash():
-                if bloc.id == ultim_bloc.id + 1:
-                    self.my_db.guardar_bloc_dades(bloc)
-                    return False
+        bloc = Bloc.crear_json(bloc_json)
+        ultim_bloc = my_db.ultim_bloc()
+        if ultim_bloc is None and bloc.id == 0:
+            bloc.id = 1
+            my_db.guardar_bloc_dades(bloc)
+            return True
+        else:
+            if bloc.transaccio.verificar:
+                if bloc.hash_bloc_anterior == ultim_bloc.calcular_hash():
+                    if bloc.id == ultim_bloc.id + 1:
+                        my_db.guardar_bloc_dades(bloc)
+                        return True
         return False
 
     def afegir_nova_transaccio(self, transaccio):
@@ -701,8 +709,7 @@ class BlockchainUniversity:
                 index = ultim_bloc.id + 1
                 hash_anterior = ultim_bloc.calcular_hash()
                 new_bloc = Bloc(index, transaccio, hash_anterior, self.my_db)
-
-                self.my_db.guardar_bloc(new_bloc, emissor)
+                resultat = Paquet.confirmar_enviament(new_bloc, self.my_db)
                 self.my_db.esborrar_transaccio(transaccio.id_transaccio)
                 return self.minat()
 
@@ -721,3 +728,116 @@ class BlockchainUniversity:
         return bloc.id == 1
 
 
+
+class Paquet:
+
+    def __init__(self, bloc=None, ip=None, my_db=None):
+        self.pas = 1
+        self.my_db = None
+        if bloc is not None:
+            self.num_blocs = bloc.id
+            self.dada = bloc.id
+            self.hash_anterior = bloc.hash_bloc_anterior
+            try:
+                http = f'ws://{ip}:5005/echo'
+                self.ws = simple_websocket.Client(http)
+                self.my_db = my_db
+            except (KeyboardInterrupt, EOFError, simple_websocket.ConnectionClosed):
+                 self.ws.close()
+
+    def to_dict(self):
+        return collections.OrderedDict({
+            'pas': self.pas,
+            'num_blocs': self.num_blocs,
+            'dada': self.dada,
+            'hash_anterior': self.hash_anterior})
+
+    @classmethod
+    def crear_json(cls, paquet_json, my_db):
+        paquet = cls()
+        paquet.pas = paquet_json['pas']
+        paquet.num_blocs = paquet_json['num_blocs']
+        paquet.dada = paquet_json['dada']
+        paquet.hash_anterior = paquet_json['hash_anterior']
+        paquet.my_db = my_db
+        return paquet
+
+    def resposta(self):
+        try:
+            data = self.ws.receive()
+        except (KeyboardInterrupt, EOFError, simple_websocket.ConnectionClosed):
+            self.dada = False
+            return self
+            self.ws.close()
+        data_json = json.loads(data)
+        paquet = Paquet.crear_json(data_json, self.my_db)
+        self.pas = paquet.pas
+        self.dada = paquet.dada
+        self.repartiment()
+
+    def repartiment(self):
+        try:
+            if self.pas == 1:# es un paquet inici de repartiment blocs
+                self.pas = 2 # indiquem que es un paquet que hem enviat nosaltres
+                self.ws.send(Factoria.to_json(self))
+                self.resposta()
+
+            elif self.pas == 2:# es paquet que hem rebut per confirmar blocs
+                if self.dada == 0:
+                    self.dada = True
+                    num_blocs = 0
+                else:
+                    num_blocs = self.my_db.id_ultim_bloc()
+                    if self.dada == num_blocs:
+                        meu_bloc = Factoria.build_bloc_from_db(self.my_db, num_blocs)
+                        self.dada = self.hash_bloc_anterior == meu_bloc.calcular_hash()
+                        self.num_blocs = num_blocs
+                        self.pas = 3
+                        self.ws.send(Factoria.to_json(self))
+                    else:
+                        self.dada = False
+                self.pas = 3
+                self.num_blocs = num_blocs
+                self.ws.send(Factoria.to_json(self))
+                self.resposta()
+
+            elif self.pas == 3:# Tenim la resposta si les dugues cadenes son correctes
+                return self
+
+            elif self.pas == 4:# Enviem el bloc i diem que es correcte per ells
+                self.pas = 5
+                self.ws.send(Factoria.to_json(self))
+
+            elif self.pas == 5:  # rebem un bloc ja confirmat.
+                BlockchainUniversity.afegir_bloc_extern(self.my_db, self.dada)
+                self.ws.close()
+
+        except (KeyboardInterrupt, EOFError, simple_websocket.ConnectionClosed):
+            self.dada = False
+            return self
+            self.ws.close()
+
+    @staticmethod
+    def confirmar_enviament(bloc, my_db):
+        llista = Factoria.build_all_universitat_from_db(my_db)
+        paquets = list()
+        for universitat in llista:
+            ip_universitat = universitat.ip
+            paquet = Paquet(bloc, ip_universitat, my_db)
+            paquet.repartiment()
+            paquets.append(paquet)
+        if paquets:
+            # això es un for on extreiem el numblocs i despres counter es diu quin es valor mes comu
+            resultat = Counter([x.num_blocs for x in paquets if x.dada]).most_common()
+            if resultat:
+                mes_comu, quantitat = resultat.pop(0)
+                mitat_mes_un = ((len(paquets) / 2) <= quantitat)
+                if mes_comu == bloc.id and mitat_mes_un:
+                    for x in paquets:
+                        if x.dada:
+                            x.dada = Factoria.to_json(bloc)
+                            x.pas = 4
+                            x.repartiment()
+                    return True
+            else:
+                return False
