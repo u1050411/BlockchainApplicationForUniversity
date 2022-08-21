@@ -4,7 +4,7 @@ import simple_websocket
 import time
 import json
 from BlockchainUniversity import Factoria, Bloc
-from flask import request, render_template, session, redirect
+from flask import request, render_template, session, redirect, before_render_template
 from CreateMysql import MySqlBloc
 from BlockWeb import my_db, app
 
@@ -36,7 +36,6 @@ def proves():
     # ws = simple_websocket.Client('ws://192.168.50.27:5005/echo')
     my_db = MySqlBloc('localhost', 'root', 'root', 'blockchainuniversity')
     bloc = Factoria.build_bloc_from_db(my_db, my_db.id_ultim_bloc())
-    id_ultim_bloc = my_db.id_ultim_bloc()
     Paquet.confirmar_enviament(bloc)
 
 
@@ -52,33 +51,37 @@ def proves():
 
 class Paquet:
 
-    def __init__(self, bloc, ip=None):
+    def __init__(self, bloc=None, ip=None):
         self.pas = 1
-        self.num_blocs = bloc.id
-        self.dada = bloc.id
-        self.hash = bloc.hash_bloc_anterior
-        url = f'ws://"+{ip}+"/echo'
-        self.ws = simple_websocket.Client(url)
-        self.ws = simple_websocket.Client(f'ws://"+{ip}+"/echo')
+        if bloc is not None:
+            self.num_blocs = bloc.id
+            self.dada = bloc.id
+            self.hash = bloc.hash_bloc_anterior
+            self.ws = simple_websocket.Client(f'ws://{ip}:5005/echo')
 
     def to_dict(self):
         return collections.OrderedDict({
             'pas': self.pas,
             'num_blocs': self.num_blocs,
             'dada': self.dada,
-            'hash_anterior': Factoria.to_json(self.hash)})
+            'hash_anterior': self.hash})
 
     @classmethod
     def crear_json(cls, paquet_json):
-        id_paquet = paquet_json['pas']
-        num_blocs = paquet_json['num_blocs']
-        dada = paquet_json['dada']
-        bloc = Bloc.crear_json(paquet_json['hash_anterior'])
-        return cls(id_paquet, dada, bloc, num_blocs)
+        paquet = cls()
+        paquet.pas = paquet_json['pas']
+        paquet.num_blocs = paquet_json['num_blocs']
+        paquet.dada = paquet_json['dada']
+        paquet.hash_anterior = paquet_json['hash_anterior']
+        return paquet
 
     def resposta(self):
-        self.ws.send(Factoria.to_json(self))
-        data = self.ws.receive(15)
+        try:
+            data = self.ws.receive(15)
+        except (KeyboardInterrupt, EOFError, simple_websocket.ConnectionClosed):
+            self.dada = False
+            return self
+            self.ws.close()
         data_json = json.loads(data)
         paquet = Paquet.crear_json(data_json)
         self.pas = paquet.pas
@@ -113,22 +116,22 @@ class Paquet:
                 return self
 
         except (KeyboardInterrupt, EOFError, simple_websocket.ConnectionClosed):
+            self.dada = False
+            return self
             self.ws.close()
 
     @classmethod
-    def confirmar_enviament(self, bloc):
+    def confirmar_enviament(cls, bloc):
         llista = Factoria.build_all_universitat_from_db(my_db)
-        confirmacions = list
+        confirmacions = list()
 
         for universitat in llista:
-            id_bloc = universitat.id
             ip_universitat = universitat.ip
-            has_anterior = universitat.calcular_hash()
             paquet = Paquet(bloc, ip_universitat)
             paquet.repartiment()
             confirmacions.append([universitat, paquet])
         if confirmacions:
-            self.qui_es_mes_gran(confirmacions)
+            cls.qui_es_mes_gran(confirmacions)
 
 
     # Retorna qui es la cadena mes llarga correcte

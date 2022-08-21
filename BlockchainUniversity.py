@@ -49,11 +49,12 @@ class Factoria:
     def build_all_universitat_from_db(my_db):
         universiat_db = my_db.importar_universitats()
         llista = list()
+        global id_universitat
         for x in universiat_db:
             id_universitat, nom, ip, private_key_str, public_key_str = x
-            public_key = RSA.importKey(public_key_str)
-            private_key = RSA.importKey(private_key_str)
-            llista.append(Universitat(nom, private_key, public_key, id_universitat, ip))
+            if id_universitat != 1:
+                public_key = RSA.importKey(public_key_str)
+                llista.append(Universitat(nom, None, public_key, id_universitat, ip))
         return llista
 
     @staticmethod
