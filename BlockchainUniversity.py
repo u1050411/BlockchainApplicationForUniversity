@@ -43,9 +43,24 @@ class Factoria:
 
     @staticmethod
     def build_universitat_from_db(my_db):
-        universiat_db = my_db.importar_universitat()
+        return Factoria.build_universitat_from_id_db(my_db, 1)
+
+    @staticmethod
+    def build_all_universitat_from_db(my_db):
+        universiat_db = my_db.importar_universitats()
+        llista = list()
+        for x in universiat_db:
+            id_universitat, nom, ip, private_key_str, public_key_str = x
+            public_key = RSA.importKey(public_key_str)
+            private_key = RSA.importKey(private_key_str)
+            llista.append(Universitat(nom, private_key, public_key, id_universitat, ip))
+        return llista
+
+    @staticmethod
+    def build_universitat_from_id_db(my_db, id):
+        universiat_db = my_db.importar_universitat_id(my_db, id)
         if universiat_db is not None:
-            id_universitat, nom, id, private_key_str, public_key_str = universiat_db
+            id_universitat, nom, id_universitat, private_key_str, public_key_str = universiat_db
             public_key = RSA.importKey(public_key_str)
             private_key = RSA.importKey(private_key_str)
             return Universitat(nom, private_key, public_key, id_universitat)

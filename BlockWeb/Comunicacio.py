@@ -33,7 +33,7 @@ def echo():
 
 @app.route('/proves')
 def proves():
-    ws = simple_websocket.Client('ws://192.168.50.27:5005/echo')
+    # ws = simple_websocket.Client('ws://192.168.50.27:5005/echo')
     my_db = MySqlBloc('localhost', 'root', 'root', 'blockchainuniversity')
     bloc = Factoria.build_bloc_from_db(my_db, my_db.id_ultim_bloc())
     id_ultim_bloc = my_db.id_ultim_bloc()
@@ -114,17 +114,20 @@ class Paquet:
             self.ws.close()
 
     @classmethod
-    def confirmar_enviament(self, id_bloc, hash):
-        llista = my_db.importar_universitats()
+    def confirmar_enviament(self):
+        llista = Factoria.build_universitats_from_id_db(my_db)
         confirmacions = list
 
-        for universitat in llista():
+        for universitat in llista:
+            id_bloc = universitat.id
             ip_universitat = universitat.ip
-            paquet = Paquet(id_bloc, id_bloc, hash, id_bloc, ip_universitat)
+            has_anterior = universitat.calcular_hash()
+            paquet = Paquet(id_bloc, id_bloc, has_anterior, ip_universitat)
             paquet.repartiment()
             confirmacions.append([universitat, paquet])
         if confirmacions:
             self.qui_es_mes_gran(confirmacions)
+
 
     # Retorna qui es la cadena mes llarga correcte
     def qui_es_mes_gran(self, confirmacions):
