@@ -98,8 +98,13 @@ class MySqlBloc:
                 "`nota` float(4,2) NULL,"
                 "PRIMARY KEY (`id_document`, `id_estudiant`))",
 
+                "CREATE TABLE if not exists `usuari_blocs` ("
+                "`id_estudiant`  varchar(8) NOT NULL,"
+                "`id_bloc` INT NOT NULL,"
+                "PRIMARY KEY (`id_estudiant`, `id_bloc`))",
+
                 "CREATE TABLE if not exists `assignatura` ("
-                "`id_assignatura` INT NOT NULL AUTO_INCREMENT,"
+                "`id_assignatura` INT NOT NULL,"
                 "`nom`  varchar(50) NOT NULL,"
                 "`id_professor` varchar(8) NOT NULL,"
                 "PRIMARY KEY (`id_assignatura`))",
@@ -111,7 +116,7 @@ class MySqlBloc:
                 "PRIMARY KEY (`id_assignatura`, `id_estudiant`))",
 
                 "CREATE TABLE if not exists `resposta_examen` ("
-                "`id_resposta` INT NOT NULL AUTO_INCREMENT,"
+                "`id_resposta` INT NOT NULL,"
                 "`examen` INT NOT NULL,"
                 "`data_creacio` DATETIME NOT NULL,"
                 "`id_usuari` varchar(8) NOT NULL,"
@@ -120,7 +125,7 @@ class MySqlBloc:
                 "PRIMARY KEY (`id_resposta`))",
 
                 "CREATE TABLE if not exists avaluacio_examen ("
-                "`id_avaluacio` INT NOT NULL AUTO_INCREMENT,"
+                "`id_avaluacio` INT NOT NULL,"
                 "`id_resposta` INT NOT NULL,"
                 "`id_professor` varchar(8) NOT NULL,"
                 "`id_estudiant` varchar(8) NOT NULL,"
@@ -129,14 +134,15 @@ class MySqlBloc:
                 "PRIMARY KEY (`id_avaluacio`))",
 
                 "CREATE TABLE if not exists `bloc` ("
-                "`id_bloc` INT NOT NULL AUTO_INCREMENT,"
+                "`id_bloc` INT NOT NULL,"
                 "`data_bloc` DATETIME NOT NULL,"
-                "`transaccio` JSON  NOT NULL,"
-                "`hash_bloc_anterior` LONGBLOB  NOT NULL,"
+                "`transaccio` LONGBLOB  NOT NULL,"
+                "`signatura` LONGBLOB  NOT NULL,"
+                "`hash_bloc_anterior` LONGBLOB,"
                 "PRIMARY KEY (`id_bloc`))",
 
                 "CREATE TABLE if not exists `Universitat` ("
-                "`id` INT NOT NULL AUTO_INCREMENT,"
+                "`id` INT NOT NULL,"
                 "`nom` TEXT NOT NULL,"
                 "`ip` TEXT NOT NULL,"
                 "`private_key` longtext NULL,"
@@ -298,6 +304,10 @@ class MySqlBloc:
         sql = f'select id, nom, ip, private_key, public_key from universitat where id = {id}'
         return self.importar_sql(sql)
 
+    def importar_universitat_ip(self, ip):
+        sql = f'select id, nom, ip, private_key, public_key from universitat where ip = "{ip}"'
+        return self.importar_sql(sql)
+
     def importar_universitats(self):
         sql = f'select id, nom, ip, private_key, public_key from universitat'
         return self.importar_llista_sql(sql)
@@ -311,14 +321,19 @@ class MySqlBloc:
         return self.importar_sql(sql)
 
     def importar_bloc(self, id_bloc):
-        sql = f'select id_bloc, data_bloc, transaccio, hash_bloc_anterior ' \
+        sql = f'select id_bloc, data_bloc, transaccio, signatura, hash_bloc_anterior ' \
               f'from `bloc` where `id_bloc` = {id_bloc} LIMIT 1'
         return self.importar_sql(sql)
 
-    def importar_blocs(self, id_bloc):
-        sql = f'select id_bloc, data_bloc, transaccio, hash_bloc_anterior ' \
+    def importar_bloc_id(self, id_bloc):
+        sql = f'select id_bloc, data_bloc, transaccio, signatura, hash_bloc_anterior ' \
               f'from `bloc` where `id_bloc` = {id_bloc} order by 1'
         return self.importar_sql(sql)
+
+    def importar_blocs(self):
+        sql = f'select id_bloc, data_bloc, transaccio, signatura, hash_bloc_anterior ' \
+              f'from `bloc` order by 1'
+        return self.importar_llista_sql(sql)
 
     def esborrar_schema(self, schema):
         if self.existeix(schema, None, None, None):
@@ -388,6 +403,9 @@ class MySqlBloc:
     def existeix_alumnes_examen(self, id_usuari):
         return self.existeix(self.schema, 'usuari', 'id', id_usuari)
 
+    def existeix_bloc_genesis(self):
+        return self.existeix(self.schema, 'bloc', 'id_bloc', 1)
+
     #
     # def existeix_transaccio(self, id_transac):
     #     return self.existeix(self.schema, 'transaccio', 'id_transaccio', id_transac)
@@ -445,9 +463,9 @@ class MySqlBloc:
         self.exportar_sql(sql, dades)
 
     def guardar_assignatura(self, assignatura):
-        sql = "INSERT INTO assignatura(nom, id_professor) " \
-              "VALUES (%s, %s)"
-        dades = (assignatura.nom, assignatura.professor.id)
+        sql = "INSERT INTO assignatura(id_assignatura, nom, id_professor) " \
+              "VALUES (%s, %s, %s)"
+        dades = (assignatura.id, assignatura.nom, assignatura.professor.id)
         self.exportar_sql(sql, dades)
 
     def guardar_usuari(self, usuari):
@@ -463,8 +481,8 @@ class MySqlBloc:
         self.exportar_sql(sql, dades)
 
     def guardar_bloc_dades(self, bloc):
-        sql = "INSERT INTO bloc (`id_bloc`,`transaccio`,`data_bloc`,`hash_bloc_anterior`) VALUES (%s, %s, %s, %s)"
-        dades = (bloc.id, bloc.transaccio, bloc.data_bloc, bloc.hash_bloc_anterior)
+        sql = "INSERT INTO bloc (`id_bloc`,`transaccio`,`data_bloc`,`signatura`, `hash_bloc_anterior`) VALUES (%s, %s, %s, %s, %s)"
+        dades = (bloc.id, bloc.transaccio, bloc.data_bloc, bloc.signatura, bloc.hash_bloc_anterior)
         self.exportar_sql(sql, dades)
 
     def guardar_bloc_usuari(self, bloc, emissor):
@@ -552,9 +570,9 @@ class MySqlBloc:
         dades_update = (avaluacio.id_document, avaluacio.resposta.id_document, avaluacio.usuari.id, avaluacio.estudiant.id,
                         avaluacio.pdf, avaluacio.nota, avaluacio.id_document)
 
-        sql = "INSERT INTO avaluacio_examen(id_resposta, id_professor, id_estudiant, pdf, nota) " \
-              "VALUES (%s, %s, %s, %s, %s)"
-        dades = (avaluacio.resposta.id_document, avaluacio.usuari.id, avaluacio.estudiant.id,
+        sql = "INSERT INTO avaluacio_examen(id_avaluacio, id_resposta, id_professor, id_estudiant, pdf, nota) " \
+              "VALUES (%s, %s, %s, %s, %s, %s)"
+        dades = (avaluacio.id_document, avaluacio.resposta.id_document, avaluacio.usuari.id, avaluacio.estudiant.id,
                         avaluacio.pdf, avaluacio.nota)
         if self.existeix_avaluacio(avaluacio.id_document):
             self.exportar_sql(sql_update, dades_update)

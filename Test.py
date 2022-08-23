@@ -32,8 +32,7 @@ class CreacioTaulaTest:
         self.crear_examens()
         self.crear_respostes()
         self.crear_avaluacio()
-        self.crear_transaccions()
-        self.crear_genesis_bloc()
+
 
     def crear_schema_inicial(self):
         self.my_db.esborrar_schema(self.schema)
@@ -55,7 +54,8 @@ class CreacioTaulaTest:
           "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCchauIJX8B/mlEc+HjYTz9Tgym\nwPJ589ntbaoO44AIES7l1CT5L1mE44f5W8VBtIK6xE+y5E0mkNlnKt02nsHuxwjY\nj1olsZ66mTqjtrdizAPv/otAQtU93fX9sQLH0QoPRz554CmyjapbtobaYI6xcqRw\nxIu/FG04TJ0KRt4EZQIDAQAB\n-----END PUBLIC KEY-----"},
          {"id": 3, "ip": "192.168.50.27", "nom": "Universitat Rovira i Virgili",
           "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIICXAIBAAKBgQCWY6jFMVyA2FolRbB91q1EeUVwxX6Hma4sMXlyqgsLHJ5QU7Ke\nAXTU7IMzsOpTfn+xE6l86w0R+5ZWu1BsC1z6XxE8ZgWbMSzR9Bs6aMGd4rAHca4w\nJ8nMUWyCvjoehm+/WYtw3e8d5YvkQY9PMUCe4Vpfg2lRReDO/qwScS9+uwIDAQAB\nAoGAAxN5xcLLNhV2zpFc2U4VUDO80GAxxNtHXT8L0WUaAbmtoU389s9n0N0fl+ST\n/m41dW1GB7iVFVuUiSSesf8PgUV+oobVcFfKt2AzoGBQYKKDh1D4BovB+hQihzFu\n+no4XOmGk7KPWUhK2mThJ4OvPwg3HYUt7iKVlgQSMUoAMMkCQQDDSc3f4uemWaHg\nkNdK7jS4by9JbJqFZVj0FcFoUwnnqnk6GLJuNvhxEKhG1JyZ8Xi/xfZIuur7Ch0c\nG8hDVFyJAkEAxSSG+X15uo6YpmYWW0VWFqW1+TYfjwEUhmC3/DU0qnNSLOn218qC\nhxNPILlJG+P4r9OsfbjwRJb8biAemaoYIwJBAIJUCfIlgwVQgijVYOjfyg1gHkW5\nFfJ6bYAP2NBfwpd5/IdaHhJR20HRpQwILi7KqRQK8E8fd1xsJnswy1irv0kCQCvN\nFtQd5crmXdIywmra9+qmPM03EkHyqn3ExXwa0i3A25QxE3AUhXW/e4g4wp6YwytF\nq4Bvc6q5pTJOnp3jpeMCQDP2LV5cfP9WuPzMW5Fkc1nScFVme35PaVkgUQ4zO02B\nWgCMViwfHSnIrrtSICT1MoLHH4UqdtHavHAIcwZlGfM=\n-----END RSA PRIVATE KEY-----",
-          "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCWY6jFMVyA2FolRbB91q1EeUVw\nxX6Hma4sMXlyqgsLHJ5QU7KeAXTU7IMzsOpTfn+xE6l86w0R+5ZWu1BsC1z6XxE8\nZgWbMSzR9Bs6aMGd4rAHca4wJ8nMUWyCvjoehm+/WYtw3e8d5YvkQY9PMUCe4Vpf\ng2lRReDO/qwScS9+uwIDAQAB\n-----END PUBLIC KEY-----"}]
+          "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCWY6jFMVyA2FolRbB91q1EeUVw\nxX6Hma4sMXlyqgsLHJ5QU7KeAXTU7IMzsOpTfn+xE6l86w0R+5ZWu1BsC1z6XxE8\nZgWbMSzR9Bs6aMGd4rAHca4wJ8nMUWyCvjoehm+/WYtw3e8d5YvkQY9PMUCe4Vpf\ng2lRReDO/qwScS9+uwIDAQAB\n-----END PUBLIC KEY-----"}
+        ]
 
         for y in univ:
             x = json.dumps(y, indent=4, sort_keys=True, default=str)
@@ -97,11 +97,11 @@ class CreacioTaulaTest:
 
     def crear_assignatures(self):
 
-        assignatures = [['Sistemes operatius', 'u2000256'], ['Computadors', 'u2050404']]
+        assignatures = [[1, 'Sistemes operatius', 'u2000256'], [2, 'Computadors', 'u2050404']]
 
-        for nom, id_professor in assignatures:
+        for id_assig, nom, id_professor in assignatures:
             professor = Factoria.build_usuari_from_db(self.my_db, id_professor)
-            assignatura = Assignatura(0, nom, professor)
+            assignatura = Assignatura(id_assig, nom, professor)
             self.my_db.guardar_assignatura(assignatura)
 
         self.my_db.guardar_estudiants_assignatura(Factoria.build_assignatura_from_db(self.my_db, 1),
@@ -173,17 +173,17 @@ class CreacioTaulaTest:
 
     def crear_avaluacio(self):
 
-        respostes = [[1, 1, 'u2000256', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
+        respostes = [[1, 1, 1, 'u2000256', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
                                         f'Examen_2021_20_10_01_primer_parcial-solucio.pdf', 'u1050411',8],
-                     [2, 2, 'u2050404', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
+                     [2, 2, 2, 'u2050404', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
                                         f'Examen_2020-21-_26-03_primer_parcial.pdf', 'u1050402',4]]
 
-        for id_resposta, id_examen, id_professor, nom_fitxer, estudiant, nota in respostes:
+        for id_avaluacio, id_resposta, id_examen, id_professor, nom_fitxer, estudiant, nota in respostes:
             pdf = Factoria.recuperar_fitxer(nom_fitxer)
             professor = Factoria.build_usuari_from_db(self.my_db, id_professor)
             resposta = Factoria.build_id_resposta_alumne_from_db(self.my_db, id_resposta)
             estudiant = Factoria.build_usuari_from_db(self.my_db, estudiant)
-            avaluacio_examen = AvaluacioExamen(resposta, professor, estudiant, pdf)
+            avaluacio_examen = AvaluacioExamen(resposta, professor, estudiant, pdf, id_avaluacio)
             self.my_db.guardar_avaluacio_examen(avaluacio_examen)
 
     def crear_transaccions(self):
@@ -203,7 +203,7 @@ class CreacioTaulaTest:
 
     def crear_genesis_bloc(self):
         bloc_chain = BlockchainUniversity(self.my_db)
-        bloc_chain.crear_genesis_bloc()
+        # bloc_chain.crear_genesis_bloc()
 
 
 class TestUsuaris(unittest.TestCase):
@@ -379,12 +379,11 @@ class TestMysql(unittest.TestCase):
 
     def test_guardar_bloc(self):
         self.test.crear_schema_dades()
+        ultim_bloc = Factoria.build_ultim_bloc_from_db((self.my_db))
         transactions = Factoria.build_transaccio_from_db(self.my_db)
         emissor = transactions.emissor
-        ultim_bloc = Factoria.build_ultim_bloc_from_db((self.my_db))
         index = ultim_bloc.id + 1
-        hash_anterior = ultim_bloc.calcular_hash()
-        new_bloc = Bloc(index, transactions, hash_anterior, self.my_db)
+        new_bloc = Bloc(index, transactions, self.my_db)
         self.my_db.guardar_bloc(new_bloc, emissor)
 
 
@@ -572,40 +571,45 @@ class TestavaluacioExamen(unittest.TestCase):
 class TestEncriptador(unittest.TestCase):
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.my_db.esborrar_schema(SCHEMA)
-        self.test = CreacioTaulaTest(self.my_db, SCHEMA)
+        self.schema = SCHEMA
+        self.test = CreacioTaulaTest(self.my_db, self.schema)
         self.test.crear_schema_dades()
 
+
     def test_encriptar_desencriptar(self):
+        universitat = Factoria.build_universitat_from_db(self.my_db)
+        receptor = Factoria.build_usuari_from_db(self.my_db, 'u1050402')
         emissor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
         examen = Factoria.build_examen_from_db(self.my_db, 1)
-        examen_encriptar = Encriptador(examen, emissor.public_key)
-        examen_resultat = examen_encriptar.desencriptar(self.my_db.clau_privada(emissor.id))
-        examen_final = Examen.crear_json(examen_resultat)
-        self.assertEqual(examen.id_document, examen_final.id_document)
-        self.assertEqual(examen.usuari.id, examen_final.usuari.id)
-        self.assertEqual(examen.pdf, examen_final.pdf)
+        transaccio = Transaccio(emissor, receptor, examen, "0")
+        transaccio_encriptar = Encriptador(transaccio, universitat.public_key)
+        transaccio_byte = str.encode(Factoria.to_json(transaccio_encriptar))
+        transaccio_json = transaccio_byte.decode()
+        encriptat = Encriptador.crear_json(transaccio_json)
+        transaccio2 = Transaccio.crear_json(encriptat.desencriptar(universitat.private_key))
+        self.assertEqual(transaccio.id_transaccio, transaccio2.id_transaccio)
+
 
     def test_signar_verificar(self):
+        universitat = Factoria.build_universitat_from_db(self.my_db)
+        receptor = Factoria.build_usuari_from_db(self.my_db, 'u1050402')
         emissor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
         examen = Factoria.build_examen_from_db(self.my_db, 1)
-        examen_encriptar = Encriptador(examen, emissor.public_key)
-        examen_encriptar.signar(self.my_db.clau_privada(emissor.id))
-        self.assertTrue(examen_encriptar.verificar_sign(emissor.public_key))
-        examen_resultat = examen_encriptar.desencriptar(self.my_db.clau_privada(emissor.id))
-        examen_final = Examen.crear_json(examen_resultat)
-        self.assertEqual(examen.id_document, examen_final.id_document)
-        self.assertEqual(examen.usuari.id, examen_final.usuari.id)
-        self.assertEqual(examen.pdf, examen_final.pdf)
+        transaccio = Transaccio(emissor, receptor, examen, "0")
+        transaccio_encriptar = Encriptador(transaccio, universitat.public_key)
+        transaccio_json = str.encode(Factoria.to_json(transaccio_encriptar))
+        signatura = Encriptador.signar(transaccio_json,universitat.private_key)
+        validacio = Encriptador.verificar_sign(transaccio_json, signatura, universitat.public_key)
+        self.assertTrue(Encriptador.verificar_sign(transaccio_json, signatura, universitat.public_key))
 
 
 class TestTransaction(unittest.TestCase):
 
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.my_db.esborrar_schema(SCHEMA)
-        self.test = CreacioTaulaTest(self.my_db, SCHEMA)
-        self.test.crear_schema_dades()
+        self.my_db.afegir_schema(SCHEMA)
+        self.test = TestInicial()
+        self.test.test_inicial()
 
     @property
     def crear_transaccio(self):
@@ -645,7 +649,7 @@ class TestBloc(unittest.TestCase):
 
     def test_crear(self):
         transaccio = Factoria.build_transaccio_from_db(self.my_db)
-        bloc = Bloc(0, transaccio, "41b8e84497b3d73038a397e8b5e100", self.my_db)
+        bloc = Bloc(0, transaccio, self.my_db)
         uni = Factoria.build_universitat_from_db(self.my_db)
         Encriptador_json = Encriptador.crear_json(bloc.transaccio)
         transaccio_json = Encriptador_json.desencriptar(uni.private_key)
@@ -659,21 +663,21 @@ class TestBloc(unittest.TestCase):
         self.assertEqual(bloc.id, bloc2.id)
 
 
-class TestPaquet(unittest.TestCase):
+# class TestPaquet(unittest.TestCase):
+#
+#     def setUp(self):
+#         self.my_db = MySqlBloc('localhost', 'root', 'root')
+#         self.schema = SCHEMA
+#
+#     def test_to_json(self):
+#         bloc = Factoria.build_bloc_from_db(self.my_db, self.my_db.id_ultim_bloc())
+#         id_ultim_bloc = self.my_db.id_ultim_bloc()
+#         paquet = Paquet(bloc, '192.168.50.27:5005')
+#         paquet_json = Factoria.to_json(paquet)
+#         paquet2 = Paquet.crear_json(paquet_json)
+#         self.assertEqual(paquet.pas, paquet2.pas)
 
-    def setUp(self):
-        self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.schema = SCHEMA
-        self.test = CreacioTaulaTest(self.my_db, self.schema)
-        self.test.crear_schema_dades()
 
-    def test_to_json(self):
-        bloc = Factoria.build_bloc_from_db(self.my_db, self.my_db.id_ultim_bloc())
-        id_ultim_bloc = self.my_db.id_ultim_bloc()
-        paquet = Paquet(bloc, '192.168.50.27:5005')
-        paquet_json = Factoria.to_json(paquet)
-        paquet2 = Paquet.crear_json(paquet_json)
-        self.assertEqual(paquet.pas, paquet2.pas)
 
 
 class TestBlockchainUniversity(unittest.TestCase):
@@ -681,21 +685,40 @@ class TestBlockchainUniversity(unittest.TestCase):
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
         self.my_db.afegir_schema(SCHEMA)
+        # self.test = TestInicial()
+        # self.test.test_inicial()
+
+    def test_prova(self):
+        bloc = Factoria.build_bloc_from_db(self.my_db, 1)
+        calcul = bloc.calcular_hash()
+        print(calcul)
+        bloc.id
+
 
     def test_crear_genesis_bloc(self):
+        resultat = False
         if self.my_db.ultim_bloc() is None:
-            bloc_chain = BlockchainUniversity(self.my_db)
-            bloc_chain.crear_genesis_bloc()
-        self.assertIsNotNone(self.my_db.ultim_bloc())
+            genesis = BlockchainUniversity(self.my_db)
+            resultat = genesis.crear_genesis_bloc()
 
-    def test_minat(self):
-        self.test_crear_genesis_bloc()
-        bloc_chain = BlockchainUniversity(self.my_db)
-        bloc_chain.minat()
+        return resultat
 
     def test_comprovar_cadena(self):
         main = BlockchainUniversity(self.my_db)
         self.assertEqual(main.comprovarCadena(), True)
+
+    def test_to_minat(self):
+        resultat = False
+        if self.my_db.existeix_alguna_transaccio():
+            transaccio = Factoria.build_transaccio_from_db(self.my_db)
+            if transaccio:
+                ultim_bloc = Factoria.build_ultim_bloc_from_db(self.my_db)
+                index = ultim_bloc.id + 1
+                new_bloc = Bloc(index, transaccio, self.my_db, ultim_bloc.calcular_hash())
+                resultat = Paquet.confirmar_enviament(new_bloc, self.my_db)
+                if resultat:
+                    self.my_db.esborrar_transaccio(transaccio.id_transaccio)
+        self.assertTrue(resultat)
 
 
 class TestInicial(unittest.TestCase):

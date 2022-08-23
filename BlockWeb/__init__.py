@@ -10,7 +10,7 @@ from BlockchainUniversity import BlockchainUniversity
 from CreateMysql import MySqlBloc
 
 app = Flask(__name__)
-my_db = MySqlBloc('localhost', 'Pau', 'UsuariUdg2022', 'blockchainuniversity')
+my_db = MySqlBloc('localhost', 'root', 'root', 'blockchainuniversity')
 main = BlockchainUniversity(my_db)
 app.secret_key = secrets.token_urlsafe()
 app.config["SESSION_PERMANENT"] = False

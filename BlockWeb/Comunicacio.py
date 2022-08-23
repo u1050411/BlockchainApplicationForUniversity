@@ -3,7 +3,8 @@ import json
 import simple_websocket
 from flask import request, render_template
 from BlockWeb import my_db, app
-from BlockchainUniversity import Paquet
+from BlockchainUniversity import Paquet, Factoria
+from CreateMysql import MySqlBloc
 
 
 @app.route('/echo', websocket=True)
