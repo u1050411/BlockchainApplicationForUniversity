@@ -908,4 +908,47 @@ class Paquet:
         return llista_hash
 
 
+class Missatge:
+    def __init__(self, paquet):
+        if paquet:
+            uni = Factoria.build_universitat_from_db(paquet.my_db)
+            public_key = uni.public_key
+            self.public_key_export = public_key.exportKey('PEM')
+            self.paquet_code = Factoria.to_json(paquet).encode('utf-8', 'replace')
+            self.signatura = Encriptador.signar(self.paquet_code, uni.private_key)
+            print(Encriptador.verificar_sign(self.paquet_code, self.signatura, uni.public_key))
+            self.ip = uni.ip
+        else:
+            self.public_key_export = 0
+            self.paquet_code = 0
+            self.signatura = 0
+            self.ip = 0
+
+    def rebut(self, my_db):
+            public_key = RSA.importKey(ast.literal_eval(self.public_key_export))
+            paquet_code = ast.literal_eval(self.paquet_code)
+            signatura = ast.literal_eval(self.signatura)
+            if Encriptador.verificar_sign(paquet_code, signatura, public_key):
+                paquet_json = paquet_code.decode('utf-8', 'replace')
+                return json.loads(paquet_json)
+            else:
+                return False
+
+    def to_dict(self):
+        return collections.OrderedDict({
+            'public_key_export': self.public_key_export,
+            'paquet_code': self.paquet_code,
+            'signatura': self.signatura,
+            'ip': self.ip,
+        })
+
+    @classmethod
+    def crear_json(cls, missatge_json):
+        missatge = cls(None)
+        missatge.public_key_export = missatge_json['public_key_export']
+        missatge.paquet_code = missatge_json['paquet_code']
+        missatge.signatura = missatge_json['signatura']
+        missatge.ip = missatge_json['ip']
+        return missatge
+
 

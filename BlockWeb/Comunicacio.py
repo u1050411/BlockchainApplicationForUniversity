@@ -20,4 +20,3 @@ def echo():
         print("Emissio erronea")
     return render_template("login.html")
 
-

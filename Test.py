@@ -644,8 +644,8 @@ class TestBloc(unittest.TestCase):
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
         self.schema = SCHEMA
-        self.test = CreacioTaulaTest(self.my_db, self.schema)
-        self.test.crear_schema_dades()
+        # self.test = CreacioTaulaTest(self.my_db, self.schema)
+        # self.test.crear_schema_dades()
 
     def test_crear(self):
         transaccio = Factoria.build_transaccio_from_db(self.my_db)
@@ -689,10 +689,13 @@ class TestBlockchainUniversity(unittest.TestCase):
         # self.test.test_inicial()
 
     def test_prova(self):
-        bloc = Factoria.build_bloc_from_db(self.my_db, 1)
-        calcul = bloc.calcular_hash()
-        print(calcul)
-        bloc.id
+        bloc = Factoria.build_ultim_bloc_from_db(self.my_db)
+        uni = Factoria.build_universitat_from_db(self.my_db)
+        Encriptador_json = Encriptador.crear_json(bloc.transaccio)
+        transaccio_json = Encriptador_json.desencriptar(uni.private_key)
+        transaccio_final = Transaccio.crear_json(transaccio_json)
+        self.assertEqual(transaccio_final.id_document, 2)
+
 
 
     def test_crear_genesis_bloc(self):
