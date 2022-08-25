@@ -504,6 +504,13 @@ class MySqlBloc:
             return 0
         return id_bloc
 
+    def importar_cadena_blocs_desc(self):
+        sql = "SELECT id_bloc FROM bloc order by 1 desc"
+        cadena = self.importar_llista_sql(sql)
+        if cadena is None:
+            return list()
+        return cadena
+
     @staticmethod
     def dades_num(num_document):
         num_document = str(num_document)

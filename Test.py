@@ -455,7 +455,6 @@ class TestFactoria(unittest.TestCase):
         self.assertEqual(transaccio_inicial.emissor.id, transaccio_guardat.emissor.id)
         self.assertEqual(transaccio_inicial.receptor.id, transaccio_guardat.receptor.id)
 
-
 class TestPdf(unittest.TestCase):
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
@@ -663,19 +662,19 @@ class TestBloc(unittest.TestCase):
         self.assertEqual(bloc.id, bloc2.id)
 
 
-# class TestPaquet(unittest.TestCase):
-#
-#     def setUp(self):
-#         self.my_db = MySqlBloc('localhost', 'root', 'root')
-#         self.schema = SCHEMA
-#
-#     def test_to_json(self):
-#         bloc = Factoria.build_bloc_from_db(self.my_db, self.my_db.id_ultim_bloc())
-#         id_ultim_bloc = self.my_db.id_ultim_bloc()
-#         paquet = Paquet(bloc, '192.168.50.27:5005')
-#         paquet_json = Factoria.to_json(paquet)
-#         paquet2 = Paquet.crear_json(paquet_json)
-#         self.assertEqual(paquet.pas, paquet2.pas)
+class TestPaquet(unittest.TestCase):
+
+    def setUp(self):
+        self.my_db = MySqlBloc('localhost', 'root', 'root')
+        self.schema = SCHEMA
+
+    def test_to_json(self):
+        bloc = Factoria.build_bloc_from_db(self.my_db, self.my_db.id_ultim_bloc())
+        id_ultim_bloc = self.my_db.id_ultim_bloc()
+        paquet = Paquet(bloc, '192.168.50.27:5005')
+        paquet_json = Factoria.to_json(paquet)
+        paquet2 = Paquet.crear_json(paquet_json)
+        self.assertEqual(paquet.pas, paquet2.pas)
 
 
 
@@ -697,18 +696,16 @@ class TestBlockchainUniversity(unittest.TestCase):
         self.assertEqual(transaccio_final.id_document, 2)
 
 
-
     def test_crear_genesis_bloc(self):
         resultat = False
         if self.my_db.ultim_bloc() is None:
             genesis = BlockchainUniversity(self.my_db)
             resultat = genesis.crear_genesis_bloc()
-
         return resultat
 
     def test_comprovar_cadena(self):
         main = BlockchainUniversity(self.my_db)
-        self.assertEqual(main.comprovarCadena(), True)
+        self.assertEqual(main.comprovar_cadena_propia(), True)
 
     def test_to_minat(self):
         resultat = False
@@ -723,6 +720,13 @@ class TestBlockchainUniversity(unittest.TestCase):
                     self.my_db.esborrar_transaccio(transaccio.id_transaccio)
         self.assertTrue(resultat)
 
+    def test_Cadena_blocs(self):
+        cadena = Factoria.build_cadena_blocs(self.my_db)
+        retorn = False
+        if cadena:
+            retorn =BlockchainUniversity.comprovar_cadena(cadena)
+        self.assertTrue(retorn)
+
 
 class TestInicial(unittest.TestCase):
 
@@ -731,64 +735,3 @@ class TestInicial(unittest.TestCase):
         self.schema = SCHEMA
         self.test = CreacioTaulaTest(self.my_db, self.schema)
         self.test.crear_schema_inicial()
-
-#
-# class TestConexions(unittest.TestCase):
-#
-#     def setUp(self):
-#         self.my_db = MySqlBloc('localhost', 'root', 'root')
-#         self.schema = SCHEMA
-#
-#     def test_conexio_servidor(self):
-#         HOST = ''  # Symbolic name meaning all available interfaces
-#         PORT = 50007  # Arbitrary non-privileged port
-#         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-#             s.bind((HOST, PORT))
-#             s.listen(1)
-#             conn, addr = s.accept()
-#             with conn:
-#                 print('Connected by', addr)
-#                 while True:
-#                     data = conn.recv(1024)
-#                     if not data: break
-#                     conn.sendall(data)
-#                     print(data)
-#         self.test_conexio_servidor()
-#
-#     def test_conexio_client(self):
-#         HOST = '192.168.50.26'  # The remote host
-#         PORT = 50007  # The same port as used by the server
-#         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-#             s.connect((HOST, PORT))
-#             s.sendall(b'Hello, world udg')
-#             data = s.recv(1024)
-#         print('Received', repr(data))
-#
-#
-#     def test_connexio_client2(self):
-#         hash_anterior = Factoria.build_ultim_bloc_from_db(self.my_db)
-#         HOST, PORT = "192.168.50.28", 50007
-#         data = Factoria.to_json(hash_anterior)
-#
-#         # Create a socket (SOCK_STREAM means a TCP socket)
-#         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#
-#         try:
-#             # Connect to server and send data
-#             sock.connect((HOST, PORT))
-#             print (bytes(data, 'UTF-8'))
-#             sock.send(bytes(data, 'UTF-8'))
-#             #
-#         #     print("esperant missatge")
-#         #     received = sock.recv(1024).decode('utf8')
-#         #     # if received == data:
-#         #     print(received)
-#         #
-#         #     print("missatge rebut")
-#         # #
-#         finally:
-#             print("s'ha acabat ")
-#             sock.close()
-#
-#         # print("Sent: {}".format(data))
-#         # print("Received: {}".format(received))

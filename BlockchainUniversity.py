@@ -151,6 +151,16 @@ class Factoria:
             return None
 
     @staticmethod
+    def build_cadena_blocs(my_db):
+        cadena_id = my_db.importar_cadena_blocs_desc()
+        cadena = list()
+        for id_bloc in cadena_id:
+            bloc = Factoria.build_bloc_from_db(my_db, id_bloc)
+            cadena.append(bloc)
+        return cadena
+
+
+    @staticmethod
     def build_transaccio_from_db(my_db):
         trans_db = my_db.importar_transaccions()
         (id_trans, emissor, receptor, dada_json, id_document, data_creacio) = trans_db
@@ -738,7 +748,7 @@ class BlockchainUniversity:
                         new_bloc = Bloc(index, transaccio, self.my_db, ultim_bloc.calcular_hash())
                         resultat = Paquet.confirmar_enviament(new_bloc, self.my_db)
                         if resultat:
-                            self.my_db.guardar_bloc_dades(new_bloc)
+                            self.my_db.guardar_bloc(new_bloc)
                             self.my_db.esborrar_transaccio(transaccio.id_transaccio)
                             return self.minat()
                 else:
@@ -746,7 +756,7 @@ class BlockchainUniversity:
                     return self.minat()
 
     # Mirem que la cadena sigui correcta
-    def comprovarCadena(self):
+    def comprovar_cadena_propia(self):
         ultim_bloc = self.my_db.id_ultim_bloc()
         bloc = Factoria.build_bloc_from_db(self.my_db, ultim_bloc)
         ok = True
@@ -758,6 +768,32 @@ class BlockchainUniversity:
                 ok = False
             bloc = bloc_anterior
         return bloc.id == 1
+
+    def comprovar_cadena(self, cadena):
+        if not cadena:
+            return False
+        else:
+            id_cadena = 1
+            bloc = cadena[0]
+            ok = bloc is not None
+            while ok and bloc.id > 1:
+                bloc_anterior = cadena[id_cadena]
+                if bloc_anterior:
+                    ok = (bloc.hash_bloc_anterior.decode() == bloc_anterior.calcular_hash())
+                    id_cadena += 1
+                    bloc = bloc_anterior
+                else:
+                    ok = False
+                    print("La cadena de blocs es incorrecta")
+            return bloc.id == 1
+
+    def canviar_cadena(self, cadena):
+        if self.comprovar_cadena(cadena):
+            self.my_db.esborrar_taula('bloc')
+            for bloc in cadena:
+                self.my_db.guardar_bloc_dades(bloc)
+            return True
+        return False
 
 
 class Paquet:
@@ -801,19 +837,25 @@ class Paquet:
             self.dada = False
             return self
             self.ws.close()
-        data_json = json.loads(data)
-        paquet = Paquet.crear_json(data_json, self.my_db)
-        self.pas = paquet.pas
-        self.dada = paquet.dada
-        self.num_blocs = paquet.num_blocs
-        self.hash_anterior = self.hash_anterior
-        self.repartiment()
+        if data:
+            data_json = json.loads(data)
+            missatge = Missatge.crear_json(data_json)
+            paquet_json = missatge.rebut(self.my_db)
+            paquet = Paquet.crear_json(paquet_json, self.my_db)
+            self.pas = paquet.pas
+            self.dada = paquet.dada
+            self.num_blocs = paquet.num_blocs
+            self.hash_anterior = self.hash_anterior
+            self.repartiment()
+        else:
+            self.ws.close()
+
 
     def repartiment(self):
         try:
             if self.pas == 1:  # es un paquet inici de repartiment blocs
                 self.pas = 2  # indiquem que es un paquet que hem enviat nosaltres
-                self.ws.send(Factoria.to_json(self))
+                self.ws.send(Factoria.to_json(Missatge(self)))
                 self.resposta()
 
             elif self.pas == 2:  # es paquet que hem rebut per confirmar blocs
@@ -827,7 +869,7 @@ class Paquet:
                         self.dada = (self.hash_anterior == meu_bloc.calcular_hash())
                         self.num_blocs = num_blocs
                         self.pas = 3
-                        self.ws.send(Factoria.to_json(self))
+                        self.ws.send(Factoria.to_json(Missatge(self)))
                     else:
                         self.dada = False
                 self.pas = 3
@@ -841,7 +883,7 @@ class Paquet:
             elif self.pas == 4:  # Enviem el bloc i diem que es correcte per ells
                 self.pas = 5
                 self.num_blocs = Factoria.build_universitat_from_db(self.my_db).ip
-                self.ws.send(Factoria.to_json(self))
+                self.ws.send(Factoria.to_json(Missatge(self)))
 
             elif self.pas == 5:  # rebem un bloc ja confirmat.
                 BlockchainUniversity.afegir_bloc_extern(self.my_db, self.dada, self.num_blocs)
@@ -852,8 +894,16 @@ class Paquet:
                 self.resposta()
 
             elif self.pas == 7:  # rebem una peticio de tota la cadena
+                cadena = Factoria.build_cadena_blocs(self.my_db)
+                self.pas = 8
+                self.dada = bytes(cadena)
                 self.ws.send(Factoria.to_json(self))
                 self.resposta()
+
+            elif self.pas == 8:  # rebem tota la cadena
+                cadena = self.dada.decode()
+                self.dada = BlockchainUniversity.canviar_cadena(cadena)
+                return self
 
         except (KeyboardInterrupt, EOFError, simple_websocket.ConnectionClosed):
             self.dada = False
