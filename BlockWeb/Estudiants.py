@@ -132,3 +132,5 @@ def enviar_examen():  # put application's code here
             my_db.guardar_transaccio(transaccio)
         main.minat()
     return render_template("examens_enviats.html")
+
+

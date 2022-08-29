@@ -1,24 +1,42 @@
 {% extends 'layout.html' %}
 {% block navegacio1 %}
-
+{% if missatge =="Aquesta es la cadena de BlockchainUniversity : " %}
+{% if session  %}
+     <ul>
+{% if session['tipus']=="professor" %}
+        <li><a href="{{ url_for('seleccionar_alumnes') }}">Enviar Examens</a></li>
+         <li><a href="{{ url_for('triar_resposta')}}">Evaluar Examens</a></li>
+         <li><a href="{{ url_for('veure_cadena_usuari')}}">Els meus blocs</a></li>
+{% else %}
+         <li><a href="{{ url_for('triar_examens')}}">Enviar Resposta</a></li>
+         <li><a href="{{ url_for('veure_cadena_usuari')}}">Els meus blocs</a></li>
+ </ul>
+{% endif %}
+{% else %}
+         <li><a href="{{ url_for('login')}}">Entrar com a usuari</a></li>
+{% endif %}
+{% else %}
 <ul>
-    <li><a href="examens_alumne">Enviar Examens</a></li>
+         <li><a href="{{ url_for('triar_examens')}}">Enviar Resposta</a></li>
+         <li><a href="{{ url_for('veure_cadena_usuari')}}">Els meus blocs</a></li>
 </ul>
-
+{% endif %}
 {% endblock %}
 
 {% block navegacio2 %}
 <div class="nav_opcions">
-    <ul>
-        {% if missatge == "Pots triar agafar un altre resposta o entregar aquesta : " %}
-        <li><a href="{{ url_for('pujar_pdf')}}">Agafar un altre</a></li>
-        <li><a href="{{ url_for('entregar_resposta')}}">Entregar</a></li>
-        {% elif missatge == "L'hora limit per entregar l'examen es : " %}
-        <li><a href="{{ url_for('pujar_pdf')}}">Puja Resposta</a></li>
+    <ul>{% if missatge =="Aquesta es la cadena de BlockchainUniversity : " %}
         {% else %}
-        <li><a href="{{ url_for('pujar_pdf')}}">Respota Incorrecte "{{missatge}}"</a></li>
-        <input name="prova" value="{{fitxer}}">
-        {% endif %}
+            {% if missatge == "Pots triar agafar un altre resposta o entregar aquesta : " %}
+            <li><a href="{{ url_for('pujar_pdf')}}">Agafar un altre</a></li>
+            <li><a href="{{ url_for('entregar_resposta')}}">Entregar</a></li>
+            {% elif missatge == "L'hora limit per entregar l'examen es : " %}
+            <li><a href="{{ url_for('pujar_pdf')}}">Puja Resposta</a></li>
+            {% else %}
+            <li><a href="{{ url_for('pujar_pdf')}}">Respota Incorrecte "{{missatge}}"</a></li>
+            <input name="prova" value="{{fitxer}}">
+            {% endif %}
+         {% endif %}
     </ul>
 </div>
 {% endblock %}

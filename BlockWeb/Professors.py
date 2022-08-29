@@ -3,6 +3,7 @@ from datetime import datetime
 from os.path import join
 
 from flask import request, render_template, session, redirect
+from fpdf import FPDF
 
 from BlockWeb import PROFESSOR, app, PATH_TOTAL, PATH_RELATIU, main, my_db, Login
 from BlockchainUniversity import Factoria, Transaccio, AvaluacioExamen
@@ -119,3 +120,39 @@ def entregar_avaluacio():
     Factoria.guardar_fitxer(nom_total_resposta, pdf_resposta)
     return render_template('resposta_evaluacio.html', fitxer_avaluacio=nom_relatiu_avaluacio,
                            fitxer_resposta=nom_relatiu_resposta, nota=nota)
+
+
+def escriure_cadena(cadena_bloc):
+    nom_fitxer_txt = join(PATH_TOTAL, 'cadena.txt')
+    nom_fitxer_pdf = join(PATH_TOTAL, 'cadena.pdf')
+    with open(nom_fitxer_txt, 'w') as temp_file:
+        for blocs in cadena_bloc:
+            text = str(blocs.data_bloc)+"  "+str(blocs.hash_bloc_anterior)
+            temp_file.write("%s\n" % text)
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=8)
+    f = open(nom_fitxer_txt, "r")
+    for x in f:
+        pdf.cell(200, 10, txt=x, ln=1, align='C')
+    pdf.output(nom_fitxer_pdf)
+
+
+@app.route('/veure_cadena')
+def veure_cadena():
+    cadena_bloc = Factoria.build_cadena_blocs(my_db)
+    escriure_cadena(cadena_bloc)
+    nom_relatu = join(PATH_RELATIU, 'cadena.pdf')
+    missatge = "Aquesta es la cadena de BlockchainUniversity : "
+    hora_limit = datetime.now()
+    return render_template('veure_examen.html', fitxer=nom_relatu, hora=hora_limit, missatge=missatge)
+
+@app.route('/veure_cadena_usuari')
+def veure_cadena_usuari():
+    usuari = Factoria.build_usuari_from_db(my_db, session['id'])
+    cadena_bloc = Factoria.build_cadena_blocs_usuari(my_db, usuari)
+    escriure_cadena(cadena_bloc)
+    nom_relatu = join(PATH_RELATIU, 'cadena.pdf')
+    missatge = "Aquesta es la cadena de BlockchainUniversity : "
+    hora_limit = datetime.now()
+    return render_template('veure_examen.html', fitxer=nom_relatu, hora=hora_limit, missatge=missatge)

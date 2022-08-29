@@ -517,6 +517,13 @@ class MySqlBloc:
             return list()
         return cadena
 
+    def importar_cadena_blocs_usuari(self, usuari):
+        sql = f'SELECT id_bloc FROM hash_bloc_usuari where id_emissor = "{usuari.id}" order by 1 desc'
+        cadena = self.importar_llista_sql(sql)
+        if cadena is None:
+            return list()
+        return cadena
+
     @staticmethod
     def dades_num(num_document):
         num_document = str(num_document)

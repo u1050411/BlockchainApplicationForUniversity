@@ -1,10 +1,10 @@
 {% extends 'layout.html' %}
 {% block navegacio1 %}
-<ul>
-    <li><a href="{{ url_for('triar_examens')}}">Enviar Examens</a></li>
-    <li><a href="afegir_examen">Veure Blocks</a></li>
-    <li><a href="correccio">Enviar Correcció Examens</a></li>
-</ul>
+     <ul>
+        <li><a href="{{ url_for('seleccionar_alumnes') }}">Enviar Examens</a></li>
+         <li><a href="{{ url_for('triar_resposta')}}">Evaluar Examens</a></li>
+         <li><a href="{{ url_for('veure_cadena_usuari')}}">Els meus blocs</a></li>
+    </ul>
 {% endblock %}
 {% block content %}
 <section class="intro">

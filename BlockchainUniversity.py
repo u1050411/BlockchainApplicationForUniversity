@@ -6,6 +6,7 @@ import json
 from collections import Counter
 from datetime import datetime
 
+import PyPDF2
 import simple_websocket
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA
@@ -155,7 +156,16 @@ class Factoria:
         cadena_id = my_db.importar_cadena_blocs_desc()
         cadena = list()
         for id_bloc in cadena_id:
-            bloc = Factoria.build_bloc_from_db(my_db, id_bloc)
+            bloc = Factoria.build_bloc_from_db(my_db, id_bloc[0])
+            cadena.append(bloc)
+        return cadena
+
+    @staticmethod
+    def build_cadena_blocs_usuari(my_db, usuari):
+        cadena_id = my_db.importar_cadena_blocs_usuari(usuari)
+        cadena = list()
+        for id_bloc in cadena_id:
+            bloc = Factoria.build_bloc_from_db(my_db, id_bloc[0])
             cadena.append(bloc)
         return cadena
 
