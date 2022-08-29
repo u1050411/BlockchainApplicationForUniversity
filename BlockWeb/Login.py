@@ -21,19 +21,6 @@ def es_usuari(tipus):
         return wrapper_sessio_iniciada
 
     return decorator_es_usuari
-#
-# @app.route('/echo', websocket=True)
-# def echo():
-#     print("hola")
-#     ws = simple_websocket.Server(request.environ)
-#     try:
-#         data = json.loads(ws.receive())
-#         bloc = Bloc.crear_json(data)
-#         hash_anterior = bloc.hash_bloc_anterior
-#         Comunicacio.send()
-#     except simple_websocket.ConnectionClosed:
-#         pass
-#     return render_template("login.html")
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

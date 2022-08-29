@@ -32,6 +32,7 @@ class CreacioTaulaTest:
         self.crear_examens()
         self.crear_respostes()
         self.crear_avaluacio()
+        self.crear_transaccions()
 
 
     def crear_schema_inicial(self):
@@ -43,16 +44,16 @@ class CreacioTaulaTest:
         self.crear_usuaris()
         self.crear_assignatures()
         self.crear_pdf()
-        self.crear_genesis_bloc()
+        # self.crear_genesis_bloc()
 
     def crear_universitat(self):
         univ = [{"id": 1,"ip": "192.168.50.25", "nom": "Universitat de Girona",
           "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIICWwIBAAKBgQDWYgDCSOewWQPyr673t9bsMIiLjykjryY8qxz4QHHv+b5l2PeB\n5aZjziAcDEWrcaFnfgH7TrB09QRwdRCs7GWISM3+oTcdQ6nAw/SpWK1hRbeI/y+P\nhtOJBe2Z5bzIXjNU4BMCGtpvI8jKGR7cVEtOhlebl01ehSNO2JzEsAOQVwIDAQAB\nAoGAC1pyLUWMkLXWHUKHIuC5ql54MU9OlpUObg4Uqj9JwEXa6HWaEEKVpIctlZM/\nFwNmPmgip5aVGN7U8lqMLtDLRMZNNuS+r2cIqeCLlTPyKSmnw+/IkpBfRAkGHaUK\n7on/+cxB1ASy8yNqAPQxmAH4N1mdn9TW7aGQSyZsSxkN32ECQQDmcHqT+ss5CpGJ\nVWRpFy2hL25mOng+Rq77IsFOZeL41Fqfc+K2P297gl1SS0j3viBCjkDtOfmuQ8Uk\n3CZcNQVnAkEA7imVvGz7Dpbl+EnaSDLJSKR6mmUgvUL85hSRO4IAtpsmJ3G9aUv+\nGkQZxYLV75IBFVc241zl32HZ0OBBNL7XkQJAPaKOFrB41Lvv61Sss7MgYEFofO1c\npgOP39oO7CIyUC20Q3vigq566gUXYuCCFsmCpWqZERp1nte/jjlYBUelNwJAE0zd\nbJKsWcdSxac+gEFVXISvxtlRKOVH12FtT5Q+eI3kLqgiAGl/IyPHruDmc26ylccm\nlJBPtKWaYDn8LskUcQJAc0GeTF3/EiClAMrNTnCbM7FKr7we+fGtnyuQxbLABSkk\nsb2OnhzJLzm+BkOU9AoeZoxGsoa5iBrMapkYr517yw==\n-----END RSA PRIVATE KEY-----",
           "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDWYgDCSOewWQPyr673t9bsMIiL\njykjryY8qxz4QHHv+b5l2PeB5aZjziAcDEWrcaFnfgH7TrB09QRwdRCs7GWISM3+\noTcdQ6nAw/SpWK1hRbeI/y+PhtOJBe2Z5bzIXjNU4BMCGtpvI8jKGR7cVEtOhleb\nl01ehSNO2JzEsAOQVwIDAQAB\n-----END PUBLIC KEY-----"},
-         {"id": 2, "ip": "192.168.50.28", "nom": "Universitat Politecnica Catalunya",
-          "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIICWwIBAAKBgQCchauIJX8B/mlEc+HjYTz9TgymwPJ589ntbaoO44AIES7l1CT5\nL1mE44f5W8VBtIK6xE+y5E0mkNlnKt02nsHuxwjYj1olsZ66mTqjtrdizAPv/otA\nQtU93fX9sQLH0QoPRz554CmyjapbtobaYI6xcqRwxIu/FG04TJ0KRt4EZQIDAQAB\nAoGABFVFzReVcm8u59u50BGNkck629TxZ+nilkpkz+1OMPfIAuNo5wZMcqIMtINs\n+XQvWE9KxSRbDgT3JJfqfT9PSN6K4NxkjraGbj3Nsv9m1C1LxJNNxPhUoukv/5ZR\no7zJf+bmX/6UsQvewNFS/gVtLIvtEQbpvDFrTCxIv07nfUMCQQC5l2nApGbeXnOS\n8li4iwkwObr1AsLKeSEVG6aY0b4lxgm1dvV0AQlwpiPVw16hSdXoonMZk2k2U8/H\nE00XyLhDAkEA1+cN6tQuHT0JbdSz35CMjoUgx3L50pt2Bxr/EraKMcIY5n/zlpqj\naxLhYtfsLInYhP8wialRX3ZTF0dWe6/6NwJALI8tBeKzDBrTVum24YAIUbrap27l\nQ+W3SrEb278oDzuwIxCPuC1zjcdl/THuK31lzXgLeI2LCk8vKNX6gYZgrwJAQg1M\nMrWrTgKoadOTHCiK9+c+ugYw6//nwhC+TKlP6h0ppQssKL0ylcV28tiARrf9Z+Ly\npIsKfBwlG5AVo02ZTQJAWLk056zopXHRjy2wVSk+mrxrX9fmSGQndKo32x0Gq9dG\njzCvS/H2iyojw9GzB4jSxLVMTVYXcvlj4RSWMAXA1A==\n-----END RSA PRIVATE KEY-----",
-          "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCchauIJX8B/mlEc+HjYTz9Tgym\nwPJ589ntbaoO44AIES7l1CT5L1mE44f5W8VBtIK6xE+y5E0mkNlnKt02nsHuxwjY\nj1olsZ66mTqjtrdizAPv/otAQtU93fX9sQLH0QoPRz554CmyjapbtobaYI6xcqRw\nxIu/FG04TJ0KRt4EZQIDAQAB\n-----END PUBLIC KEY-----"},
-         {"id": 3, "ip": "192.168.50.27", "nom": "Universitat Rovira i Virgili",
+         # {"id": 3, "ip": "192.168.50.28", "nom": "Universitat Politecnica Catalunya",
+         #  "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIICWwIBAAKBgQCchauIJX8B/mlEc+HjYTz9TgymwPJ589ntbaoO44AIES7l1CT5\nL1mE44f5W8VBtIK6xE+y5E0mkNlnKt02nsHuxwjYj1olsZ66mTqjtrdizAPv/otA\nQtU93fX9sQLH0QoPRz554CmyjapbtobaYI6xcqRwxIu/FG04TJ0KRt4EZQIDAQAB\nAoGABFVFzReVcm8u59u50BGNkck629TxZ+nilkpkz+1OMPfIAuNo5wZMcqIMtINs\n+XQvWE9KxSRbDgT3JJfqfT9PSN6K4NxkjraGbj3Nsv9m1C1LxJNNxPhUoukv/5ZR\no7zJf+bmX/6UsQvewNFS/gVtLIvtEQbpvDFrTCxIv07nfUMCQQC5l2nApGbeXnOS\n8li4iwkwObr1AsLKeSEVG6aY0b4lxgm1dvV0AQlwpiPVw16hSdXoonMZk2k2U8/H\nE00XyLhDAkEA1+cN6tQuHT0JbdSz35CMjoUgx3L50pt2Bxr/EraKMcIY5n/zlpqj\naxLhYtfsLInYhP8wialRX3ZTF0dWe6/6NwJALI8tBeKzDBrTVum24YAIUbrap27l\nQ+W3SrEb278oDzuwIxCPuC1zjcdl/THuK31lzXgLeI2LCk8vKNX6gYZgrwJAQg1M\nMrWrTgKoadOTHCiK9+c+ugYw6//nwhC+TKlP6h0ppQssKL0ylcV28tiARrf9Z+Ly\npIsKfBwlG5AVo02ZTQJAWLk056zopXHRjy2wVSk+mrxrX9fmSGQndKo32x0Gq9dG\njzCvS/H2iyojw9GzB4jSxLVMTVYXcvlj4RSWMAXA1A==\n-----END RSA PRIVATE KEY-----",
+         #  "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCchauIJX8B/mlEc+HjYTz9Tgym\nwPJ589ntbaoO44AIES7l1CT5L1mE44f5W8VBtIK6xE+y5E0mkNlnKt02nsHuxwjY\nj1olsZ66mTqjtrdizAPv/otAQtU93fX9sQLH0QoPRz554CmyjapbtobaYI6xcqRw\nxIu/FG04TJ0KRt4EZQIDAQAB\n-----END PUBLIC KEY-----"},
+         {"id": 2, "ip": "192.168.50.27", "nom": "Universitat Rovira i Virgili",
           "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIICXAIBAAKBgQCWY6jFMVyA2FolRbB91q1EeUVwxX6Hma4sMXlyqgsLHJ5QU7Ke\nAXTU7IMzsOpTfn+xE6l86w0R+5ZWu1BsC1z6XxE8ZgWbMSzR9Bs6aMGd4rAHca4w\nJ8nMUWyCvjoehm+/WYtw3e8d5YvkQY9PMUCe4Vpfg2lRReDO/qwScS9+uwIDAQAB\nAoGAAxN5xcLLNhV2zpFc2U4VUDO80GAxxNtHXT8L0WUaAbmtoU389s9n0N0fl+ST\n/m41dW1GB7iVFVuUiSSesf8PgUV+oobVcFfKt2AzoGBQYKKDh1D4BovB+hQihzFu\n+no4XOmGk7KPWUhK2mThJ4OvPwg3HYUt7iKVlgQSMUoAMMkCQQDDSc3f4uemWaHg\nkNdK7jS4by9JbJqFZVj0FcFoUwnnqnk6GLJuNvhxEKhG1JyZ8Xi/xfZIuur7Ch0c\nG8hDVFyJAkEAxSSG+X15uo6YpmYWW0VWFqW1+TYfjwEUhmC3/DU0qnNSLOn218qC\nhxNPILlJG+P4r9OsfbjwRJb8biAemaoYIwJBAIJUCfIlgwVQgijVYOjfyg1gHkW5\nFfJ6bYAP2NBfwpd5/IdaHhJR20HRpQwILi7KqRQK8E8fd1xsJnswy1irv0kCQCvN\nFtQd5crmXdIywmra9+qmPM03EkHyqn3ExXwa0i3A25QxE3AUhXW/e4g4wp6YwytF\nq4Bvc6q5pTJOnp3jpeMCQDP2LV5cfP9WuPzMW5Fkc1nScFVme35PaVkgUQ4zO02B\nWgCMViwfHSnIrrtSICT1MoLHH4UqdtHavHAIcwZlGfM=\n-----END RSA PRIVATE KEY-----",
           "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCWY6jFMVyA2FolRbB91q1EeUVw\nxX6Hma4sMXlyqgsLHJ5QU7KeAXTU7IMzsOpTfn+xE6l86w0R+5ZWu1BsC1z6XxE8\nZgWbMSzR9Bs6aMGd4rAHca4wJ8nMUWyCvjoehm+/WYtw3e8d5YvkQY9PMUCe4Vpf\ng2lRReDO/qwScS9+uwIDAQAB\n-----END PUBLIC KEY-----"}
         ]
@@ -173,17 +174,17 @@ class CreacioTaulaTest:
 
     def crear_avaluacio(self):
 
-        respostes = [[1, 1, 1, 'u2000256', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
+        avaluacions = [[1, 1, 1, 'u2000256', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
                                         f'Examen_2021_20_10_01_primer_parcial-solucio.pdf', 'u1050411',8],
                      [2, 2, 2, 'u2050404', f'C:/Users/u1050/PycharmProjects/BlockchainApplicationForUniversity/pdf/'
                                         f'Examen_2020-21-_26-03_primer_parcial.pdf', 'u1050402',4]]
 
-        for id_avaluacio, id_resposta, id_examen, id_professor, nom_fitxer, estudiant, nota in respostes:
+        for id_avaluacio, id_resposta, id_examen, id_professor, nom_fitxer, estudiant, nota in avaluacions:
             pdf = Factoria.recuperar_fitxer(nom_fitxer)
             professor = Factoria.build_usuari_from_db(self.my_db, id_professor)
             resposta = Factoria.build_id_resposta_alumne_from_db(self.my_db, id_resposta)
             estudiant = Factoria.build_usuari_from_db(self.my_db, estudiant)
-            avaluacio_examen = AvaluacioExamen(resposta, professor, estudiant, pdf, id_avaluacio)
+            avaluacio_examen = AvaluacioExamen(resposta, professor, estudiant, pdf, nota, id_avaluacio)
             self.my_db.guardar_avaluacio_examen(avaluacio_examen)
 
     def crear_transaccions(self):
@@ -201,9 +202,11 @@ class CreacioTaulaTest:
         transaccio2 = Transaccio(emissor2, receptor2, resposta)
         self.my_db.guardar_transaccio(transaccio2)
 
-    def crear_genesis_bloc(self):
-        bloc_chain = BlockchainUniversity(self.my_db)
-        # bloc_chain.crear_genesis_bloc()
+    def crear_bloc(self):
+        transaccio = Factoria.build_transaccio_from_db(self.my_db)
+        bloc = Bloc(0, transaccio, self.my_db)
+        self.my_db.guardar_bloc_dades(bloc)
+
 
 
 class TestUsuaris(unittest.TestCase):
@@ -213,6 +216,7 @@ class TestUsuaris(unittest.TestCase):
         self.schema = SCHEMA
         self.test = CreacioTaulaTest(self.my_db, self.schema)
         self.test.crear_schema_dades()
+
 
     def test_creation(self):
         public_key = RSA.generate(1024, randfunc=None, e=65537).publickey()
@@ -379,6 +383,8 @@ class TestMysql(unittest.TestCase):
 
     def test_guardar_bloc(self):
         self.test.crear_schema_dades()
+        self.test.crear_transaccions()
+        self.test.crear_bloc()
         ultim_bloc = Factoria.build_ultim_bloc_from_db((self.my_db))
         transactions = Factoria.build_transaccio_from_db(self.my_db)
         emissor = transactions.emissor
@@ -444,6 +450,7 @@ class TestFactoria(unittest.TestCase):
         self.assertEqual(resposta.usuari.tipus, PROFESSOR)
 
     def test_transaccio(self):
+        self.test.crear_transaccions()
         receptor = Factoria.build_usuari_from_db(self.my_db, 'u1050402')
         emissor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
         examen = Factoria.build_examen_from_db(self.my_db, 1)
@@ -606,16 +613,16 @@ class TestTransaction(unittest.TestCase):
 
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.my_db.afegir_schema(SCHEMA)
-        self.test = TestInicial()
-        self.test.test_inicial()
+        self.schema = SCHEMA
+        self.test = CreacioTaulaTest(self.my_db, self.schema)
+        self.test.crear_schema_dades()
 
     @property
     def crear_transaccio(self):
         receptor = Factoria.build_usuari_from_db(self.my_db, 'u1050402')
         emissor = Factoria.build_usuari_from_db(self.my_db, 'u2000256')
         examen = Factoria.build_examen_from_db(self.my_db, 1)
-        transaccio = Transaccio(emissor, receptor, examen)
+        transaccio = Transaccio(emissor, receptor, examen, '01')
         return receptor, emissor, examen, transaccio
 
     def test_guardar(self):
@@ -626,16 +633,6 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(transaccio.emissor.id, emissor.id)
         self.assertEqual(transaccio.receptor.id, receptor.id)
         self.assertEqual(transaccio.id_document, transaccio_inicial.id_document)
-
-
-    def test_encriptar_desencriptar(self):
-        (receptor, emissor, examen, transaccio_inicial) = self.crear_transaccio
-        uni = Factoria.build_universitat_from_db(self.my_db)
-        transaccio_encriptat = Encriptador(transaccio_inicial, uni.public_key)
-        transaccio_json = transaccio_encriptat.desencriptar(uni.private_key)
-        transaccio_final = Transaccio.crear_json(transaccio_json)
-        self.assertEqual(transaccio_inicial.emissor.id, transaccio_final.emissor.id)
-        self.assertEqual(transaccio_inicial.id_document, transaccio_final.id_document)
 
 
 class TestBloc(unittest.TestCase):
@@ -653,6 +650,7 @@ class TestBloc(unittest.TestCase):
         Encriptador_json = Encriptador.crear_json(bloc.transaccio)
         transaccio_json = Encriptador_json.desencriptar(uni.private_key)
         transaccio_final = Transaccio.crear_json(transaccio_json)
+
         self.assertEqual(transaccio.emissor.id, transaccio_final.emissor.id)
 
     def test_to_json(self):
@@ -687,14 +685,6 @@ class TestBlockchainUniversity(unittest.TestCase):
         # self.test = TestInicial()
         # self.test.test_inicial()
 
-    def test_prova(self):
-        bloc = Factoria.build_ultim_bloc_from_db(self.my_db)
-        uni = Factoria.build_universitat_from_db(self.my_db)
-        Encriptador_json = Encriptador.crear_json(bloc.transaccio)
-        transaccio_json = Encriptador_json.desencriptar(uni.private_key)
-        transaccio_final = Transaccio.crear_json(transaccio_json)
-        self.assertEqual(transaccio_final.id_document, 2)
-
 
     def test_crear_genesis_bloc(self):
         resultat = False
@@ -708,16 +698,21 @@ class TestBlockchainUniversity(unittest.TestCase):
         self.assertEqual(main.comprovar_cadena_propia(), True)
 
     def test_to_minat(self):
-        resultat = False
+        main = BlockchainUniversity(self.my_db)
         if self.my_db.existeix_alguna_transaccio():
             transaccio = Factoria.build_transaccio_from_db(self.my_db)
             if transaccio:
-                ultim_bloc = Factoria.build_ultim_bloc_from_db(self.my_db)
-                index = ultim_bloc.id + 1
-                new_bloc = Bloc(index, transaccio, self.my_db, ultim_bloc.calcular_hash())
-                resultat = Paquet.confirmar_enviament(new_bloc, self.my_db)
-                if resultat:
-                    self.my_db.esborrar_transaccio(transaccio.id_transaccio)
+                if self.my_db.existeix_bloc_genesis():
+                    ultim_bloc = Factoria.build_ultim_bloc_from_db(self.my_db)
+                    if ultim_bloc:
+                        index = ultim_bloc.id + 1
+                        new_bloc = Bloc(index, transaccio, self.my_db, ultim_bloc.calcular_hash())
+                        resultat = Paquet.confirmar_enviament(new_bloc, self.my_db)
+                        if resultat:
+                            self.my_db.guardar_bloc(new_bloc)
+                            self.my_db.esborrar_transaccio(transaccio.id_transaccio)
+                else:
+                    main.crear_genesis_bloc()
         self.assertTrue(resultat)
 
     def test_Cadena_blocs(self):

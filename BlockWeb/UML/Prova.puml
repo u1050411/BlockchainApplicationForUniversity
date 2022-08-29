@@ -2,10 +2,86 @@
 'https://plantuml.com/sequence-diagram
 
 autonumber
+Web_professor -> Web: seleccionar_alumnes()
+Web -> Web: enviar_examen()
+Web -> Factoria: build_usuari_from_db('u2025600')
+Factoria -> Mysql: importar_usuari(id_usuari)
+Mysql -> Factoria: dades_professor
+Factoria -> Professor: Professor(dades_professor)
+Professor -> Factoria: professor
+Factoria -> Web: professor
+Web -> Factoria: build_usuari_from_db('u1050410')
+Factoria -> Mysql: importar_usuari(id_usuari)
+Mysql -> Factoria: dades_estudiant
+Factoria -> Estudiant: Estudiant(dades_estudiant)
+Estudiant -> Factoria: estudiant
+Factoria -> Web: estudiant
+Web -> Factoria: build_examen_from_db()
+Factoria -> Mysql: importar_examen(id_examen)
+Mysql -> Factoria: dades_examen
+Factoria -> Examen: Examen(dades_examen)
+Examen -> Factoria: examen
+Factoria -> Web: examen
+Web -> Transaccio: Transaccio(professor, estudiant, examen)
+Transaccio -> Web: new_transaccio
+Web -> Mysql: guardar_transaccio(new_transaccio)
+Web -> BlockChain: minat()
+BlockChain -> Factoria: build_transaccio_from_db()
+Factoria -> Mysql: importar_usuari(id_usuari)
+Mysql -> Factoria: dades_professor
+Factoria -> Professor: Professor(dades_professor)
+Professor -> Factoria: professor
+Factoria -> Mysql: importar_usuari(id_usuari)
+Mysql -> Factoria: dades_estudiant
+Factoria -> Estudiant: Estudiant(dades_estudiant)
+Estudiant -> Factoria: estudiant
+Factoria -> Mysql: importar_examen(id_examen)
+Mysql -> Factoria: dades_examen
+Factoria -> Examen: Examen(dades_examen)
+Examen -> Factoria: examen
+Factoria -> Transaccio: crear_mysql(dades_estudiant, dades_professor, dades_document)
+Transaccio -> Factoria: transaccio
+Factoria -> BlockChain: transaccio
+BlockChain -> Factoria: build_ultim_bloc_from_db()
+Factoria -> Mysql: importar_ultim_bloc()
+Mysql -> Factoria: dades_bloc
+Factoria -> Bloc: Bloc(dades_bloc)
+Bloc -> Factoria: ultim_bloc
+Factoria -> BlockChain: ultim_bloc
+BlockChain -> Bloc: (transaccio,ultim_bloc.hash)
+Bloc -> Encriptacio: Encriptacio(transaccio, public_key)
+Encriptacio -> Encriptacio:
+Bloc -> BlockChain: new_bloc
+BlockChain -> Paquet: confirmar_enviament(new_bloc)
+Paquet -> Factoria: build_all_univeristat_from_db()
+Factoria -> Mysql: importar_universitats()
+Mysql -> Factoria: llista_universitats
+Factoria -> Paquet
+loop llista_universitats
+Paquet -> Paquet: (Bloc, universitat.ip)
+Paquet -> Paquet: repartiment()
+Paquet -> Missatge: Missatge(dades_enviament, bloc)
+Missatge -> Paquet: new_missatge(ip, bloc, pas)
+Paquet -> Simple_WebSocket: Simple_websocket(new_missatge)
+Simple_Websocket -> Paquet: repartiment()
+Paquet -> Paquet: Confirmat_Bloc
+Paquet -> BlockChain: resultat
+BlockChain -> Mysql: guardar_bloc_dades(new_bloc)
 
-Alice -> Bob: Authentication Request
-Pau -> Alice: Envio de mensaje
 
-Alice -> Bob: Another authentication Request
-Alice <-- Bob: another authentication Response
+newpage En un altre universitat
+
+Simple_Websocket -> Simple_Websocket: receive()
+Simple_Websocket -> Web: data
+Web -> Paquet: crear_json(dada)
+Paquet -> Web: new_paquet
+Paquet -> Paquet: repartiment()
+Paquet -> Blockchain: afegir_bloc_extern(bloc,ip)
+Blockchain -> Bloc: verificar_bloc()
+Bloc -> Encriptador: verificar_sign()
+Encriptador -> Bloc: True
+Bloc -> Blockchain: True
+Blockchain -> Mysql: guardar_bloc(bloc)
+Blockchain -> Web: Missatge Confirmació
+
 @enduml

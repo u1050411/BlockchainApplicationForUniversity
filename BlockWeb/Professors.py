@@ -39,7 +39,7 @@ def seleccionar_alumnes():
 @Login.es_usuari(tipus=PROFESSOR)
 def triar_resposta():
     user = Factoria.build_usuari_from_db(my_db, session['id'])
-    llista = user.importar_examens(my_db)
+    llista = user.importar_respostes_examen(my_db)
     llista_examens = list()
     for x in llista:
         if x.nota is None or x.nota == 0:

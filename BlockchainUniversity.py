@@ -3,15 +3,15 @@ import base64
 import collections
 import hashlib
 import json
+from collections import Counter
 from datetime import datetime
-import simple_websocket
 
+import simple_websocket
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_PSS
 from cryptography.fernet import Fernet
-from collections import Counter
 
 UTF_8 = 'utf8'
 ESTUDIANT = 'estudiant'
@@ -49,8 +49,8 @@ class Factoria:
 
     @staticmethod
     def build_universitat_from_db_ip(my_db, ip):
-        my_db.importar_universitat_ip(ip)
-        return Factoria.build_universitat_from_id_db(my_db, 1)
+        id_universitat, nom, ip, private_key_str, public_key_str = my_db.importar_universitat_ip(ip)
+        return Factoria.build_universitat_from_id_db(my_db, id_universitat)
 
     @staticmethod
     def build_all_universitat_from_db(my_db):
@@ -65,12 +65,15 @@ class Factoria:
         return llista
 
     @staticmethod
-    def build_universitat_from_id_db(my_db, id):
-        universiat_db = my_db.importar_universitat_id(id)
+    def build_universitat_from_id_db(my_db, id_uni):
+        universiat_db = my_db.importar_universitat_id(id_uni)
         if universiat_db is not None:
             id_universitat, nom, ip, private_key_str, public_key_str = universiat_db
             public_key = RSA.importKey(public_key_str)
-            private_key = RSA.importKey(private_key_str)
+            if id_universitat == 1:
+                private_key = RSA.importKey(private_key_str)
+            else:
+                private_key = None
             return Universitat(nom, private_key, public_key, id_universitat, ip)
         return None
 
@@ -144,11 +147,8 @@ class Factoria:
     @staticmethod
     def build_ultim_bloc_from_db(my_db):
         (id_bloc, data, transaccio, signar, hash_anterior) = my_db.ultim_bloc()
-        if id_bloc:
-            bloc = Bloc.crear_msql(id_bloc, data, transaccio, signar, hash_anterior)
-            return bloc
-        else:
-            return None
+        bloc = Bloc.crear_msql(id_bloc, data, transaccio, signar, hash_anterior)
+        return bloc
 
     @staticmethod
     def build_cadena_blocs(my_db):
@@ -158,7 +158,6 @@ class Factoria:
             bloc = Factoria.build_bloc_from_db(my_db, id_bloc)
             cadena.append(bloc)
         return cadena
-
 
     @staticmethod
     def build_transaccio_from_db(my_db):
@@ -187,13 +186,12 @@ class Factoria:
         estudiant = Factoria.build_usuari_from_db(my_db, id_estudiant)
         return AvaluacioExamen(resposta, professor, estudiant, pdf, nota, id_avaluacio)
 
-
-@staticmethod
-def build_avaluacio_examen_from_db(my_db, id_examen, id_resposta):
-    resposta = Factoria.build_resposta_examen_from_db(my_db, id_examen, id_resposta)
-    if resposta.usuari.tipus != PROFESSOR:
-        raise ValueError('Amb aquest id no hi ha una avaluacio')
-    return resposta
+    @staticmethod
+    def build_avaluacio_examen_from_db(my_db, id_examen, id_resposta):
+        resposta = Factoria.build_resposta_examen_from_db(my_db, id_examen, id_resposta)
+        if resposta.usuari.tipus != PROFESSOR:
+            raise ValueError('Amb aquest id no hi ha una avaluacio')
+        return resposta
 
 
 class Encriptador:
@@ -203,7 +201,6 @@ class Encriptador:
             # self.nom = None
             self.clau = None
             self.dada = None
-            # self.sign = None
         else:
             key_simetric = Fernet.generate_key()
             encriptar_clau = PKCS1_OAEP.new(public_key)
@@ -212,8 +209,6 @@ class Encriptador:
             dada_byte = data_json.encode("utf-8")
             encriptador = Fernet(key_simetric)
             self.dada = encriptador.encrypt(dada_byte)
-            # self.sign = None
-            # self.nom = None
 
     @staticmethod
     def signar(dada, private_key=None):
@@ -320,7 +315,7 @@ class Usuari:
             llista_pdfs.append(classe_pdf)
         return llista_pdfs
 
-    def importar_examens(self, my_db):
+    def importar_respostes_examen(self, my_db):
         pass
 
     def to_json(self):
@@ -352,7 +347,7 @@ class Professor(Usuari):
         return llista_examens
 
     # Importa les respostes que han enviat els alumnes de la seva asignatura
-    def importar_examens(self, my_db):
+    def importar_respostes_examen(self, my_db):
         llista_id = my_db.importar_id_respostes_professor(self)
         llista = list()
         for x in llista_id:
@@ -371,7 +366,7 @@ class Estudiant(Usuari):
         super(Estudiant, self).__init__(id_usuari, nif, nom, cognom, public_key, contrasenya, email)
         self.tipus = ESTUDIANT
 
-    def importar_examens(self, my_db):
+    def importar_respostes_examen(self, my_db):
         return my_db.importar_examens_estudiant(self)
 
 
@@ -524,7 +519,7 @@ class RespostaExamen(Document):
 
 class AvaluacioExamen(Document):
 
-    def __init__(self, resposta=None, professor=None, estudiant=None, pdf=None, nota=None, id_avaluacio=0):
+    def __init__(self, resposta=None, professor=None, estudiant=None, pdf=None, nota=None, id_avaluacio=None):
         super(AvaluacioExamen, self).__init__(id_avaluacio, 3, professor, pdf)
         self.resposta = resposta
         self.estudiant = estudiant
@@ -617,10 +612,6 @@ class Transaccio:
         trans.data_creacio = data_creacio
         trans.hash_anterior = hash_anterior
         return trans
-
-    # def sign(self, data):
-    #     h = SHA1.new(data)
-    #     return binascii.hexlify(self._signatura.sign(h)).decode('ascii')
 
     def to_dict(self):
         return collections.OrderedDict({
@@ -748,12 +739,12 @@ class BlockchainUniversity:
                         new_bloc = Bloc(index, transaccio, self.my_db, ultim_bloc.calcular_hash())
                         resultat = Paquet.confirmar_enviament(new_bloc, self.my_db)
                         if resultat:
-                            self.my_db.guardar_bloc(new_bloc)
+                            self.my_db.guardar_bloc(new_bloc, transaccio.emissor)
                             self.my_db.esborrar_transaccio(transaccio.id_transaccio)
-                            return self.minat()
+                            self.minat()
                 else:
                     self.crear_genesis_bloc()
-                    return self.minat()
+                    self.minat()
 
     # Mirem que la cadena sigui correcta
     def comprovar_cadena_propia(self):
@@ -840,16 +831,19 @@ class Paquet:
         if data:
             data_json = json.loads(data)
             missatge = Missatge.crear_json(data_json)
-            paquet_json = missatge.rebut(self.my_db)
-            paquet = Paquet.crear_json(paquet_json, self.my_db)
-            self.pas = paquet.pas
-            self.dada = paquet.dada
-            self.num_blocs = paquet.num_blocs
-            self.hash_anterior = self.hash_anterior
-            self.repartiment()
+            rebut_correcte = missatge.rebut(self.my_db)
+            if rebut_correcte:
+                paquet = missatge.paquet
+                self.pas = paquet.pas
+                self.dada = paquet.dada
+                self.num_blocs = paquet.num_blocs
+                self.hash_anterior = self.hash_anterior
+                self.repartiment()
+            else:
+                self.dada = False
+                return self
         else:
             self.ws.close()
-
 
     def repartiment(self):
         try:
@@ -874,7 +868,7 @@ class Paquet:
                         self.dada = False
                 self.pas = 3
                 self.num_blocs = num_blocs
-                self.ws.send(Factoria.to_json(self))
+                self.ws.send(Factoria.to_json(Missatge(self)))
                 self.resposta()
 
             elif self.pas == 3:  # Tenim la resposta si les dugues cadenes son correctes
@@ -890,14 +884,14 @@ class Paquet:
                 self.ws.close()
 
             elif self.pas == 6:  # demanem que ens passi tota la cadena
-                self.ws.send(Factoria.to_json(self))
+                self.ws.send(Factoria.to_json(Missatge(self)))
                 self.resposta()
 
             elif self.pas == 7:  # rebem una peticio de tota la cadena
                 cadena = Factoria.build_cadena_blocs(self.my_db)
                 self.pas = 8
                 self.dada = bytes(cadena)
-                self.ws.send(Factoria.to_json(self))
+                self.ws.send(Factoria.to_json(Missatge(self)))
                 self.resposta()
 
             elif self.pas == 8:  # rebem tota la cadena
@@ -925,7 +919,7 @@ class Paquet:
             if resultat:
                 mes_comu, quantitat = resultat.pop(0)
                 if (len(paquets) / 2) <= quantitat:
-                    if mes_comu == (bloc.id - 1) :
+                    if mes_comu == (bloc.id - 1):
                         for paquet_confirmat in paquets:
                             if paquet_confirmat.dada:
                                 paquet_confirmat.dada = Factoria.to_json(bloc)
@@ -957,36 +951,33 @@ class Paquet:
             llista_hash.append(Factoria.build_bloc_from_db(x['id']).hash_bloc_anterior)
         return llista_hash
 
-
 class Missatge:
     def __init__(self, paquet):
         if paquet:
             uni = Factoria.build_universitat_from_db(paquet.my_db)
-            public_key = uni.public_key
-            self.public_key_export = public_key.exportKey('PEM')
+            self.paquet = paquet
             self.paquet_code = Factoria.to_json(paquet).encode('utf-8', 'replace')
             self.signatura = Encriptador.signar(self.paquet_code, uni.private_key)
-            print(Encriptador.verificar_sign(self.paquet_code, self.signatura, uni.public_key))
             self.ip = uni.ip
         else:
-            self.public_key_export = 0
             self.paquet_code = 0
             self.signatura = 0
             self.ip = 0
 
     def rebut(self, my_db):
-            public_key = RSA.importKey(ast.literal_eval(self.public_key_export))
+            uni = Factoria.build_universitat_from_db_ip(my_db, self.ip)
             paquet_code = ast.literal_eval(self.paquet_code)
             signatura = ast.literal_eval(self.signatura)
-            if Encriptador.verificar_sign(paquet_code, signatura, public_key):
+            resultat = Encriptador.verificar_sign(paquet_code, signatura, uni.public_key)
+            if resultat:
                 paquet_json = paquet_code.decode('utf-8', 'replace')
-                return json.loads(paquet_json)
+                self.paquet = Paquet.crear_json(json.loads(paquet_json), my_db)
+                return resultat
             else:
                 return False
 
     def to_dict(self):
         return collections.OrderedDict({
-            'public_key_export': self.public_key_export,
             'paquet_code': self.paquet_code,
             'signatura': self.signatura,
             'ip': self.ip,
@@ -995,10 +986,7 @@ class Missatge:
     @classmethod
     def crear_json(cls, missatge_json):
         missatge = cls(None)
-        missatge.public_key_export = missatge_json['public_key_export']
         missatge.paquet_code = missatge_json['paquet_code']
         missatge.signatura = missatge_json['signatura']
         missatge.ip = missatge_json['ip']
         return missatge
-
-

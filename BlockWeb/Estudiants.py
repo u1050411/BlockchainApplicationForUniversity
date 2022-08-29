@@ -32,7 +32,7 @@ def alumne():  # put application's code here
 @Login.es_usuari(tipus=ESTUDIANT)
 def triar_examens():
     user = Factoria.build_usuari_from_db(my_db, session['id'])
-    llista = user.importar_examens(my_db)
+    llista = user.importar_respostes_examen(my_db)
     llista_examens = list()
     for x in llista:
         (id_document, id_professor, data_inici, data_final) = x

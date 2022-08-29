@@ -3,7 +3,7 @@ import json
 import simple_websocket
 from flask import request, render_template
 from BlockWeb import my_db, app
-from BlockchainUniversity import Paquet, Factoria
+from BlockchainUniversity import Paquet, Factoria, Missatge
 from CreateMysql import MySqlBloc
 
 
@@ -13,9 +13,11 @@ def echo():
     try:
         data = ws.receive()
         data_json = json.loads(data)
-        paquet = Paquet.crear_json(data_json, my_db)
-        paquet.ws = ws
-        paquet.repartiment()
+        missatge = Missatge.crear_json(data_json)
+        if missatge.rebut(my_db):
+            paquet = missatge.paquet
+            paquet.ws = ws
+            paquet.repartiment()
     except simple_websocket.ConnectionClosed:
         print("Emissio erronea")
     return render_template("login.html")

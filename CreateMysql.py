@@ -219,10 +219,6 @@ class MySqlBloc:
         sql = f'select `id_estudiant` from `estudiant_examen` where `id_document` = {id_document}'
         return self.importar_llista_sql(sql)
 
-    # def importar_estudiants_examen(self, id_document: object) -> object:
-    #     sql = f'select `id_estudiant` from `estudiant_examen` where `id_document` = {id_document}'
-    #     return self.importar_llista_sql(sql)
-
     def importar_estudiants_professor(self, professor):
         sql = f'select id_estudiant from `estudiants_assignatura` where `id_assignatura` in (select id_assignatura from assignatura ' \
               f'where id_professor = "{professor.id}")'
@@ -292,10 +288,13 @@ class MySqlBloc:
               f'from `examen` where `id_document` = {id_document} LIMIT 1'
         return self.importar_sql(sql)
 
-    def importar_transaccions(self):
-        sql = f'select id_transaccio, id_emissor, id_receptor, document, id_document, data_creacio from `transaccio` ' \
+    def importar_transaccio(self, id_transaccio):
+        sql = f'select id_transaccio, id_emissor, id_receptor, document, id_document, data_creacio from `transaccio` where id_transaccio = {id_transaccio} ' \
               f'LIMIT 1'
         return self.importar_sql(sql)
+
+    def importar_transaccions(self):
+        return self.importar_transaccio(self.id_primera_transaccio())
 
     def importar_universitat(self):
         return self.importar_universitat_id(self, 1)
@@ -498,11 +497,18 @@ class MySqlBloc:
         return self.importar_bloc(self.id_ultim_bloc())
 
     def id_ultim_bloc(self):
-        sql = "SELECT MAX(id_bloc) FROM bloc"
-        id_bloc = self.importar_sql(sql)[0]
-        if id_bloc is None:
+        return self.id_ultim("bloc", "id_bloc", "MAX")
+
+    def id_primera_transaccio(self):
+        return self.id_ultim("transaccio", "id_transaccio", "MIN")
+
+
+    def id_ultim(self, taula, columna, opcio):
+        sql = f'SELECT {opcio}({columna}) FROM {taula}'
+        id_columna = self.importar_sql(sql)[0]
+        if id_columna is None:
             return 0
-        return id_bloc
+        return id_columna
 
     def importar_cadena_blocs_desc(self):
         sql = "SELECT id_bloc FROM bloc order by 1 desc"
