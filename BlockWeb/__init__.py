@@ -1,11 +1,9 @@
-import functools
 import secrets
 from os.path import abspath, dirname, join
 
-from flask import Flask, session, redirect, url_for
+from flask import Flask
 from flask_sock import Sock
 
-from BlockWeb import auth
 from BlockchainUniversity import BlockchainUniversity
 from CreateMysql import MySqlBloc
 

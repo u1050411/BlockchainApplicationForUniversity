@@ -1,10 +1,11 @@
-import collections
 import json
+import json
+
 import simple_websocket
 from flask import request, render_template
+
 from BlockWeb import my_db, app
-from BlockchainUniversity import Paquet, Factoria, Missatge
-from CreateMysql import MySqlBloc
+from BlockchainUniversity import Missatge
 
 
 @app.route('/echo', websocket=True)

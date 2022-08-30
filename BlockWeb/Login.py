@@ -1,11 +1,9 @@
 import functools
-import json
 
-import simple_websocket
 from flask import request, render_template, session, redirect, url_for
 
 from BlockWeb import BOTH, app, my_db
-from BlockchainUniversity import Factoria, Bloc
+from BlockchainUniversity import Factoria
 
 
 def es_usuari(tipus):

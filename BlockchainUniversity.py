@@ -6,7 +6,6 @@ import json
 from collections import Counter
 from datetime import datetime
 
-import PyPDF2
 import simple_websocket
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA
@@ -223,13 +222,8 @@ class Encriptador:
     @staticmethod
     def signar(dada, private_key=None):
         h = SHA.new(dada)
-        h1 = SHA.new(dada)
-        public_key = private_key.publickey()
         signer = PKCS1_PSS.new(private_key)
-        verifier2 = PKCS1_PSS.new(public_key)
         signature = signer.sign(h)
-        if verifier2.verify(h1, signature):
-            print("Verificado")
         return signature
 
     @staticmethod
@@ -242,8 +236,6 @@ class Encriptador:
         return collections.OrderedDict({
             'clau': self.clau,
             'resposta': self.dada
-            # 'sign': self.sign,
-            # 'nom': self.nom
         })
 
     @staticmethod
@@ -251,8 +243,6 @@ class Encriptador:
         nou = Encriptador()
         nou.clau = ast.literal_eval(json.loads(j_son)['clau'])
         nou.dada = ast.literal_eval(json.loads(j_son)['resposta'])
-        # nou.sign = ast.literal_eval(json.loads(j_son)['sign'])
-        # nou.nom = json.loads(j_son)['nom']
         return nou
 
     def desencriptar(self, privat_key):
@@ -707,7 +697,6 @@ class BlockchainUniversity:
         genesis_bloc.data_bloc = datetime.now().isoformat()
         resultat = Paquet.confirmar_enviament(genesis_bloc, self.my_db)
         if resultat:
-            print(Encriptador.calcular_hash(genesis_bloc))
             self.my_db.guardar_bloc_dades(genesis_bloc)
         return resultat
 
@@ -724,7 +713,7 @@ class BlockchainUniversity:
             if my_db.existeix_bloc_genesis():
                 ultim_bloc = Factoria.build_ultim_bloc_from_db(my_db)
                 if bloc.verificar_bloc(my_db, ip):
-                    if bloc.hash_bloc_anterior == Encriptador.calcular_hash(my_db, ultim_bloc):
+                    if bloc.hash_bloc_anterior == Encriptador.calcular_hash(ultim_bloc):
                         if bloc.id == ultim_bloc.id + 1:
                             my_db.guardar_bloc_dades(bloc)
                             return True
@@ -789,7 +778,7 @@ class BlockchainUniversity:
                     print("La cadena de blocs es incorrecta")
             return bloc.id == 1
 
-    def canviar_cadena(self, cadena):
+    def canviar_cadena(self, cadena=None):
         if self.comprovar_cadena(cadena):
             self.my_db.esborrar_taula('bloc')
             for bloc in cadena:
@@ -811,7 +800,7 @@ class Paquet:
                 http = f'ws://{ip}:5005/echo'
                 self.ws = simple_websocket.Client(http)
                 self.my_db = my_db
-            except (KeyboardInterrupt, EOFError, simple_websocket.ConnectionClosed):
+            except (KeyboardInterrupt, EOFError, TimeoutError, simple_websocket.ConnectionClosed):
                 self.ws.close()
 
     def to_dict(self):
@@ -834,8 +823,8 @@ class Paquet:
 
     def resposta(self):
         try:
-            data = self.ws.receive()
-        except (KeyboardInterrupt, EOFError, simple_websocket.ConnectionClosed):
+            data = self.ws.receive(15)
+        except (KeyboardInterrupt, EOFError, TimeoutError, simple_websocket.ConnectionClosed):
             self.dada = False
             return self
             self.ws.close()

@@ -1,4 +1,4 @@
-import hashlib
+import json
 import json
 import unittest
 
@@ -51,12 +51,18 @@ class CreacioTaulaTest:
         univ = [{"id": 1,"ip": "192.168.50.25", "nom": "Universitat de Girona",
           "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIICWwIBAAKBgQDWYgDCSOewWQPyr673t9bsMIiLjykjryY8qxz4QHHv+b5l2PeB\n5aZjziAcDEWrcaFnfgH7TrB09QRwdRCs7GWISM3+oTcdQ6nAw/SpWK1hRbeI/y+P\nhtOJBe2Z5bzIXjNU4BMCGtpvI8jKGR7cVEtOhlebl01ehSNO2JzEsAOQVwIDAQAB\nAoGAC1pyLUWMkLXWHUKHIuC5ql54MU9OlpUObg4Uqj9JwEXa6HWaEEKVpIctlZM/\nFwNmPmgip5aVGN7U8lqMLtDLRMZNNuS+r2cIqeCLlTPyKSmnw+/IkpBfRAkGHaUK\n7on/+cxB1ASy8yNqAPQxmAH4N1mdn9TW7aGQSyZsSxkN32ECQQDmcHqT+ss5CpGJ\nVWRpFy2hL25mOng+Rq77IsFOZeL41Fqfc+K2P297gl1SS0j3viBCjkDtOfmuQ8Uk\n3CZcNQVnAkEA7imVvGz7Dpbl+EnaSDLJSKR6mmUgvUL85hSRO4IAtpsmJ3G9aUv+\nGkQZxYLV75IBFVc241zl32HZ0OBBNL7XkQJAPaKOFrB41Lvv61Sss7MgYEFofO1c\npgOP39oO7CIyUC20Q3vigq566gUXYuCCFsmCpWqZERp1nte/jjlYBUelNwJAE0zd\nbJKsWcdSxac+gEFVXISvxtlRKOVH12FtT5Q+eI3kLqgiAGl/IyPHruDmc26ylccm\nlJBPtKWaYDn8LskUcQJAc0GeTF3/EiClAMrNTnCbM7FKr7we+fGtnyuQxbLABSkk\nsb2OnhzJLzm+BkOU9AoeZoxGsoa5iBrMapkYr517yw==\n-----END RSA PRIVATE KEY-----",
           "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDWYgDCSOewWQPyr673t9bsMIiL\njykjryY8qxz4QHHv+b5l2PeB5aZjziAcDEWrcaFnfgH7TrB09QRwdRCs7GWISM3+\noTcdQ6nAw/SpWK1hRbeI/y+PhtOJBe2Z5bzIXjNU4BMCGtpvI8jKGR7cVEtOhleb\nl01ehSNO2JzEsAOQVwIDAQAB\n-----END PUBLIC KEY-----"},
-         # {"id": 3, "ip": "192.168.50.28", "nom": "Universitat Politecnica Catalunya",
-         #  "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIICWwIBAAKBgQCchauIJX8B/mlEc+HjYTz9TgymwPJ589ntbaoO44AIES7l1CT5\nL1mE44f5W8VBtIK6xE+y5E0mkNlnKt02nsHuxwjYj1olsZ66mTqjtrdizAPv/otA\nQtU93fX9sQLH0QoPRz554CmyjapbtobaYI6xcqRwxIu/FG04TJ0KRt4EZQIDAQAB\nAoGABFVFzReVcm8u59u50BGNkck629TxZ+nilkpkz+1OMPfIAuNo5wZMcqIMtINs\n+XQvWE9KxSRbDgT3JJfqfT9PSN6K4NxkjraGbj3Nsv9m1C1LxJNNxPhUoukv/5ZR\no7zJf+bmX/6UsQvewNFS/gVtLIvtEQbpvDFrTCxIv07nfUMCQQC5l2nApGbeXnOS\n8li4iwkwObr1AsLKeSEVG6aY0b4lxgm1dvV0AQlwpiPVw16hSdXoonMZk2k2U8/H\nE00XyLhDAkEA1+cN6tQuHT0JbdSz35CMjoUgx3L50pt2Bxr/EraKMcIY5n/zlpqj\naxLhYtfsLInYhP8wialRX3ZTF0dWe6/6NwJALI8tBeKzDBrTVum24YAIUbrap27l\nQ+W3SrEb278oDzuwIxCPuC1zjcdl/THuK31lzXgLeI2LCk8vKNX6gYZgrwJAQg1M\nMrWrTgKoadOTHCiK9+c+ugYw6//nwhC+TKlP6h0ppQssKL0ylcV28tiARrf9Z+Ly\npIsKfBwlG5AVo02ZTQJAWLk056zopXHRjy2wVSk+mrxrX9fmSGQndKo32x0Gq9dG\njzCvS/H2iyojw9GzB4jSxLVMTVYXcvlj4RSWMAXA1A==\n-----END RSA PRIVATE KEY-----",
-         #  "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCchauIJX8B/mlEc+HjYTz9Tgym\nwPJ589ntbaoO44AIES7l1CT5L1mE44f5W8VBtIK6xE+y5E0mkNlnKt02nsHuxwjY\nj1olsZ66mTqjtrdizAPv/otAQtU93fX9sQLH0QoPRz554CmyjapbtobaYI6xcqRw\nxIu/FG04TJ0KRt4EZQIDAQAB\n-----END PUBLIC KEY-----"},
-         {"id": 2, "ip": "192.168.50.27", "nom": "Universitat Rovira i Virgili",
-          "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIICXAIBAAKBgQCWY6jFMVyA2FolRbB91q1EeUVwxX6Hma4sMXlyqgsLHJ5QU7Ke\nAXTU7IMzsOpTfn+xE6l86w0R+5ZWu1BsC1z6XxE8ZgWbMSzR9Bs6aMGd4rAHca4w\nJ8nMUWyCvjoehm+/WYtw3e8d5YvkQY9PMUCe4Vpfg2lRReDO/qwScS9+uwIDAQAB\nAoGAAxN5xcLLNhV2zpFc2U4VUDO80GAxxNtHXT8L0WUaAbmtoU389s9n0N0fl+ST\n/m41dW1GB7iVFVuUiSSesf8PgUV+oobVcFfKt2AzoGBQYKKDh1D4BovB+hQihzFu\n+no4XOmGk7KPWUhK2mThJ4OvPwg3HYUt7iKVlgQSMUoAMMkCQQDDSc3f4uemWaHg\nkNdK7jS4by9JbJqFZVj0FcFoUwnnqnk6GLJuNvhxEKhG1JyZ8Xi/xfZIuur7Ch0c\nG8hDVFyJAkEAxSSG+X15uo6YpmYWW0VWFqW1+TYfjwEUhmC3/DU0qnNSLOn218qC\nhxNPILlJG+P4r9OsfbjwRJb8biAemaoYIwJBAIJUCfIlgwVQgijVYOjfyg1gHkW5\nFfJ6bYAP2NBfwpd5/IdaHhJR20HRpQwILi7KqRQK8E8fd1xsJnswy1irv0kCQCvN\nFtQd5crmXdIywmra9+qmPM03EkHyqn3ExXwa0i3A25QxE3AUhXW/e4g4wp6YwytF\nq4Bvc6q5pTJOnp3jpeMCQDP2LV5cfP9WuPzMW5Fkc1nScFVme35PaVkgUQ4zO02B\nWgCMViwfHSnIrrtSICT1MoLHH4UqdtHavHAIcwZlGfM=\n-----END RSA PRIVATE KEY-----",
-          "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCWY6jFMVyA2FolRbB91q1EeUVw\nxX6Hma4sMXlyqgsLHJ5QU7KeAXTU7IMzsOpTfn+xE6l86w0R+5ZWu1BsC1z6XxE8\nZgWbMSzR9Bs6aMGd4rAHca4wJ8nMUWyCvjoehm+/WYtw3e8d5YvkQY9PMUCe4Vpf\ng2lRReDO/qwScS9+uwIDAQAB\n-----END PUBLIC KEY-----"}
+         {"id": 2, "ip": "192.168.50.28", "nom": "Universitat Politecnica Catalunya",
+         "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIICWwIBAAKBgQCchauIJX8B/mlEc+HjYTz9TgymwPJ589ntbaoO44AIES7l1CT5\nL1mE44f5W8VBtIK6xE+y5E0mkNlnKt02nsHuxwjYj1olsZ66mTqjtrdizAPv/otA\nQtU93fX9sQLH0QoPRz554CmyjapbtobaYI6xcqRwxIu/FG04TJ0KRt4EZQIDAQAB\nAoGABFVFzReVcm8u59u50BGNkck629TxZ+nilkpkz+1OMPfIAuNo5wZMcqIMtINs\n+XQvWE9KxSRbDgT3JJfqfT9PSN6K4NxkjraGbj3Nsv9m1C1LxJNNxPhUoukv/5ZR\no7zJf+bmX/6UsQvewNFS/gVtLIvtEQbpvDFrTCxIv07nfUMCQQC5l2nApGbeXnOS\n8li4iwkwObr1AsLKeSEVG6aY0b4lxgm1dvV0AQlwpiPVw16hSdXoonMZk2k2U8/H\nE00XyLhDAkEA1+cN6tQuHT0JbdSz35CMjoUgx3L50pt2Bxr/EraKMcIY5n/zlpqj\naxLhYtfsLInYhP8wialRX3ZTF0dWe6/6NwJALI8tBeKzDBrTVum24YAIUbrap27l\nQ+W3SrEb278oDzuwIxCPuC1zjcdl/THuK31lzXgLeI2LCk8vKNX6gYZgrwJAQg1M\nMrWrTgKoadOTHCiK9+c+ugYw6//nwhC+TKlP6h0ppQssKL0ylcV28tiARrf9Z+Ly\npIsKfBwlG5AVo02ZTQJAWLk056zopXHRjy2wVSk+mrxrX9fmSGQndKo32x0Gq9dG\njzCvS/H2iyojw9GzB4jSxLVMTVYXcvlj4RSWMAXA1A==\n-----END RSA PRIVATE KEY-----",
+         "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCchauIJX8B/mlEc+HjYTz9Tgym\nwPJ589ntbaoO44AIES7l1CT5L1mE44f5W8VBtIK6xE+y5E0mkNlnKt02nsHuxwjY\nj1olsZ66mTqjtrdizAPv/otAQtU93fX9sQLH0QoPRz554CmyjapbtobaYI6xcqRw\nxIu/FG04TJ0KRt4EZQIDAQAB\n-----END PUBLIC KEY-----"}
+        #  {"id": 2, "ip": "192.168.50.27", "nom": "Universitat Rovira i Virgili",
+        #   "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIICXAIBAAKBgQCWY6jFMVyA2FolRbB91q1EeUVwxX6Hma4sMXlyqgsLHJ5QU7Ke\nAXTU7IMzsOpTfn+xE6l86w0R+5ZWu1BsC1z6XxE8ZgWbMSzR9Bs6aMGd4rAHca4w\nJ8nMUWyCvjoehm+/WYtw3e8d5YvkQY9PMUCe4Vpfg2lRReDO/qwScS9+uwIDAQAB\nAoGAAxN5xcLLNhV2zpFc2U4VUDO80GAxxNtHXT8L0WUaAbmtoU389s9n0N0fl+ST\n/m41dW1GB7iVFVuUiSSesf8PgUV+oobVcFfKt2AzoGBQYKKDh1D4BovB+hQihzFu\n+no4XOmGk7KPWUhK2mThJ4OvPwg3HYUt7iKVlgQSMUoAMMkCQQDDSc3f4uemWaHg\nkNdK7jS4by9JbJqFZVj0FcFoUwnnqnk6GLJuNvhxEKhG1JyZ8Xi/xfZIuur7Ch0c\nG8hDVFyJAkEAxSSG+X15uo6YpmYWW0VWFqW1+TYfjwEUhmC3/DU0qnNSLOn218qC\nhxNPILlJG+P4r9OsfbjwRJb8biAemaoYIwJBAIJUCfIlgwVQgijVYOjfyg1gHkW5\nFfJ6bYAP2NBfwpd5/IdaHhJR20HRpQwILi7KqRQK8E8fd1xsJnswy1irv0kCQCvN\nFtQd5crmXdIywmra9+qmPM03EkHyqn3ExXwa0i3A25QxE3AUhXW/e4g4wp6YwytF\nq4Bvc6q5pTJOnp3jpeMCQDP2LV5cfP9WuPzMW5Fkc1nScFVme35PaVkgUQ4zO02B\nWgCMViwfHSnIrrtSICT1MoLHH4UqdtHavHAIcwZlGfM=\n-----END RSA PRIVATE KEY-----",
+        #   "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCWY6jFMVyA2FolRbB91q1EeUVw\nxX6Hma4sMXlyqgsLHJ5QU7KeAXTU7IMzsOpTfn+xE6l86w0R+5ZWu1BsC1z6XxE8\nZgWbMSzR9Bs6aMGd4rAHca4wJ8nMUWyCvjoehm+/WYtw3e8d5YvkQY9PMUCe4Vpf\ng2lRReDO/qwScS9+uwIDAQAB\n-----END PUBLIC KEY-----"},
+        # {"id": 4, "ip": "192.168.50.28", "nom": "Universitat Autonoma Barcelona",
+        #  "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIICWwIBAAKBgQCchauIJX8B/mlEc+HjYTz9TgymwPJ589ntbaoO44AIES7l1CT5\nL1mE44f5W8VBtIK6xE+y5E0mkNlnKt02nsHuxwjYj1olsZ66mTqjtrdizAPv/otA\nQtU93fX9sQLH0QoPRz554CmyjapbtobaYI6xcqRwxIu/FG04TJ0KRt4EZQIDAQAB\nAoGABFVFzReVcm8u59u50BGNkck629TxZ+nilkpkz+1OMPfIAuNo5wZMcqIMtINs\n+XQvWE9KxSRbDgT3JJfqfT9PSN6K4NxkjraGbj3Nsv9m1C1LxJNNxPhUoukv/5ZR\no7zJf+bmX/6UsQvewNFS/gVtLIvtEQbpvDFrTCxIv07nfUMCQQC5l2nApGbeXnOS\n8li4iwkwObr1AsLKeSEVG6aY0b4lxgm1dvV0AQlwpiPVw16hSdXoonMZk2k2U8/H\nE00XyLhDAkEA1+cN6tQuHT0JbdSz35CMjoUgx3L50pt2Bxr/EraKMcIY5n/zlpqj\naxLhYtfsLInYhP8wialRX3ZTF0dWe6/6NwJALI8tBeKzDBrTVum24YAIUbrap27l\nQ+W3SrEb278oDzuwIxCPuC1zjcdl/THuK31lzXgLeI2LCk8vKNX6gYZgrwJAQg1M\nMrWrTgKoadOTHCiK9+c+ugYw6//nwhC+TKlP6h0ppQssKL0ylcV28tiARrf9Z+Ly\npIsKfBwlG5AVo02ZTQJAWLk056zopXHRjy2wVSk+mrxrX9fmSGQndKo32x0Gq9dG\njzCvS/H2iyojw9GzB4jSxLVMTVYXcvlj4RSWMAXA1A==\n-----END RSA PRIVATE KEY-----",
+        #  "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCchauIJX8B/mlEc+HjYTz9Tgym\nwPJ589ntbaoO44AIES7l1CT5L1mE44f5W8VBtIK6xE+y5E0mkNlnKt02nsHuxwjY\nj1olsZ66mTqjtrdizAPv/otAQtU93fX9sQLH0QoPRz554CmyjapbtobaYI6xcqRw\nxIu/FG04TJ0KRt4EZQIDAQAB\n-----END PUBLIC KEY-----"},
+        # {"id": 5, "ip": "192.168.50.27", "nom": "Universitat Lleida",
+        #  "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIICXAIBAAKBgQCWY6jFMVyA2FolRbB91q1EeUVwxX6Hma4sMXlyqgsLHJ5QU7Ke\nAXTU7IMzsOpTfn+xE6l86w0R+5ZWu1BsC1z6XxE8ZgWbMSzR9Bs6aMGd4rAHca4w\nJ8nMUWyCvjoehm+/WYtw3e8d5YvkQY9PMUCe4Vpfg2lRReDO/qwScS9+uwIDAQAB\nAoGAAxN5xcLLNhV2zpFc2U4VUDO80GAxxNtHXT8L0WUaAbmtoU389s9n0N0fl+ST\n/m41dW1GB7iVFVuUiSSesf8PgUV+oobVcFfKt2AzoGBQYKKDh1D4BovB+hQihzFu\n+no4XOmGk7KPWUhK2mThJ4OvPwg3HYUt7iKVlgQSMUoAMMkCQQDDSc3f4uemWaHg\nkNdK7jS4by9JbJqFZVj0FcFoUwnnqnk6GLJuNvhxEKhG1JyZ8Xi/xfZIuur7Ch0c\nG8hDVFyJAkEAxSSG+X15uo6YpmYWW0VWFqW1+TYfjwEUhmC3/DU0qnNSLOn218qC\nhxNPILlJG+P4r9OsfbjwRJb8biAemaoYIwJBAIJUCfIlgwVQgijVYOjfyg1gHkW5\nFfJ6bYAP2NBfwpd5/IdaHhJR20HRpQwILi7KqRQK8E8fd1xsJnswy1irv0kCQCvN\nFtQd5crmXdIywmra9+qmPM03EkHyqn3ExXwa0i3A25QxE3AUhXW/e4g4wp6YwytF\nq4Bvc6q5pTJOnp3jpeMCQDP2LV5cfP9WuPzMW5Fkc1nScFVme35PaVkgUQ4zO02B\nWgCMViwfHSnIrrtSICT1MoLHH4UqdtHavHAIcwZlGfM=\n-----END RSA PRIVATE KEY-----",
+        #  "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCWY6jFMVyA2FolRbB91q1EeUVw\nxX6Hma4sMXlyqgsLHJ5QU7KeAXTU7IMzsOpTfn+xE6l86w0R+5ZWu1BsC1z6XxE8\nZgWbMSzR9Bs6aMGd4rAHca4wJ8nMUWyCvjoehm+/WYtw3e8d5YvkQY9PMUCe4Vpf\ng2lRReDO/qwScS9+uwIDAQAB\n-----END PUBLIC KEY-----"}
         ]
 
         for y in univ:
@@ -698,38 +704,10 @@ class TestBlockchainUniversity(unittest.TestCase):
         main = BlockchainUniversity(self.my_db)
         self.assertEqual(main.comprovar_cadena_propia(), True)
 
-    def test_to_minat(self):
-        if self.my_db.existeix_alguna_transaccio():
-            transaccio = Factoria.build_transaccio_from_db(self.my_db)
-            if transaccio:
-                if self.my_db.existeix_bloc_genesis():
-                    ultim_bloc = Factoria.build_ultim_bloc_from_db(self.my_db)
-                    if ultim_bloc:
-                        index = ultim_bloc.id + 1
-                        new_bloc = Bloc(index, transaccio, self.my_db,
-                                        Encriptador.calcular_hash(ultim_bloc))
-                        hash_bloc = hashlib.sha256(str.encode(Factoria.to_json(new_bloc))).hexdigest()
-                        print("************1**************")
-                        print(hash_bloc)
-                        resultat = Paquet.confirmar_enviament(new_bloc, self.my_db)
-                        if resultat:
-                            self.my_db.guardar_bloc(new_bloc, transaccio.emissor)
-                            self.my_db.esborrar_transaccio(transaccio.id_transaccio)
-                            bloc_seguretat = Factoria.build_bloc_from_db(self.my_db, new_bloc.id)
-                            hash_bloc_seguretat = hashlib.sha256(str.encode(Factoria.to_json(new_bloc))).hexdigest()
-                            print(hash_bloc_seguretat)
-                            print("************2**************")
-
-                else:
-                    self.crear_genesis_bloc()
-
 
     def test_Cadena_blocs(self):
-        cadena = Factoria.build_cadena_blocs(self.my_db)
-        retorn = False
-        if cadena:
-            retorn =BlockchainUniversity.comprovar_cadena(cadena)
-        self.assertTrue(retorn)
+        main = BlockchainUniversity(self.my_db)
+        self.assertTrue(main.comprovar_cadena_propia())
 
 
 class TestInicial(unittest.TestCase):
