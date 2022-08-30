@@ -1,3 +1,4 @@
+import hashlib
 import json
 import unittest
 
@@ -698,7 +699,6 @@ class TestBlockchainUniversity(unittest.TestCase):
         self.assertEqual(main.comprovar_cadena_propia(), True)
 
     def test_to_minat(self):
-        main = BlockchainUniversity(self.my_db)
         if self.my_db.existeix_alguna_transaccio():
             transaccio = Factoria.build_transaccio_from_db(self.my_db)
             if transaccio:
@@ -706,14 +706,23 @@ class TestBlockchainUniversity(unittest.TestCase):
                     ultim_bloc = Factoria.build_ultim_bloc_from_db(self.my_db)
                     if ultim_bloc:
                         index = ultim_bloc.id + 1
-                        new_bloc = Bloc(index, transaccio, self.my_db, ultim_bloc.calcular_hash())
+                        new_bloc = Bloc(index, transaccio, self.my_db,
+                                        Encriptador.calcular_hash(ultim_bloc))
+                        hash_bloc = hashlib.sha256(str.encode(Factoria.to_json(new_bloc))).hexdigest()
+                        print("************1**************")
+                        print(hash_bloc)
                         resultat = Paquet.confirmar_enviament(new_bloc, self.my_db)
                         if resultat:
-                            self.my_db.guardar_bloc(new_bloc)
+                            self.my_db.guardar_bloc(new_bloc, transaccio.emissor)
                             self.my_db.esborrar_transaccio(transaccio.id_transaccio)
+                            bloc_seguretat = Factoria.build_bloc_from_db(self.my_db, new_bloc.id)
+                            hash_bloc_seguretat = hashlib.sha256(str.encode(Factoria.to_json(new_bloc))).hexdigest()
+                            print(hash_bloc_seguretat)
+                            print("************2**************")
+
                 else:
-                    main.crear_genesis_bloc()
-        self.assertTrue(resultat)
+                    self.crear_genesis_bloc()
+
 
     def test_Cadena_blocs(self):
         cadena = Factoria.build_cadena_blocs(self.my_db)

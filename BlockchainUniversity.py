@@ -262,6 +262,13 @@ class Encriptador:
         dada_desencriptada = key_simetric.decrypt(self.dada).decode()
         return dada_desencriptada
 
+    @staticmethod
+    def calcular_hash(bloc):
+        bloc_json = Factoria.to_json(bloc)
+        bloc_encode = str.encode(bloc_json)
+        return hashlib.sha256(bloc_encode).hexdigest()
+
+
 
 class Assignatura:
     def __init__(self, id_assignatura=0, nom=None, professor=None):
@@ -599,7 +606,6 @@ class Transaccio:
         self.id_document = document.id_document_blockchain
         self.data_creacio = datetime.now().isoformat()
         self.document = Factoria.to_json(document)
-        self.hash_anterior = hash_anterior
 
     @classmethod
     def crear_json(cls, dada):
@@ -610,8 +616,7 @@ class Transaccio:
         id_document = trans_json['id_document']
         data_creacio = trans_json['data_creacio']
         dada = Document.crear_json(trans_json['document'])
-        hash_anterior = trans_json['hash_anterior']
-        return cls.crear_mysql(id_transaccio, emissor, receptor, dada, id_document, data_creacio, hash_anterior)
+        return cls.crear_mysql(id_transaccio, emissor, receptor, dada, id_document, data_creacio)
 
     @classmethod
     def crear_mysql(cls, id_trans=None, emissor=None, receptor=None, dada=None, id_document=None,
@@ -620,7 +625,6 @@ class Transaccio:
         trans.id_transaccio = id_trans
         trans.id_document = id_document
         trans.data_creacio = data_creacio
-        trans.hash_anterior = hash_anterior
         return trans
 
     def to_dict(self):
@@ -630,8 +634,7 @@ class Transaccio:
             'receptor': Factoria.to_json(self.receptor),
             'id_document': self.id_document,
             'document': self.document,
-            'data_creacio': self.data_creacio,
-            'hash_anterior': self.hash_anterior})
+            'data_creacio': self.data_creacio})
 
 
 class Bloc:
@@ -685,9 +688,6 @@ class Bloc:
             'signatura': self.signatura,
             'hash_bloc_anterior': self.hash_bloc_anterior})
 
-    def calcular_hash(self):
-        return hashlib.sha256(self.transaccio).hexdigest()
-
 
 class BlockchainUniversity:
 
@@ -707,7 +707,7 @@ class BlockchainUniversity:
         genesis_bloc.data_bloc = datetime.now().isoformat()
         resultat = Paquet.confirmar_enviament(genesis_bloc, self.my_db)
         if resultat:
-            print(genesis_bloc.calcular_hash())
+            print(Encriptador.calcular_hash(genesis_bloc))
             self.my_db.guardar_bloc_dades(genesis_bloc)
         return resultat
 
@@ -724,7 +724,7 @@ class BlockchainUniversity:
             if my_db.existeix_bloc_genesis():
                 ultim_bloc = Factoria.build_ultim_bloc_from_db(my_db)
                 if bloc.verificar_bloc(my_db, ip):
-                    if bloc.hash_bloc_anterior == ultim_bloc.calcular_hash():
+                    if bloc.hash_bloc_anterior == Encriptador.calcular_hash(my_db, ultim_bloc):
                         if bloc.id == ultim_bloc.id + 1:
                             my_db.guardar_bloc_dades(bloc)
                             return True
@@ -739,22 +739,23 @@ class BlockchainUniversity:
     Aquesta funció serveix com a interfície per afegir la transacció pendent a la cadena de blocs afegint-les al hash_anterior
          i esbrinar el hash_anterior.b'\x1d\xfd\xd2W\x0e\xe2xE`\xb3\xe2;\xbd\xbfM\x05C\x1b\xb9\x08\x16\x8ej<D\x00O\xd1\xaf\x1fdzR\x03\xfb\xc4\xf4\x19\xe1\x1e\xb3\xfd\xa7\xc5\x18\xf5nM\x85\xa8F\xaeI\xf4\xd8\xc2-\xef\x87\xb2\x1a1I\xb24}R\x9e9\x97\xb4\xda\xb6\xa0\xcd\xe1\x97_\xd3\x87f\x86R\xe9\x18\x06\xd4\x1de\xc8ze\x17\xf0\x80\xcb\xa6\xeahkN\xda\xbb\xa64,\xdf\xd8\xf0b\xdcP\x03\xbe\x163x\xce\xb8@&>^Y\xe4\xda\xa8b'
         """
-        if self.my_db.existeix_alguna_transaccio():
+        id_transaccio = self.my_db.id_primera_transaccio()
+        while id_transaccio > 0:
             transaccio = Factoria.build_transaccio_from_db(self.my_db)
             if transaccio:
                 if self.my_db.existeix_bloc_genesis():
                     ultim_bloc = Factoria.build_ultim_bloc_from_db(self.my_db)
                     if ultim_bloc:
                         index = ultim_bloc.id + 1
-                        new_bloc = Bloc(index, transaccio, self.my_db, ultim_bloc.calcular_hash())
+                        new_bloc = Bloc(index, transaccio, self.my_db, Encriptador.calcular_hash(ultim_bloc))
                         resultat = Paquet.confirmar_enviament(new_bloc, self.my_db)
                         if resultat:
                             self.my_db.guardar_bloc(new_bloc, transaccio.emissor)
                             self.my_db.esborrar_transaccio(transaccio.id_transaccio)
-                            self.minat()
+                            id_transaccio = self.my_db.id_primera_transaccio()
                 else:
                     self.crear_genesis_bloc()
-                    self.minat()
+                    id_transaccio = self.my_db.id_primera_transaccio()
 
     # Mirem que la cadena sigui correcta
     def comprovar_cadena_propia(self):
@@ -764,7 +765,7 @@ class BlockchainUniversity:
         while ok and bloc.id > 1:
             bloc_anterior = Factoria.build_bloc_from_db(self.my_db, (bloc.id - 1))
             if bloc_anterior:
-                ok = (bloc.hash_bloc_anterior.decode() == bloc_anterior.calcular_hash())
+                ok = (bloc.hash_bloc_anterior.decode() == Encriptador.calcular_hash(bloc_anterior))
             else:
                 ok = False
             bloc = bloc_anterior
@@ -780,7 +781,7 @@ class BlockchainUniversity:
             while ok and bloc.id > 1:
                 bloc_anterior = cadena[id_cadena]
                 if bloc_anterior:
-                    ok = (bloc.hash_bloc_anterior.decode() == bloc_anterior.calcular_hash())
+                    ok = (bloc.hash_bloc_anterior.decode() == Encriptador.calcular_hash(bloc_anterior))
                     id_cadena += 1
                     bloc = bloc_anterior
                 else:
@@ -870,7 +871,7 @@ class Paquet:
                     num_blocs = self.my_db.id_ultim_bloc()
                     if self.dada == (num_blocs + 1):
                         meu_bloc = Factoria.build_bloc_from_db(self.my_db, num_blocs)
-                        self.dada = (self.hash_anterior == meu_bloc.calcular_hash())
+                        self.dada = (self.hash_anterior == Encriptador.calcular_hash(meu_bloc))
                         self.num_blocs = num_blocs
                         self.pas = 3
                         self.ws.send(Factoria.to_json(Missatge(self)))

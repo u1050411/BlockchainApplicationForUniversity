@@ -409,9 +409,9 @@ class MySqlBloc:
     # def existeix_transaccio(self, id_transac):
     #     return self.existeix(self.schema, 'transaccio', 'id_transaccio', id_transac)
 
-    def existeix_alguna_transaccio(self):
-        num = self.seguent_id('transaccio', 'id_transaccio')
-        return num != 1
+    # def existeix_alguna_transaccio(self):
+    #     num = self.seguent_id('transaccio', 'id_transaccio')
+    #     return num != 1
 
     def seguent_id(self, taula, columna):
         sql = f"select Max(`{columna}`) from `{taula}`"
