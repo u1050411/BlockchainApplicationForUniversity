@@ -792,6 +792,7 @@ class Paquet:
     def __init__(self, bloc=None, ip=None, my_db=None):
         self.pas = 1
         self.my_db = None
+        self.ws = None
         if bloc is not None:
             self.num_blocs = bloc.id
             self.dada = bloc.id
@@ -801,7 +802,8 @@ class Paquet:
                 self.ws = simple_websocket.Client(http)
                 self.my_db = my_db
             except (KeyboardInterrupt, EOFError, TimeoutError, simple_websocket.ConnectionClosed):
-                self.ws.close()
+                if self.ws is not None:
+                    self.ws.close()
 
     def to_dict(self):
         return collections.OrderedDict({
@@ -823,7 +825,7 @@ class Paquet:
 
     def resposta(self):
         try:
-            data = self.ws.receive(15)
+            data = self.ws.receive()
         except (KeyboardInterrupt, EOFError, TimeoutError, simple_websocket.ConnectionClosed):
             self.dada = False
             return self
@@ -911,8 +913,11 @@ class Paquet:
         for universitat in llista:
             ip_universitat = universitat.ip
             paquet = Paquet(bloc, ip_universitat, my_db)
-            paquet.repartiment()
-            paquets.append(paquet)
+            if paquet.ws is not None:
+                paquet.repartiment()
+                paquets.append(paquet)
+            else:
+                paquet.dada = False
         if paquets:
             # això es un for on extreiem el numblocs i despres counter es diu quin es valor mes comu
             resultat = Counter([x.num_blocs for x in paquets if x.dada]).most_common()
