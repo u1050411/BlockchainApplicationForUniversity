@@ -160,6 +160,13 @@ class Factoria:
         return cadena
 
     @staticmethod
+    def build_cadena_blocs_json(my_db):
+        cadena_json = list()
+        for bloc in Factoria.build_cadena_blocs(my_db):
+            cadena_json.append(Factoria.to_json(bloc))
+        return cadena_json
+
+    @staticmethod
     def build_cadena_blocs_usuari(my_db, usuari):
         cadena_id = my_db.importar_cadena_blocs_usuari(usuari)
         cadena = list()
@@ -770,7 +777,7 @@ class BlockchainUniversity:
             while ok and bloc.id > 1:
                 bloc_anterior = cadena[id_cadena]
                 if bloc_anterior:
-                    ok = (bloc.hash_bloc_anterior.decode() == Encriptador.calcular_hash(bloc_anterior))
+                    ok = (ast.literal_eval(bloc.hash_bloc_anterior).decode() == Encriptador.calcular_hash(bloc_anterior))
                     id_cadena += 1
                     bloc = bloc_anterior
                 else:
@@ -786,6 +793,13 @@ class BlockchainUniversity:
             return True
         return False
 
+    def canviar_cadena_json(self, cadena_json=None):
+        cadena = list()
+        for x in cadena_json:
+            bloc = Bloc.crear_json(x)
+            cadena.append(bloc)
+        return self.canviar_cadena(cadena)
+
 
 class Paquet:
 
@@ -797,13 +811,17 @@ class Paquet:
             self.num_blocs = bloc.id
             self.dada = bloc.id
             self.hash_anterior = bloc.hash_bloc_anterior
-            try:
-                http = f'ws://{ip}:5005/echo'
-                self.ws = simple_websocket.Client(http)
-                self.my_db = my_db
-            except (KeyboardInterrupt, EOFError, TimeoutError, ConnectionRefusedError, simple_websocket.ConnectionClosed):
-                if self.ws is not None:
-                    self.ws.close()
+            if ip !='0.0.0.0':
+                try:
+                    http = f'ws://{ip}:5005/echo'
+                    self.ws = simple_websocket.Client(http)
+                    self.my_db = my_db
+                except (KeyboardInterrupt, EOFError, TimeoutError, ConnectionRefusedError, simple_websocket.ConnectionClosed):
+                    if self.ws is not None:
+                        self.ws.close()
+            else:
+                self.num_blocs = bloc.id - 1
+                self.dada = True
 
     def to_dict(self):
         return collections.OrderedDict({
@@ -886,19 +904,21 @@ class Paquet:
                 self.ws.close()
 
             elif self.pas == 6:  # demanem que ens passi tota la cadena
+                self.pas = 7
                 self.ws.send(Factoria.to_json(Missatge(self)))
                 self.resposta()
 
             elif self.pas == 7:  # rebem una peticio de tota la cadena
                 cadena = Factoria.build_cadena_blocs(self.my_db)
+                cadena_json = Factoria.build_cadena_blocs_json(self.my_db)
                 self.pas = 8
-                self.dada = bytes(cadena)
+                self.dada = cadena_json
                 self.ws.send(Factoria.to_json(Missatge(self)))
-                self.resposta()
+
 
             elif self.pas == 8:  # rebem tota la cadena
-                cadena = self.dada.decode()
-                self.dada = BlockchainUniversity.canviar_cadena(cadena)
+                blockchain = BlockchainUniversity(self.my_db)
+                self.dada = blockchain.canviar_cadena_json(self.dada)
                 return self
 
         except (KeyboardInterrupt, EOFError, simple_websocket.ConnectionClosed):
@@ -921,22 +941,24 @@ class Paquet:
         if paquets:
             # això és un for on extrèiem el número de blocs i després counter es diu quin es el numero de blocs mes comu de les cadenes
             paquets.append(Paquet(bloc, "0.0.0.0", my_db))
-            resultat = Counter([x.num_blocs for x in paquets if x.dada]).most_common()
+            resultat = Counter([x.num_blocs for x in paquets]).most_common()
             if resultat:
                 mes_comu, quantitat = resultat.pop(0)
                 if (len(paquets) / 2) <= quantitat:
                     if mes_comu == (bloc.id - 1):
-                        for paquet_confirmat in paquets:
-                            if paquet_confirmat.dada:
-                                paquet_confirmat.dada = Factoria.to_json(bloc)
-                                paquet_confirmat.pas = 4
-                                paquet_confirmat.repartiment()
-                        return True
+                        quantitat_positiu = Counter([x.num_blocs for x in paquets if (x.dada and x.num_blocs == mes_comu)]).most_common()[0][1]
+                        if quantitat == quantitat_positiu:
+                            for paquet_confirmat in paquets:
+                                if paquet_confirmat.dada and paquet_confirmat.ws is not None:
+                                    paquet_confirmat.dada = Factoria.to_json(bloc)
+                                    paquet_confirmat.pas = 4
+                                    paquet_confirmat.repartiment()
+                            return True
                     else:
-                        paquet_demanar_cadena = [z for z in paquets if z.num_blocs == mes_comu]
+                        paquet_demanar_cadena = [z for z in paquets if z.num_blocs == mes_comu].pop(0)
                         paquet_demanar_cadena.pas = 6
-                        paquet_demanar_cadena.repartiment()
-                        Paquet.confirmar_enviament(bloc, my_db)
+                        if (paquet_demanar_cadena.repartiment()):
+                            Paquet.confirmar_enviament(bloc, my_db)
                 else:
                     return False
             else:

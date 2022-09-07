@@ -253,10 +253,6 @@ class TestProfessors(unittest.TestCase):
         print(llista_alumnes)
 
 
-class TestUniversitat(unittest.TestCase):
-    pass
-
-
 class TestMysql(unittest.TestCase):
 
     def setUp(self):
@@ -646,8 +642,8 @@ class TestBloc(unittest.TestCase):
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
         self.schema = SCHEMA
-        # self.test = CreacioTaulaTest(self.my_db, self.schema)
-        # self.test.crear_schema_dades()
+        self.test = CreacioTaulaTest(self.my_db, self.schema)
+        self.test.crear_schema_dades()
 
     def test_crear(self):
         transaccio = Factoria.build_transaccio_from_db(self.my_db)
@@ -660,7 +656,8 @@ class TestBloc(unittest.TestCase):
         self.assertEqual(transaccio.emissor.id, transaccio_final.emissor.id)
 
     def test_to_json(self):
-        bloc = Factoria.build_bloc_from_db(self.my_db, 1)
+        transaccio = Factoria.build_transaccio_from_db(self.my_db)
+        bloc = Bloc(1, transaccio, self.my_db)
         bloc_json = Factoria.to_json(bloc)
         bloc2 = Bloc.crear_json(bloc_json)
         self.assertEqual(bloc.id, bloc2.id)
@@ -671,42 +668,44 @@ class TestPaquet(unittest.TestCase):
     def setUp(self):
         self.my_db = MySqlBloc('localhost', 'root', 'root')
         self.schema = SCHEMA
+        self.test = CreacioTaulaTest(self.my_db, self.schema)
+        self.test.crear_schema_dades()
 
     def test_to_json(self):
-        bloc = Factoria.build_bloc_from_db(self.my_db, self.my_db.id_ultim_bloc())
-        id_ultim_bloc = self.my_db.id_ultim_bloc()
-        paquet = Paquet(bloc, '192.168.50.27:5005')
+        transaccio = Factoria.build_transaccio_from_db(self.my_db)
+        bloc = Bloc(1, transaccio, self.my_db)
+        paquet = Paquet(bloc, '192.168.50.27')
         paquet_json = Factoria.to_json(paquet)
-        paquet2 = Paquet.crear_json(paquet_json)
+        paquet2 = Paquet.crear_json(json.loads(paquet_json), self.my_db)
         self.assertEqual(paquet.pas, paquet2.pas)
 
 
 
-
-class TestBlockchainUniversity(unittest.TestCase):
-
-    def setUp(self):
-        self.my_db = MySqlBloc('localhost', 'root', 'root')
-        self.my_db.afegir_schema(SCHEMA)
-        # self.test = TestInicial()
-        # self.test.test_inicial()
-
-
-    def test_crear_genesis_bloc(self):
-        resultat = False
-        if self.my_db.ultim_bloc() is None:
-            genesis = BlockchainUniversity(self.my_db)
-            resultat = genesis.crear_genesis_bloc()
-        return resultat
-
-    def test_comprovar_cadena(self):
-        main = BlockchainUniversity(self.my_db)
-        self.assertEqual(main.comprovar_cadena_propia(), True)
-
-
-    def test_Cadena_blocs(self):
-        main = BlockchainUniversity(self.my_db)
-        self.assertTrue(main.comprovar_cadena_propia())
+# Perque aquest test , totes les universitats tindrian que començar igual
+# class TestBlockchainUniversity(unittest.TestCase):
+#
+#     def setUp(self):
+#         self.my_db = MySqlBloc('localhost', 'root', 'root')
+#         self.my_db.afegir_schema(SCHEMA)
+#         # self.test = TestInicial()
+#         # self.test.test_inicial()
+#
+#
+#     def test_crear_genesis_bloc(self):
+#         resultat = False
+#         if self.my_db.ultim_bloc() is None:
+#             genesis = BlockchainUniversity(self.my_db)
+#             resultat = genesis.crear_genesis_bloc()
+#         return resultat
+#
+#     def test_comprovar_cadena(self):
+#         main = BlockchainUniversity(self.my_db)
+#         self.assertEqual(main.comprovar_cadena_propia(), True)
+#
+#
+#     def test_Cadena_blocs(self):
+#         main = BlockchainUniversity(self.my_db)
+#         self.assertTrue(main.comprovar_cadena_propia())
 
 
 class TestInicial(unittest.TestCase):
