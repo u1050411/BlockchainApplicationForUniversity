@@ -5,7 +5,7 @@ from os.path import join
 from flask import request, render_template, session, redirect
 
 from BlockWeb import ESTUDIANT, BOTH, app, PATH_TOTAL, PATH_RELATIU, main, my_db, Login
-from BlockchainUniversity import Factoria, Examen, Transaccio, RespostaExamen
+from BlockchainUniversity import Factoria, Examen, Transaccio, RespostaExamen, Encriptador, Document
 
 
 @app.route('/')
@@ -40,6 +40,39 @@ def triar_examens():
         valors = [id_document, profe.nom, profe.cognom, data_inici, data_final]
         llista_examens.append(valors)
     return render_template('triar_examens.html', llista=llista_examens, tipus=session['tipus'])
+
+@app.route('/triar_blocs')
+@Login.es_usuari(tipus=BOTH)
+def triar_blocs():
+    usuari = Factoria.build_usuari_from_db(my_db, session['id'])
+    cadena_bloc = Factoria.build_cadena_blocs_usuari(my_db, usuari)
+    llista_blocs = list()
+    for bloc in cadena_bloc:
+        valors = [bloc.id, bloc.data_bloc, Encriptador.calcular_hash(bloc)]
+        llista_blocs.append(valors)
+    return render_template('triar_blocs.html', llista=llista_blocs)
+
+
+@app.route('/veure_bloc', methods=["GET", "POST"])
+@Login.es_usuari(tipus=BOTH)
+def veure_bloc():
+    id_bloc = request.form.get('bloc')
+    bloc = Factoria.build_bloc_from_db(my_db, id_bloc)
+    if bloc is None:
+        redirect('error404.html')
+    universitat = Factoria.build_universitat_from_db(my_db)
+    transaccio_byte = bloc.transaccio
+    transaccio_json = transaccio_byte.decode()
+    encriptat = Encriptador.crear_json(transaccio_json)
+    transaccio = Transaccio.crear_json(encriptat.desencriptar(universitat.private_key))
+    document_json = transaccio.document
+    document = Document.crear_json(document_json)
+    pdf = document.pdf
+    nom_total = join(PATH_TOTAL, 'veure_bloc.pdf')
+    nom_relatiu = join(PATH_RELATIU, 'veure_bloc.pdf')
+    Factoria.guardar_fitxer(nom_total, pdf)
+    missatge = "Aquesta es l'informació del bloc : "+str(Encriptador.calcular_hash(bloc))
+    return render_template('veure_bloc.html', fitxer=nom_relatiu, missatge=missatge)
 
 
 @app.route('/pujar_pdf', methods=["GET", "POST"])

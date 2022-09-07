@@ -6,7 +6,7 @@ from flask import request, render_template, session, redirect
 from fpdf import FPDF
 
 from BlockWeb import PROFESSOR, app, PATH_TOTAL, PATH_RELATIU, main, my_db, Login
-from BlockchainUniversity import Factoria, Transaccio, AvaluacioExamen
+from BlockchainUniversity import Factoria, Transaccio, AvaluacioExamen, Encriptador
 
 
 @app.route('/professor')
@@ -127,7 +127,7 @@ def escriure_cadena(cadena_bloc):
     nom_fitxer_pdf = join(PATH_TOTAL, 'cadena.pdf')
     with open(nom_fitxer_txt, 'w') as temp_file:
         for blocs in cadena_bloc:
-            text = str(blocs.data_bloc)+"  "+str(blocs.hash_bloc_anterior)
+            text = str(blocs.data_bloc)+"  "+str(Encriptador.calcular_hash(blocs))
             temp_file.write("%s\n" % text)
     pdf = FPDF()
     pdf.add_page()

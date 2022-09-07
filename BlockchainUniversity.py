@@ -801,7 +801,7 @@ class Paquet:
                 http = f'ws://{ip}:5005/echo'
                 self.ws = simple_websocket.Client(http)
                 self.my_db = my_db
-            except (KeyboardInterrupt, EOFError, TimeoutError, simple_websocket.ConnectionClosed):
+            except (KeyboardInterrupt, EOFError, TimeoutError, ConnectionRefusedError, simple_websocket.ConnectionClosed):
                 if self.ws is not None:
                     self.ws.close()
 
@@ -919,7 +919,8 @@ class Paquet:
             else:
                 paquet.dada = False
         if paquets:
-            # això es un for on extreiem el numblocs i despres counter es diu quin es valor mes comu
+            # això és un for on extrèiem el número de blocs i després counter es diu quin es el numero de blocs mes comu de les cadenes
+            paquets.append(Paquet(bloc, "0.0.0.0", my_db))
             resultat = Counter([x.num_blocs for x in paquets if x.dada]).most_common()
             if resultat:
                 mes_comu, quantitat = resultat.pop(0)
@@ -935,6 +936,7 @@ class Paquet:
                         paquet_demanar_cadena = [z for z in paquets if z.num_blocs == mes_comu]
                         paquet_demanar_cadena.pas = 6
                         paquet_demanar_cadena.repartiment()
+                        Paquet.confirmar_enviament(bloc, my_db)
                 else:
                     return False
             else:

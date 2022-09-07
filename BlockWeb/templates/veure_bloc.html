@@ -1,31 +1,22 @@
 {% extends 'layout.html' %}
 {% block navegacio1 %}
-
-<ul>
+     <ul>
+{% if session['tipus']=="professor" %}
         <li><a href="{{ url_for('seleccionar_alumnes') }}">Enviar Examens</a></li>
          <li><a href="{{ url_for('triar_resposta')}}">Evaluar Examens</a></li>
          <li><a href="{{ url_for('triar_blocs')}}">Els meus blocs</a></li>
-</ul>
-
+{% else %}
+         <li><a href="{{ url_for('triar_examens')}}">Enviar Resposta</a></li>
+         <li><a href="{{ url_for('triar_blocs')}}">Els meus blocs</a></li>
+{% endif %}
+ </ul>
 {% endblock %}
-
 {% block navegacio2 %}
 <div class="nav_opcions">
     <ul>
-        {% if opcio == 2 %}
-        <li><a href="{{ url_for('pujar_avaluacio')}}">Agafar un altre pdf</a></li>
-    <form action="{{ url_for('entregar_avaluacio')}}" style="padding: 15px" method="POST">
-         <li><input name="nota" type="number" step=0.1 value="0"/></li>
-         <li><input class="" type="submit" value="Posar Nota"></li>
-    </form>
-        {% elif opcio == 1 %}
-        <li><a href="{{ url_for('pujar_avaluacio')}}">Puja Evaluacio</a></li>
-        {% else %}
-        <li><a href="{{ url_for('pujar_avaluacio')}}">Respota Incorrecte "{{opcio}}"</a></li>
-        {% endif %}
+            <li><a href="{{ url_for('triar_blocs')}}">Veure informació bloc</a></li>
+            <li><a href="{{ url_for('veure_cadena_usuari')}}">Veure els meus blocs de la cadena</a></li>
     </ul>
-
-</div>
 </div>
 {% endblock %}
 {% block content %}
@@ -38,5 +29,4 @@
 </style>
 <p class="centrado">{{missatge}}</p>
 <embed height="600px" src={{fitxer}} type="application/pdf" width="100%"/>
-
 {% endblock %}

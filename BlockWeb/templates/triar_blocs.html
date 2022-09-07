@@ -1,0 +1,42 @@
+{% extends 'layout.html' %}
+{% block navegacio1 %}
+     <ul>
+{% if session['tipus']=="professor" %}
+        <li><a href="{{ url_for('seleccionar_alumnes') }}">Enviar Examens</a></li>
+         <li><a href="{{ url_for('triar_resposta')}}">Evaluar Examens</a></li>
+         <li><a href="{{ url_for('triar_blocs')}}">Els meus blocs</a></li>
+{% else %}
+         <li><a href="{{ url_for('triar_examens')}}">Enviar Resposta</a></li>
+         <li><a href="{{ url_for('triar_blocs')}}">Els meus blocs</a></li>
+{% endif %}
+ </ul>
+{% endblock %}
+{% block navegacio2 %}
+<div class="nav_opcions">
+    <ul>
+            <li><a href="{{ url_for('triar_blocs')}}">Veure informació bloc</a></li>
+            <li><a href="{{ url_for('veure_cadena_usuari')}}">Veure els meus blocs de la cadena</a></li>
+    </ul>
+</div>
+{% endblock %}
+{% block content %}
+<section class="intro">
+    <div class="columna_esquerra">
+        <p>Aquest son els teus blocs </p>
+    </div>
+    <div class="column_dreta">
+        <b><p>Tria un bloc per veure-ho</p></b>
+        <form action="{{ url_for('veure_bloc') }}" autocomplete="off" enctype="multipart/form-data" method="POST">
+            <select id="bloc" name="bloc">
+                {% for id_bloc, data_bloc, hash_bloc in llista %}
+                <option value={{id_bloc}}>{{data_bloc}} {{hash_bloc}}
+                </option>
+                {% endfor %}
+            </select>
+            <p></p>
+            <input class="button-1" type="submit" value="Veure-ho">
+        </form>
+    </div>
+</section>
+{% endblock %}
+
